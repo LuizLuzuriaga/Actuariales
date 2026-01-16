@@ -1,0 +1,14 @@
+---
+author: "Mario"
+format: pdf
+execute: 
+  echo: false
+  warning: true
+---
+
+aaaaa
+
+```{python}
+%run "nigga.ipynb"
+
+```
