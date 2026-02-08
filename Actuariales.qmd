@@ -1,0 +1,88 @@
+---
+title: "Informe Actuarial"
+author: "Luiz Alberto Luzuriaga Izquierdo"
+date: "Mayo de 2025"
+lang: es
+
+
+format:
+  pdf:
+    documentclass: article
+    papersize: a4
+    fontsize: 12pt
+    title-block-style: none
+    toc: true
+    toc-title: "Índice"
+    number-sections: true
+    geometry:
+      - left=2.5cm
+      - right=2.5cm
+      - top=3cm
+      - bottom=3cm
+    include-in-header:
+      text: |
+        % --- Idioma y tipografía ---
+        % Quarto/Pandoc ya carga babel según `lang: es`.
+
+        % --- Desactivar portada/título automático (por si tu versión ignora title-block-style) ---
+        \AtBeginDocument{\renewcommand{\maketitle}{}}
+
+        % --- Matemáticas y gráficos ---
+        \usepackage{amsmath}
+        \usepackage{amsfonts}
+        \usepackage{float}
+        \usepackage{graphicx}
+        \usepackage{tikz}
+
+        % --- Tablas ---
+        \usepackage{booktabs}
+        \usepackage{longtable}
+
+        % --- Interlineado y justificación ---
+        \usepackage{setspace}
+        \onehalfspacing
+        \usepackage{ragged2e}
+        \justifying
+
+        % --- Encabezado/pie de página ---
+        \usepackage{fancyhdr}
+        \pagestyle{fancy}
+        \fancyhf{}
+        \renewcommand{\headrulewidth}{0pt}
+        \fancyfoot[C]{\thepage}
+
+        % --- Nombres de tablas/figuras ---
+        \addto\captionsspanish{\renewcommand{\tablename}{Tabla}}
+        \addto\captionsspanish{\renewcommand{\figurename}{Figura}}
+
+        % --- Hipervínculos sin cajas/colores ---
+        \usepackage{hyperref}
+        \hypersetup{hidelinks}
+    include-before-body:
+      - Qmd/titlepage.tex
+
+execute:
+  echo: false
+  warning: true
+  message: false
+---
+
+# Introducción
+
+```{python}
+%run "Actuariales.ipynb"
+```
+
+$$
+d_{dx}
+$$
+
+\newpage
+
+# Marco Teórico
+
+# Metodología y datos
+
+# Resultados y Hechos Estilizados
+
+# Conclusiones

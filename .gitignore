@@ -3,3 +3,5 @@
 !.gitignore
 !*.qmd
 !*.ipynb
+/.quarto/
+**/*.quarto_ipynb
