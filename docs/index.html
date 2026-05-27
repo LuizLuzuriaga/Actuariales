@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Derecho Bancario</title>
+    <meta name="description" content="Aplicación de tests tipo examen de Derecho Bancario y Financiero">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="logo-area">
+                    <div class="logo-icon">⚖️</div>
+                    <div>
+                        <h1>Derecho Bancario</h1>
+                        <p class="subtitle">Tests de Práctica</p>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Menu Screen -->
+        <main id="menuScreen" class="screen active">
+            <div class="menu-container">
+                <div class="menu-hero">
+                    <h2>Elige tu Test</h2>
+                    <p>Selecciona el test que deseas practicar</p>
+                </div>
+
+                <div class="menu-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">📝</span>
+                        Tests Individuales
+                    </h3>
+                    <div class="cards-grid">
+                        <button class="test-card" onclick="startTest('drive2')" id="btn-drive2">
+                            <div class="card-badge">27 preguntas</div>
+                            <div class="card-icon">🏎️</div>
+                            <h4>DRIVE 2</h4>
+                            <p>dchobank (6) · Preguntas 1-27</p>
+                        </button>
+                        <button class="test-card" onclick="startTest('drive1')" id="btn-drive1">
+                            <div class="card-badge">21 preguntas</div>
+                            <div class="card-icon">🚗</div>
+                            <h4>DRIVE 1</h4>
+                            <p>dchobank (5) · Preguntas 28-48</p>
+                        </button>
+                        <button class="test-card" onclick="startTest('random')" id="btn-random">
+                            <div class="card-badge">60 preguntas</div>
+                            <div class="card-icon">🎲</div>
+                            <h4>RANDOM TEST</h4>
+                            <p>dchobank (4) · Preguntas 1-60</p>
+                        </button>
+                        <button class="test-card" onclick="startTest('odd')" id="btn-odd">
+                            <div class="card-badge">20 preguntas</div>
+                            <div class="card-icon">🔮</div>
+                            <h4>ODD TEST</h4>
+                            <p>dchobank (3) · Preguntas 1-20</p>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="menu-section">
+                    <h3 class="section-title">
+                        <span class="section-icon">🔀</span>
+                        Tests Combinados (Mezclados)
+                    </h3>
+                    <div class="cards-grid">
+                        <button class="test-card combined" onclick="startTest('drive')" id="btn-drive">
+                            <div class="card-badge">48 preguntas</div>
+                            <div class="card-icon">🏁</div>
+                            <h4>DRIVE</h4>
+                            <p>DRIVE 1 + DRIVE 2 mezclados</p>
+                        </button>
+                        <button class="test-card combined" onclick="startTest('oddDrive')" id="btn-oddDrive">
+                            <div class="card-badge">68 preguntas</div>
+                            <div class="card-icon">⚡</div>
+                            <h4>ODD DRIVE TEST</h4>
+                            <p>DRIVE 1 + DRIVE 2 + ODD TEST mezclados</p>
+                        </button>
+                        <button class="test-card combined all" onclick="startTest('all')" id="btn-all">
+                            <div class="card-badge">128 preguntas</div>
+                            <div class="card-icon">🌟</div>
+                            <h4>ALL TEST</h4>
+                            <p>Todos los tests mezclados</p>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Test Screen -->
+        <main id="testScreen" class="screen">
+            <div class="test-container">
+                <div class="test-header">
+                    <div class="test-header-left">
+                        <button class="btn-back" onclick="goToMenu()" id="btn-back-menu">
+                            ← Volver al menú
+                        </button>
+                        <h2 id="testTitle" class="test-title"></h2>
+                    </div>
+                    <div class="test-progress">
+                        <div class="progress-text">
+                            Pregunta <span id="currentQ">1</span> de <span id="totalQ">0</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="question-area" id="questionArea">
+                    <div class="question-card">
+                        <div class="question-number" id="questionNumber"></div>
+                        <div class="question-text" id="questionText"></div>
+                        <div class="question-warning" id="questionWarning" style="display:none;">
+                            ⚠️ Esta pregunta no se ve bien en las fotografías proporcionadas del documento original.
+                        </div>
+                        <div class="options-list" id="optionsList"></div>
+                    </div>
+                </div>
+
+                <div class="test-nav">
+                    <button class="btn-nav btn-prev" id="btnPrev" onclick="prevQuestion()">← Anterior</button>
+                    <div class="question-dots" id="questionDots"></div>
+                    <button class="btn-nav btn-next" id="btnNext" onclick="nextQuestion()">Siguiente →</button>
+                    <button class="btn-nav btn-finish" id="btnFinish" onclick="finishTest()" style="display:none;">✅ Finalizar Test</button>
+                </div>
+            </div>
+        </main>
+
+        <!-- Results Screen -->
+        <main id="resultsScreen" class="screen">
+            <div class="results-container">
+                <div class="results-card">
+                    <div class="results-header">
+                        <h2>Resultados</h2>
+                        <h3 id="resultsTestName"></h3>
+                    </div>
+                    <div class="score-display">
+                        <div class="score-circle" id="scoreCircle">
+                            <svg viewBox="0 0 120 120">
+                                <circle cx="60" cy="60" r="54" class="score-bg"/>
+                                <circle cx="60" cy="60" r="54" class="score-fg" id="scoreFg"/>
+                            </svg>
+                            <div class="score-value" id="scoreValue">0.00</div>
+                        </div>
+                    </div>
+                    <div class="results-stats">
+                        <div class="stat-item correct">
+                            <span class="stat-icon">✅</span>
+                            <span class="stat-label">Aciertos</span>
+                            <span class="stat-value" id="statCorrect">0</span>
+                        </div>
+                        <div class="stat-item wrong">
+                            <span class="stat-icon">❌</span>
+                            <span class="stat-label">Fallos</span>
+                            <span class="stat-value" id="statWrong">0</span>
+                        </div>
+                        <div class="stat-item blank">
+                            <span class="stat-icon">⬜</span>
+                            <span class="stat-label">En blanco</span>
+                            <span class="stat-value" id="statBlank">0</span>
+                        </div>
+                        <div class="stat-item skipped">
+                            <span class="stat-icon">⏭️</span>
+                            <span class="stat-label">No visibles</span>
+                            <span class="stat-value" id="statSkipped">0</span>
+                        </div>
+                    </div>
+                    <div class="results-detail-info">
+                        <p id="scoringInfo"></p>
+                    </div>
+                    <div class="results-actions">
+                        <button class="btn-primary" onclick="reviewTest()" id="btn-review">📋 Revisar respuestas</button>
+                        <button class="btn-secondary" onclick="retryTest()" id="btn-retry">🔄 Repetir test</button>
+                        <button class="btn-secondary" onclick="goToMenu()" id="btn-menu-results">🏠 Volver al menú</button>
+                    </div>
+                </div>
+
+                <!-- Review Section -->
+                <div class="review-section" id="reviewSection" style="display:none;">
+                    <h3>Revisión de respuestas</h3>
+                    <div id="reviewList"></div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="questions.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
