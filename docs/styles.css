@@ -832,6 +832,224 @@ body::before {
 }
 
 /* ============================================
+   Mode Selection Screen
+   ============================================ */
+.mode-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.mode-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-xl);
+    padding: 36px 24px;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+    font-family: inherit;
+    color: var(--text-primary);
+    position: relative;
+    overflow: hidden;
+}
+
+.mode-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent-primary), var(--accent-secondary));
+    opacity: 0;
+    transition: var(--transition);
+}
+
+.mode-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--accent-primary);
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md), 0 0 30px var(--accent-glow);
+}
+
+.mode-card:hover::before {
+    opacity: 1;
+}
+
+.mode-icon {
+    font-size: 3rem;
+    margin-bottom: 16px;
+}
+
+.mode-card h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+.mode-desc {
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+    .mode-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ============================================
+   Validate Button (Repaso Mode)
+   ============================================ */
+.btn-validate {
+    display: block;
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px 28px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
+    font-family: inherit;
+    box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.btn-validate:hover {
+    box-shadow: 0 6px 25px rgba(16, 185, 129, 0.4);
+    transform: translateY(-1px);
+}
+
+.btn-validate:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ============================================
+   Option States (Repaso validated)
+   ============================================ */
+.option-btn.option-correct {
+    background: var(--success-bg) !important;
+    border-color: var(--success) !important;
+    cursor: default;
+}
+
+.option-btn.option-correct .option-letter {
+    background: var(--success);
+    border-color: var(--success);
+    color: white;
+}
+
+.option-btn.option-correct .option-text {
+    color: var(--success);
+    font-weight: 600;
+}
+
+.option-btn.option-wrong {
+    background: var(--danger-bg) !important;
+    border-color: var(--danger) !important;
+    cursor: default;
+    text-decoration: line-through;
+    opacity: 0.8;
+}
+
+.option-btn.option-wrong .option-letter {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+}
+
+.option-btn.option-wrong .option-text {
+    color: var(--danger);
+}
+
+/* ============================================
+   Feedback Area (Repaso Mode)
+   ============================================ */
+.feedback-area {
+    margin-top: 20px;
+    animation: fadeIn 0.4s ease;
+}
+
+.feedback-result {
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.feedback-correct {
+    background: var(--success-bg);
+    color: var(--success);
+    border: 1px solid rgba(52, 211, 153, 0.25);
+}
+
+.feedback-wrong {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid rgba(248, 113, 113, 0.25);
+}
+
+.feedback-explanation {
+    background: rgba(99, 102, 241, 0.08);
+    border: 1px solid rgba(99, 102, 241, 0.15);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: var(--text-secondary);
+}
+
+.explanation-title {
+    font-weight: 700;
+    color: var(--accent-secondary);
+    margin-bottom: 10px;
+    font-size: 0.9rem;
+}
+
+.expl-correct-note {
+    color: var(--success);
+    font-weight: 500;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: var(--success-bg);
+    border-radius: var(--radius-sm);
+}
+
+.expl-wrong {
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    padding: 6px 0;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.expl-wrong:last-child {
+    border-bottom: none;
+}
+
+/* ============================================
+   Dot States (Repaso validated)
+   ============================================ */
+.q-dot.dot-correct {
+    background: var(--success);
+    border-color: var(--success);
+}
+
+.q-dot.dot-wrong {
+    background: var(--danger);
+    border-color: var(--danger);
+}
+
+/* ============================================
    Responsive
    ============================================ */
 @media (max-width: 768px) {

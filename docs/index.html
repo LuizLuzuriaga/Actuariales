@@ -37,25 +37,25 @@
                         Tests Individuales
                     </h3>
                     <div class="cards-grid">
-                        <button class="test-card" onclick="startTest('drive2')" id="btn-drive2">
+                        <button class="test-card" onclick="selectTest('drive2')" id="btn-drive2">
                             <div class="card-badge">27 preguntas</div>
                             <div class="card-icon">🏎️</div>
                             <h4>DRIVE 2</h4>
                             <p>dchobank (6) · Preguntas 1-27</p>
                         </button>
-                        <button class="test-card" onclick="startTest('drive1')" id="btn-drive1">
+                        <button class="test-card" onclick="selectTest('drive1')" id="btn-drive1">
                             <div class="card-badge">21 preguntas</div>
                             <div class="card-icon">🚗</div>
                             <h4>DRIVE 1</h4>
                             <p>dchobank (5) · Preguntas 28-48</p>
                         </button>
-                        <button class="test-card" onclick="startTest('random')" id="btn-random">
+                        <button class="test-card" onclick="selectTest('random')" id="btn-random">
                             <div class="card-badge">60 preguntas</div>
                             <div class="card-icon">🎲</div>
                             <h4>RANDOM TEST</h4>
                             <p>dchobank (4) · Preguntas 1-60</p>
                         </button>
-                        <button class="test-card" onclick="startTest('odd')" id="btn-odd">
+                        <button class="test-card" onclick="selectTest('odd')" id="btn-odd">
                             <div class="card-badge">20 preguntas</div>
                             <div class="card-icon">🔮</div>
                             <h4>ODD TEST</h4>
@@ -70,19 +70,19 @@
                         Tests Combinados (Mezclados)
                     </h3>
                     <div class="cards-grid">
-                        <button class="test-card combined" onclick="startTest('drive')" id="btn-drive">
+                        <button class="test-card combined" onclick="selectTest('drive')" id="btn-drive">
                             <div class="card-badge">48 preguntas</div>
                             <div class="card-icon">🏁</div>
                             <h4>DRIVE</h4>
                             <p>DRIVE 1 + DRIVE 2 mezclados</p>
                         </button>
-                        <button class="test-card combined" onclick="startTest('oddDrive')" id="btn-oddDrive">
+                        <button class="test-card combined" onclick="selectTest('oddDrive')" id="btn-oddDrive">
                             <div class="card-badge">68 preguntas</div>
                             <div class="card-icon">⚡</div>
                             <h4>ODD DRIVE TEST</h4>
                             <p>DRIVE 1 + DRIVE 2 + ODD TEST mezclados</p>
                         </button>
-                        <button class="test-card combined all" onclick="startTest('all')" id="btn-all">
+                        <button class="test-card combined all" onclick="selectTest('all')" id="btn-all">
                             <div class="card-badge">128 preguntas</div>
                             <div class="card-icon">🌟</div>
                             <h4>ALL TEST</h4>
@@ -90,6 +90,29 @@
                         </button>
                     </div>
                 </div>
+            </div>
+        </main>
+
+        <!-- Mode Selection Screen -->
+        <main id="modeScreen" class="screen">
+            <div class="menu-container">
+                <div class="menu-hero">
+                    <h2 id="modeTestName">Test</h2>
+                    <p>Elige el modo de práctica</p>
+                </div>
+                <div class="mode-cards">
+                    <button class="mode-card" onclick="startWithMode('examen')" id="btn-mode-examen">
+                        <div class="mode-icon">📝</div>
+                        <h3>Modo Examen</h3>
+                        <p class="mode-desc">Responde todas las preguntas y al finalizar verás tus resultados, puntuación y correcciones.</p>
+                    </button>
+                    <button class="mode-card" onclick="startWithMode('repaso')" id="btn-mode-repaso">
+                        <div class="mode-icon">📖</div>
+                        <h3>Modo Repaso</h3>
+                        <p class="mode-desc">Responde cada pregunta y pulsa "Validar" para ver al instante si es correcta, con explicación detallada.</p>
+                    </button>
+                </div>
+                <button class="btn-back" onclick="goToMenu()" style="margin-top:24px;">← Volver al menú</button>
             </div>
         </main>
 
@@ -121,6 +144,11 @@
                             ⚠️ Esta pregunta no se ve bien en las fotografías proporcionadas del documento original.
                         </div>
                         <div class="options-list" id="optionsList"></div>
+                        <!-- Repaso mode: validate button and feedback -->
+                        <div id="validateArea" style="display:none;">
+                            <button class="btn-validate" id="btnValidate" onclick="validateAnswer()">✔ Validar respuesta</button>
+                        </div>
+                        <div class="feedback-area" id="feedbackArea" style="display:none;"></div>
                     </div>
                 </div>
 
@@ -192,6 +220,7 @@
     </div>
 
     <script src="questions.js"></script>
+    <script src="explanations.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
