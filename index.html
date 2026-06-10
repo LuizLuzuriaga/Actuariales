@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Luiz Luzuriaga — Portfolio Actuarial RPG</title>
+  <meta name="description" content="Portfolio interactivo de Luiz Alberto Luzuriaga Izquierdo, estudiante de Máster en Ciencias Actuariales y Financieras." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🎲</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="intro-screen">
+    <div id="intro-box">
+      <div id="intro-pixel-art">
+        <canvas id="intro-canvas" width="80" height="80"></canvas>
+      </div>
+      <h1>Luiz Luzuriaga</h1>
+      <p class="intro-tagline">Estudiante · Máster Ciencias Actuariales y Financieras</p>
+      <p class="intro-sub">Un portfolio distinto. Explora mi habitación, interactúa con cada objeto y descubre mi perfil a través de minijuegos actuariales.</p>
+      <div class="intro-links">
+        <a href="https://www.linkedin.com/in/luiz-luzuriaga-izquierdo" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a href="mailto:luzuriagaluiz@gmail.com">Email ↗</a>
+      </div>
+      <button id="start-btn">▶ Entrar a la habitación</button>
+      <p class="intro-controls">Muévete con ↑↓←→ · Interactúa con [E] · O haz clic en los objetos</p>
+    </div>
+  </div>
+ 
+  <div id="game-screen" style="display:none">
+    <div id="game-wrap">
+      <canvas id="canvas" width="680" height="480"></canvas>
+ 
+      <div id="hud">
+        <div id="name-tag">🎮 Luiz Luzuriaga — Actuario en Formación</div>
+        <div id="badges"></div>
+      </div>
+ 
+      <div id="hint">← → ↑ ↓ para moverse · [E] para interactuar · Haz clic en los objetos</div>
+ 
+      <div id="minimap">
+        <div class="mm-title">MAPA</div>
+        <div class="mm-zones">
+          <div class="mm-zone" data-zone="desk" title="Mesa — Tabla de Mortalidad">📚</div>
+          <div class="mm-zone" data-zone="board" title="Pizarra — Cadena de Markov">📊</div>
+          <div class="mm-zone" data-zone="computer" title="Ordenador — Portfolio">💻</div>
+          <div class="mm-zone" data-zone="dice" title="Escritorio — Monte Carlo">🎲</div>
+          <div class="mm-zone" data-zone="bar" title="Barra — Deporte">🏋️</div>
+          <div class="mm-zone" data-zone="kitchen" title="Cocina — Prima Pura">🍳</div>
+          <div class="mm-zone" data-zone="window" title="Ventana — CV">📄</div>
+        </div>
+      </div>
+    </div>
+ 
+    <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div id="modal-box">
+        <button id="modal-close" aria-label="Cerrar">✕ Cerrar [Esc]</button>
+        <div id="modal-content"></div>
+      </div>
+    </div>
+  </div>
+ 
+  <script src="game.js"></script>
+  <script src="modals.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
