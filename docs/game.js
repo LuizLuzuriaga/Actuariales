@@ -436,6 +436,40 @@ function checkNear() {
     hintEl.style.borderColor = '#7c5cbf';
   }
 }
+
+/* ---------- Controles Móviles ---------- */
+const btnUp = document.getElementById('btn-up');
+const btnLeft = document.getElementById('btn-left');
+const btnRight = document.getElementById('btn-right');
+const btnDown = document.getElementById('btn-down');
+const btnE = document.getElementById('btn-e');
+
+function bindTouch(btn, key) {
+  if (!btn) return;
+  const press = (e) => { e.preventDefault(); keys[key] = true; };
+  const release = (e) => { e.preventDefault(); keys[key] = false; };
+  btn.addEventListener('touchstart', press, {passive: false});
+  btn.addEventListener('touchend', release, {passive: false});
+  btn.addEventListener('mousedown', press);
+  btn.addEventListener('mouseup', release);
+  btn.addEventListener('mouseleave', release);
+}
+
+bindTouch(btnUp, 'ArrowUp');
+bindTouch(btnLeft, 'ArrowLeft');
+bindTouch(btnRight, 'ArrowRight');
+bindTouch(btnDown, 'ArrowDown');
+
+if (btnE) {
+  const interact = (e) => {
+    e.preventDefault();
+    if (!modalOpen && nearHotspot && typeof openModal === 'function') {
+      openModal(nearHotspot.id);
+    }
+  };
+  btnE.addEventListener('touchstart', interact, {passive: false});
+  btnE.addEventListener('mousedown', interact);
+}
  
 /* =================== BUCLE PRINCIPAL =================== */
  
