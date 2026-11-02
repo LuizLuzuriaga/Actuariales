@@ -509,7 +509,7 @@ function contentCV() {
   <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
     <div>
       <p style="font-size:14px;color:#af8fff;margin-bottom:2px">Estudiante de Máster en Ciencias Actuariales y Financieras</p>
-      <p style="font-size:12px;color:#9585c5">📍 Madrid, España · 📧 luzuriagaluiz@gmail.com · 📱 628 102 733</p>
+      <p style="font-size:12px;color:#9585c5">📍 Madrid, España · 📧 luzuriagaluiz@gmail.com</p>
     </div>
   </div>
  
