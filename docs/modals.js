@@ -5,30 +5,35 @@
 let modalOpen = false;
 const unlocked = new Set();
  
-/* ---------- Abrir modal ---------- */
+/* ---------- Abrir / cerrar modal (con gestión del foco) ---------- */
+let lastFocus = null;
+
 function openModal(id) {
   const el  = document.getElementById('modal');
   const box = document.getElementById('modal-content');
+  lastFocus = document.activeElement;
   el.classList.add('open');
   modalOpen = true;
   box.innerHTML = getContent(id);
+  const title = box.querySelector('h2');
+  if (title) title.id = 'modal-title';
+  document.getElementById('modal-box').scrollTop = 0;
+  document.getElementById('modal-close').focus();
   awardBadge(id);
   markMinimap(id);
   /* Inicializar lógica tras render */
-  setTimeout(() => {
-    if (id === 'dice')    runMonteCarlo();
-    if (id === 'kitchen') bindPrima();
-    if (id === 'board')   bindMarkov();
-  }, 80);
+  if (id === 'dice')    runMonteCarlo();
+  if (id === 'kitchen') bindPrima();
+  if (id === 'board')   bindMarkov();
 }
- 
-/* ---------- Cerrar modal ---------- */
+
 function closeModal() {
   document.getElementById('modal').classList.remove('open');
   modalOpen = false;
-  requestAnimationFrame(gameLoop);
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus();
+  startLoop();
 }
- 
+
 /* ---------- Badges ---------- */
 function awardBadge(id) {
   if (unlocked.has(id)) return;
@@ -77,15 +82,18 @@ function getContent(id) {
    ────────────────────────────────────────────────────────── */
 function contentMortality() {
   const stages = [
-    { period:'2017–2021', label:'Hostelería — Team Leader',            qx:0.020, lx:100000, color:'#5cdc8c' },
-    { period:'2021–2025', label:'Grado en Economía (UAH) — 8.6/10',   qx:0.030, lx: 98020, color:'#5cdc8c' },
-    { period:'2023–2024', label:'Gestor Bancario — EVO Banco',         qx:0.055, lx: 95079, color:'#ffb830' },
-    { period:'2025+',     label:'Máster Ciencias Actuariales (UAH)',   qx:0.008, lx: 89847, color:'#5cdc8c' },
-    { period:'Futuro',    label:'Actuario Certificado',                qx:0.001, lx: 89128, color:'#9c6cff' },
+    { period:'2017–2021', label:'Hostelería — Team Leader',            qx:0.020, color:'#5cdc8c' },
+    { period:'2021–2025', label:'Grado en Economía (UAH) — 8.6/10',   qx:0.030, color:'#5cdc8c' },
+    { period:'2023–2024', label:'Gestor Bancario — EVO Banco',         qx:0.055, color:'#ffb830' },
+    { period:'2025+',     label:'Máster Ciencias Actuariales (UAH)',   qx:0.008, color:'#5cdc8c' },
+    { period:'Futuro',    label:'Actuario Certificado',                qx:0.001, color:'#9c6cff' },
   ];
  
+  /* lx(siguiente) = lx · (1 − qx), partiendo de la base 100.000 */
+  let vivos = 100000;
+  stages.forEach(s => { s.lx = Math.round(vivos); vivos *= 1 - s.qx; });
+
   const rows = stages.map(s => {
-    const barW = Math.round(s.qx * 1000);
     return `<tr>
       <td>${s.period}</td>
       <td>${s.label}</td>
@@ -96,7 +104,7 @@ function contentMortality() {
  
   return `
   <h2>📊 Tabla de Mortalidad Profesional</h2>
-  <p style="font-size:11px;color:#8a7ab0;margin-bottom:12px">
+  <p style="font-size:13px;color:#8a7ab0;margin-bottom:12px">
     Inspirada en tablas biométricas de vida. <strong style="color:#af8fff">qₓ</strong> = probabilidad de
     abandonar la trayectoria en ese período · <strong style="color:#af8fff">lₓ</strong> = supervivientes
     en escala base 100.000
@@ -113,14 +121,14 @@ function contentMortality() {
     <tbody>${rows}</tbody>
   </table>
   <div style="margin-top:14px">
-    <p style="font-size:11px;color:#8a7ab0;margin-bottom:6px">Esperanza de vida profesional:</p>
+    <p style="font-size:13px;color:#8a7ab0;margin-bottom:6px">Probabilidad de continuar en cada etapa (pₓ = 1 − qₓ):</p>
     ${stages.map(s => `
     <div class="bar-row">
-      <span class="bar-label" style="width:145px;font-size:10px">${s.period}</span>
+      <span class="bar-label" style="width:145px;font-size:12px">${s.period}</span>
       <div class="bar-bg">
         <div class="bar-fill" style="width:${Math.round((1-s.qx)*100)}%;background:linear-gradient(90deg,${s.color}88,${s.color})"></div>
       </div>
-      <span style="font-size:10px;color:${s.color};width:36px;text-align:right">${Math.round((1-s.qx)*100)}%</span>
+      <span style="font-size:12px;color:${s.color};width:36px;text-align:right">${Math.round((1-s.qx)*100)}%</span>
     </div>`).join('')}
   </div>
   <div class="nota-info">
@@ -167,11 +175,20 @@ function contentPortfolio() {
       tools: ['R','ggplot2','Power BI','dplyr'],
       color: '#90c8ff'
     },
+    {
+      name: 'Gedankenpalast — Atlas 3D de estudio',
+      ramo: 'Desarrollo / Divulgación',
+      prima: 'Alta complejidad',
+      cobertura: 'Atlas interactivo en 3D del temario actuarial y cuantitativo, con teoría, fórmulas con KaTeX y código de Python ejecutable en el navegador. Proyecto propio publicado en GitHub Pages.',
+      tools: ['JavaScript','Three.js','KaTeX','Python (Pyodide)'],
+      color: '#b0a0ff',
+      link: 'https://luizluzuriaga.github.io/Gedankenpalast/'
+    },
   ];
  
   return `
   <h2>💼 Portafolio No-Vida — Proyectos como Pólizas</h2>
-  <p style="font-size:11px;color:#8a7ab0;margin-bottom:12px">
+  <p style="font-size:13px;color:#8a7ab0;margin-bottom:12px">
     En seguros No-Vida cada póliza tiene: <strong style="color:#6ab8ff">Ramo</strong> (área de cobertura) ·
     <strong style="color:#6ab8ff">Prima</strong> (nivel de complejidad requerida) ·
     <strong style="color:#6ab8ff">Cobertura</strong> (problema real resuelto)
@@ -180,11 +197,12 @@ function contentPortfolio() {
   <div class="portf-card">
     <h4 style="color:${p.color}">${p.name}</h4>
     <div style="display:flex;gap:16px;margin-bottom:7px;flex-wrap:wrap">
-      <span style="font-size:10px;color:#8a9ab0">Ramo: <strong style="color:${p.color}">${p.ramo}</strong></span>
-      <span style="font-size:10px;color:#8a9ab0">Prima: <strong style="color:${p.color}">${p.prima}</strong></span>
+      <span style="font-size:12px;color:#8a9ab0">Ramo: <strong style="color:${p.color}">${p.ramo}</strong></span>
+      <span style="font-size:12px;color:#8a9ab0">Prima: <strong style="color:${p.color}">${p.prima}</strong></span>
     </div>
-    <p style="font-size:10px;color:#a090c0;margin-bottom:8px;line-height:1.6">${p.cobertura}</p>
+    <p style="font-size:12px;color:#a090c0;margin-bottom:8px;line-height:1.6">${p.cobertura}</p>
     ${p.tools.map(t => `<span class="portf-tag">${t}</span>`).join('')}
+    ${p.link ? `<a class="portf-link" href="${p.link}" target="_blank" rel="noopener">Abrir proyecto ↗</a>` : ''}
   </div>`).join('')}
   <div class="nota-info">
     📋 <strong>Nota actuarial:</strong> La diversificación de ramos (crédito, operacional, macro, analytics) es
@@ -197,26 +215,26 @@ function contentPortfolio() {
    3. CADENA DE MARKOV
    ────────────────────────────────────────────────────────── */
 function contentMarkov() {
+  const nodes = [
+    ['hostel',   'Hostelería',  '2017–21'],
+    ['grado',    'Grado Econ.', '2021–25'],
+    ['banca',    'Banca EVO',   '2023–24'],
+    ['master',   'Máster Act.', '2025+'],
+    ['actuario', 'Actuario',    'Objetivo'],
+  ];
   return `
   <h2>🔗 Cadena de Markov — Trayectoria Profesional</h2>
-  <p style="font-size:11px;color:#8a7ab0;margin-bottom:12px">
+  <p style="font-size:13px;color:#8a7ab0;margin-bottom:12px">
     Cada etapa es un estado del proceso. Las probabilidades de transición representan la
-    coherencia y determinación de la trayectoria. Haz clic en cada nodo para ver detalles.
+    coherencia y determinación de la trayectoria. Pulsa cada nodo para ver detalles.
   </p>
   <div id="markov-chain" style="text-align:center;margin:14px 0;line-height:2.2">
-    <span class="chain-node" data-state="hostel">Hostelería<br><span style="font-size:9px;color:#6a5a9a">2017–21</span></span>
-    <span class="chain-arrow">→</span>
-    <span class="chain-node" data-state="grado">Grado Econ.<br><span style="font-size:9px;color:#6a5a9a">2021–25</span></span>
-    <span class="chain-arrow">→</span>
-    <span class="chain-node" data-state="banca">Banca EVO<br><span style="font-size:9px;color:#6a5a9a">2023–24</span></span>
-    <span class="chain-arrow">→</span>
-    <span class="chain-node active" data-state="master">Máster Act.<br><span style="font-size:9px;color:#6a5a9a">2025+</span></span>
-    <span class="chain-arrow">→</span>
-    <span class="chain-node" data-state="actuario">Actuario<br><span style="font-size:9px;color:#6a5a9a">Objetivo</span></span>
+    ${nodes.map(([k, n, y]) => `<button type="button" class="chain-node" data-state="${k}">${n}<br><span class="chain-year">${y}</span></button>`)
+           .join('<span class="chain-arrow" aria-hidden="true">→</span>')}
   </div>
-  <div id="markov-info"></div>`;
+  <div id="markov-info" aria-live="polite"></div>`;
 }
- 
+
 const markovData = {
   hostel:   { title:'Hostelería (2017–2021)', trans:'P(→ Grado) = 0.85', text:'Liderazgo de equipos de hasta 5 personas en entornos de alta presión. Gestión de inventarios, cuadre de caja. Establecimientos: Pirulo, El Jamón de Gran Vía, Don Jamón.' },
   grado:    { title:'Grado en Economía — UAH (2021–2025)', trans:'P(→ Máster) = 0.80', text:'Nota media: <strong style="color:#af8fff">8.6 / 10</strong>. Especialización en Econometría y Análisis Macroeconómico. Capacidad analítica para grandes volúmenes de datos.' },
@@ -231,12 +249,16 @@ function bindMarkov() {
   function show(state) {
     const d = markovData[state];
     if (!d || !infoBox) return;
-    nodes.forEach(n => n.classList.toggle('active', n.dataset.state === state));
+    nodes.forEach(n => {
+      const on = n.dataset.state === state;
+      n.classList.toggle('active', on);
+      n.setAttribute('aria-pressed', on);
+    });
     infoBox.innerHTML = `
       <div class="mc-result">
         <strong style="color:#af8fff">${d.title}</strong><br>
-        <span style="color:#5cdc8c;font-size:10px">${d.trans}</span><br><br>
-        <span style="font-size:11px;line-height:1.7">${d.text}</span>
+        <span style="color:#5cdc8c;font-size:12px">${d.trans}</span><br><br>
+        <span style="font-size:13px;line-height:1.7">${d.text}</span>
       </div>`;
   }
   nodes.forEach(n => n.addEventListener('click', () => show(n.dataset.state)));
@@ -249,44 +271,31 @@ function bindMarkov() {
 function contentMonteCarlo() {
   return `
   <h2>🎲 Simulación Monte Carlo — Éxito Profesional</h2>
-  <p style="font-size:11px;color:#8a7ab0;margin-bottom:10px">
+  <p style="font-size:13px;color:#8a7ab0;margin-bottom:10px">
     1.000 trayectorias simuladas basadas en las variables reales del perfil de Luiz.
-    Cada simulación es aleatoria — pulsa varias veces para ver la distribución.
+    Cada simulación es aleatoria — pulsa varias veces para ver cómo cambia la distribución.
   </p>
   <button class="modal-btn" onclick="runMonteCarlo()" style="margin-bottom:12px">▶ Nueva simulación</button>
-  <canvas id="mc-canvas" width="500" height="160"
+  <canvas id="mc-canvas" width="500" height="200" role="img" aria-label="Histograma de la simulación"
     style="width:100%;background:#06060e;border-radius:6px;border:1px solid #1a1a3a;display:block"></canvas>
   <div id="mc-stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px"></div>
   <div class="nota-info" style="margin-top:12px">
     📊 <strong>Variables del modelo:</strong> Nota académica (8.6/10) · Experiencia bancaria ·
     Formación actuarial · Python/R/Stata · Inglés B2 · Disciplina deportiva · Habilidades blandas.
-    Distribución de resultados: cada línea = una trayectoria posible.
+    Cada barra del histograma agrupa las trayectorias con un resultado parecido.
   </div>`;
 }
  
 function runMonteCarlo() {
   const c = document.getElementById('mc-canvas');
   if (!c) return;
-  const ctx2 = c.getContext('2d');
-  const CW = 500, CH = 160;
-  ctx2.clearRect(0, 0, CW, CH);
-  ctx2.fillStyle = '#06060e';
-  ctx2.fillRect(0, 0, CW, CH);
- 
-  /* Ejes */
-  ctx2.strokeStyle = '#2a1a4a';
-  ctx2.lineWidth = 0.5;
-  [0.25, 0.5, 0.75, 1.0].forEach(r => {
-    const y = CH - r * (CH - 20) - 10;
-    ctx2.beginPath(); ctx2.moveTo(0, y); ctx2.lineTo(CW, y); ctx2.stroke();
-    ctx2.fillStyle = '#4a3a6a';
-    ctx2.font = '8px monospace';
-    ctx2.fillText(Math.round(r * 100) + '%', 2, y - 2);
-  });
- 
-  const N = 1000;
+  const g  = c.getContext('2d');
+  const CW = c.width, CH = c.height;
+  const N = 1000, BINS = 20, LO = 60, HI = 100;
+  const top = 14, bottom = 22;                 // márgenes del área de dibujo
+  const plotH = CH - top - bottom;
+
   const results = [];
- 
   for (let i = 0; i < N; i++) {
     let val = 50;
     val += (8.6 / 10) * 18;                      // nota
@@ -296,34 +305,60 @@ function runMonteCarlo() {
     val += Math.random() * 5;                     // inglés
     val += Math.random() * 4;                     // deporte/disciplina
     val += (Math.random() - 0.4) * 8;             // ruido
-    val = Math.max(20, Math.min(100, val));
-    results.push(val);
- 
-    const x = (i / N) * CW;
-    const y = CH - (val / 100) * (CH - 20) - 10;
-    const hue = 240 + val * 0.8;
-    ctx2.strokeStyle = \`hsla(\${hue},70%,60%,0.25)\`;
-    ctx2.lineWidth = 0.6;
-    ctx2.beginPath(); ctx2.moveTo(x, y); ctx2.lineTo(x + CW/N + 1, y); ctx2.stroke();
+    results.push(Math.max(20, Math.min(100, val)));
   }
- 
-  /* Percentiles */
+
   const sorted = [...results].sort((a, b) => a - b);
-  const pct = r => sorted[Math.floor(N * r)];
+  const pct  = r => sorted[Math.min(N - 1, Math.floor(N * r))];
   const mean = results.reduce((s, v) => s + v, 0) / N;
   const over85 = Math.round(results.filter(v => v >= 85).length / N * 100);
- 
-  /* Línea de la mediana */
-  const medY = CH - (pct(0.5) / 100) * (CH - 20) - 10;
-  ctx2.strokeStyle = '#af8fff';
-  ctx2.lineWidth = 1.5;
-  ctx2.setLineDash([4, 3]);
-  ctx2.beginPath(); ctx2.moveTo(0, medY); ctx2.lineTo(CW, medY); ctx2.stroke();
-  ctx2.setLineDash([]);
-  ctx2.fillStyle = '#af8fff';
-  ctx2.font = '9px monospace';
-  ctx2.fillText('P50 = ' + pct(0.5).toFixed(1) + '%', CW - 90, medY - 3);
- 
+
+  /* Histograma */
+  const bins = new Array(BINS).fill(0);
+  results.forEach(v => {
+    const k = Math.min(BINS - 1, Math.max(0, Math.floor((v - LO) / (HI - LO) * BINS)));
+    bins[k]++;
+  });
+  const maxBin = Math.max(...bins);
+  const bw = CW / BINS;
+  const xOf = v => (v - LO) / (HI - LO) * CW;
+
+  g.clearRect(0, 0, CW, CH);
+  g.fillStyle = '#06060e';
+  g.fillRect(0, 0, CW, CH);
+
+  bins.forEach((n, k) => {
+    const h = n / maxBin * plotH;
+    const mid = LO + (k + 0.5) * (HI - LO) / BINS;
+    g.fillStyle = `hsla(${240 + (mid - LO) * 2},70%,62%,0.85)`;
+    g.fillRect(k * bw + 1, top + plotH - h, bw - 2, h);
+  });
+
+  /* Eje X */
+  g.fillStyle = '#9585c5';
+  g.font = '11px monospace';
+  g.textAlign = 'center';
+  for (let v = LO; v <= HI; v += 10) {
+    const x = Math.min(CW - 18, Math.max(18, xOf(v)));
+    g.fillText(v + '%', x, CH - 6);
+  }
+
+  /* Percentiles P10 / P50 / P90 */
+  [[0.1, '#ff6c6c', 'P10'], [0.5, '#af8fff', 'P50'], [0.9, '#5cdc8c', 'P90']].forEach(([r, col, name]) => {
+    const x = xOf(pct(r));
+    g.strokeStyle = col;
+    g.lineWidth = 1.5;
+    g.setLineDash([4, 3]);
+    g.beginPath(); g.moveTo(x, top - 4); g.lineTo(x, top + plotH); g.stroke();
+    g.setLineDash([]);
+    g.fillStyle = col;
+    g.fillText(name, x, top - 4);
+  });
+  g.textAlign = 'left';
+
+  c.setAttribute('aria-label',
+    `Histograma de ${N} simulaciones: mediana ${pct(0.5).toFixed(1)}%, P10 ${pct(0.1).toFixed(1)}%, P90 ${pct(0.9).toFixed(1)}%.`);
+
   const statsEl = document.getElementById('mc-stats');
   if (!statsEl) return;
   statsEl.innerHTML = [
@@ -333,20 +368,20 @@ function runMonteCarlo() {
     ['Media E[X]',      mean.toFixed(1) + '%',     '#ffb830'],
     ['VaR 90%',        (100 - pct(0.1)).toFixed(1) + '% downside', '#ff8c5c'],
     ['P(≥ 85%)',        over85 + '% trayectorias', '#6ab8ff'],
-  ].map(([l, v, c]) => \`
-    <div style="background:#0a0a1e;border:1px solid #2a1a4a;border-radius:5px;padding:8px;font-size:10px">
-      <div style="color:#6a5a9a;margin-bottom:3px">\${l}</div>
-      <div style="color:\${c};font-size:14px;font-weight:bold">\${v}</div>
-    </div>\`).join('');
+  ].map(([l, v, col]) => `
+    <div style="background:#0a0a1e;border:1px solid #2a1a4a;border-radius:5px;padding:8px;font-size:14px">
+      <div style="color:#9585c5;margin-bottom:3px">${l}</div>
+      <div style="color:${col};font-size:15px;font-weight:bold">${v}</div>
+    </div>`).join('');
 }
- 
+
 /* ──────────────────────────────────────────────────────────
    5. VIDA DEPORTIVA
    ────────────────────────────────────────────────────────── */
 function contentSport() {
-  return \`
+  return `
   <h2>🏋️ Barra de Dominadas — Perfil Deportivo</h2>
-  <p style="font-size:11px;color:#8a7ab0;margin-bottom:12px">
+  <p style="font-size:13px;color:#8a7ab0;margin-bottom:12px">
     El deporte como disciplina paralela al estudio. La constancia es una variable actuarial de
     largo plazo: reduce el riesgo de burnout (qₓ) y aumenta la esperanza de vida laboral.
   </p>
@@ -374,33 +409,33 @@ function contentSport() {
     <div class="sport-stat"><span>Cocina saludable variada</span><span class="sport-val" style="color:#c9a0ff">Alta prioridad</span></div>
   </div>
  
-  <p style="font-size:11px;color:#8a7ab0;margin:10px 0 6px">Indicadores actuariales de salud:</p>
-  \${[
+  <p style="font-size:13px;color:#8a7ab0;margin:10px 0 6px">Indicadores actuariales de salud:</p>
+  ${[
     ['Consistencia deportiva', 92, '#5cdc8c', 'linear-gradient(90deg,#2a8a4a,#5cdc8c)'],
     ['Nivel de competición',   70, '#6ab8ff', 'linear-gradient(90deg,#2a4a8a,#6ab8ff)'],
     ['Fuerza relativa',        80, '#af8fff', 'linear-gradient(90deg,#5c3cbf,#af8fff)'],
     ['Nutrición optimizada',   88, '#ffb830', 'linear-gradient(90deg,#8a5a10,#ffb830)'],
-  ].map(([l, v, c, bg]) => \`
+  ].map(([l, v, c, bg]) => `
   <div class="bar-row">
-    <span class="bar-label" style="width:160px">\${l}</span>
-    <div class="bar-bg"><div class="bar-fill" style="width:\${v}%;background:\${bg}"></div></div>
-    <span style="color:\${c};font-size:10px;width:34px;text-align:right">\${v}%</span>
-  </div>\`).join('')}
+    <span class="bar-label" style="width:160px">${l}</span>
+    <div class="bar-bg"><div class="bar-fill" style="width:${v}%;background:${bg}"></div></div>
+    <span style="color:${c};font-size:12px;width:34px;text-align:right">${v}%</span>
+  </div>`).join('')}
  
   <div class="nota-info">
     📊 <strong>Insight actuarial:</strong> Un perfil con hábitos deportivos consistentes presenta
     una tasa de abandono laboral (qₓ) estadísticamente inferior a la media. La disciplina
     deportiva correlaciona positivamente con la gestión del estrés y la productividad a largo plazo.
-  </div>\`;
+  </div>`;
 }
  
 /* ──────────────────────────────────────────────────────────
    6. CALCULADORA DE PRIMA PURA
    ────────────────────────────────────────────────────────── */
 function contentPrima() {
-  return \`
+  return `
   <h2>📐 Calculadora de Prima Pura</h2>
-  <p style="font-size:11px;color:#8a7ab0;margin-bottom:12px">
+  <p style="font-size:13px;color:#8a7ab0;margin-bottom:12px">
     La prima pura E[X] = Σ (pᵢ · vᵢ · wᵢ) donde pᵢ son las puntuaciones del perfil,
     vᵢ el valor de cada competencia y wᵢ el peso relativo según el puesto buscado.
     Ajusta los parámetros para calcular el valor esperado de contratación.
@@ -428,7 +463,7 @@ function contentPrima() {
   <div class="nota-info" style="margin-top:12px">
     ⚖️ <strong>Pesos del modelo:</strong> Formación actuarial (22%) · Nota académica (20%) ·
     Habilidades técnicas (18%) · Experiencia bancaria (15%) · Disciplina/soft skills (15%) · Inglés (10%).
-  </div>\`;
+  </div>`;
 }
  
 function bindPrima() {
@@ -469,26 +504,28 @@ function bindPrima() {
    7. CV COMPLETO
    ────────────────────────────────────────────────────────── */
 function contentCV() {
-  return \`
+  return `
   <h2>📄 Luiz Alberto Luzuriaga Izquierdo</h2>
   <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap">
     <div>
-      <p style="font-size:12px;color:#af8fff;margin-bottom:2px">Estudiante de Máster en Ciencias Actuariales y Financieras</p>
-      <p style="font-size:10px;color:#6a5a9a">📍 Madrid, España · 📧 luzuriagaluiz@gmail.com · 📱 628 102 733</p>
+      <p style="font-size:14px;color:#af8fff;margin-bottom:2px">Estudiante de Máster en Ciencias Actuariales y Financieras</p>
+      <p style="font-size:12px;color:#9585c5">📍 Madrid, España · 📧 luzuriagaluiz@gmail.com · 📱 628 102 733</p>
     </div>
   </div>
  
   <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
     <a href="https://www.linkedin.com/in/luiz-luzuriaga-izquierdo" target="_blank" rel="noopener"
-       style="color:#6ab8ff;font-size:11px;text-decoration:none;border:1px solid #2a4a6a;padding:5px 12px;border-radius:4px">LinkedIn ↗</a>
+       style="color:#6ab8ff;font-size:13px;text-decoration:none;border:1px solid #2a4a6a;padding:5px 12px;border-radius:4px">LinkedIn ↗</a>
     <a href="https://github.com/LuizLuzuriaga/Actuariales" target="_blank" rel="noopener"
-       style="color:#af8fff;font-size:11px;text-decoration:none;border:1px solid #3a2a6a;padding:5px 12px;border-radius:4px">GitHub ↗</a>
+       style="color:#af8fff;font-size:13px;text-decoration:none;border:1px solid #3a2a6a;padding:5px 12px;border-radius:4px">GitHub ↗</a>
+    <a href="https://luizluzuriaga.github.io/Gedankenpalast/" target="_blank" rel="noopener"
+       style="color:#ffb830;font-size:13px;text-decoration:none;border:1px solid #6a4a1a;padding:5px 12px;border-radius:4px">Atlas Gedankenpalast ↗</a>
     <a href="mailto:luzuriagaluiz@gmail.com"
-       style="color:#5cdc8c;font-size:11px;text-decoration:none;border:1px solid #2a4a2a;padding:5px 12px;border-radius:4px">Email ↗</a>
+       style="color:#5cdc8c;font-size:13px;text-decoration:none;border:1px solid #2a4a2a;padding:5px 12px;border-radius:4px">Email ↗</a>
   </div>
  
-  <p style="font-size:11px;color:#8a7ab0;margin-bottom:8px">Habilidades técnicas:</p>
-  \${[
+  <p style="font-size:13px;color:#8a7ab0;margin-bottom:8px">Habilidades técnicas:</p>
+  ${[
     ['Análisis de datos / Estadística', 85],
     ['Excel Avanzado / Stata',          82],
     ['Python (Pandas, NumPy)',          70],
@@ -497,30 +534,54 @@ function contentCV() {
     ['SQL (básico)',                    55],
     ['LaTeX',                           65],
     ['Power BI',                        68],
-  ].map(([l, v]) => \`
+  ].map(([l, v]) => `
   <div class="bar-row">
-    <span class="bar-label" style="width:185px">\${l}</span>
-    <div class="bar-bg"><div class="bar-fill" style="width:\${v}%"></div></div>
-    <span style="color:#af8fff;font-size:10px;width:32px;text-align:right">\${v}%</span>
-  </div>\`).join('')}
+    <span class="bar-label" style="width:185px">${l}</span>
+    <div class="bar-bg"><div class="bar-fill" style="width:${v}%"></div></div>
+    <span style="color:#af8fff;font-size:12px;width:32px;text-align:right">${v}%</span>
+  </div>`).join('')}
  
-  <p style="font-size:11px;color:#8a7ab0;margin:14px 0 8px">Formación y experiencia:</p>
-  \${[
+  <p style="font-size:13px;color:#8a7ab0;margin:14px 0 8px">Formación y experiencia:</p>
+  ${[
     ['🎓', 'Máster Ciencias Actuariales y Financieras', 'UAH · Sept 2025 – actualidad', 'Modelos de solvencia · Estadística avanzada · Gestión de riesgos', '#af8fff'],
     ['🎓', 'Grado en Economía',                          'UAH · Sept 2021 – Jun 2025',  'Nota media: 8.6/10 · Econometría · Análisis macroeconómico', '#9c6cff'],
     ['🏦', 'Gestor de Operaciones Bancarias',             'EVO Banco (Covisian) · Jun 2023 – Sept 2024', 'AML · Salesforce · Excel KPIs · Análisis de riesgo', '#6ab8ff'],
     ['🍽', 'Team Leader / Jefe de Salón',                 'Hostelería · Jun 2017 – Sept 2021', 'Liderazgo hasta 5 personas · Gestión inventarios · Alta presión', '#5cdc8c'],
-  ].map(([icon, title, when, desc, c]) => \`
+  ].map(([icon, title, when, desc, c]) => `
   <div style="display:flex;gap:12px;padding:9px 0;border-bottom:1px solid #1a1a3a">
-    <div style="font-size:20px;line-height:1">\${icon}</div>
+    <div style="font-size:20px;line-height:1">${icon}</div>
     <div>
-      <div style="font-size:12px;color:\${c};margin-bottom:2px">\${title}</div>
-      <div style="font-size:10px;color:#6a5a9a;margin-bottom:3px">\${when}</div>
-      <div style="font-size:10px;color:#a090c0;line-height:1.5">\${desc}</div>
+      <div style="font-size:14px;color:${c};margin-bottom:2px">${title}</div>
+      <div style="font-size:12px;color:#9585c5;margin-bottom:3px">${when}</div>
+      <div style="font-size:12px;color:#a090c0;line-height:1.5">${desc}</div>
     </div>
-  </div>\`).join('')}
+  </div>`).join('')}
  
-  <p style="font-size:11px;color:#8a7ab0;margin:14px 0 8px">Idiomas:</p>
-  <div class="bar-row"><span class="bar-label">Español (nativo)</span><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div><span style="color:#af8fff;font-size:10px;width:32px;text-align:right">100%</span></div>
-  <div class="bar-row"><span class="bar-label">Inglés (B2)</span><div class="bar-bg"><div class="bar-fill" style="width:72%"></div></div><span style="color:#af8fff;font-size:10px;width:32px;text-align:right">72%</span></div>\`;
+  <p style="font-size:13px;color:#8a7ab0;margin:14px 0 8px">Idiomas:</p>
+  <div class="bar-row"><span class="bar-label">Español (nativo)</span><div class="bar-bg"><div class="bar-fill" style="width:100%"></div></div><span style="color:#af8fff;font-size:12px;width:32px;text-align:right">100%</span></div>
+  <div class="bar-row"><span class="bar-label">Inglés (B2)</span><div class="bar-bg"><div class="bar-fill" style="width:72%"></div></div><span style="color:#af8fff;font-size:12px;width:32px;text-align:right">72%</span></div>`;
 }
+
+/* ============================================================
+   EVENTOS DEL MODAL Y DEL MAPA DE SECCIONES
+   ============================================================ */
+document.getElementById('modal-close').addEventListener('click', closeModal);
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal') closeModal();
+});
+
+/* El foco no se escapa del cuadro mientras está abierto */
+document.getElementById('modal').addEventListener('keydown', e => {
+  if (e.key !== 'Tab') return;
+  const f = [...document.getElementById('modal-box')
+    .querySelectorAll('button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])')]
+    .filter(x => !x.disabled);
+  if (!f.length) return;
+  const first = f[0], last = f[f.length - 1];
+  if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+});
+
+document.querySelectorAll('.mm-zone').forEach(b =>
+  b.addEventListener('click', () => { if (!modalOpen) openModal(b.dataset.zone); }));

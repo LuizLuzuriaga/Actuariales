@@ -2,73 +2,128 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Luiz Luzuriaga — Portfolio Actuarial RPG</title>
-  <meta name="description" content="Portfolio interactivo de Luiz Alberto Luzuriaga Izquierdo, estudiante de Máster en Ciencias Actuariales y Financieras." />
+  <meta name="description" content="Portfolio interactivo de Luiz Alberto Luzuriaga Izquierdo, estudiante de Máster en Ciencias Actuariales y Financieras. Explora una habitación y descubre su perfil con minijuegos actuariales." />
+  <meta name="author" content="Luiz Alberto Luzuriaga Izquierdo" />
+  <meta name="theme-color" content="#0a0818" />
+  <link rel="canonical" href="https://luizluzuriaga.github.io/Actuariales/" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🎲</text></svg>" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:locale" content="es_ES" />
+  <meta property="og:site_name" content="Luiz Luzuriaga" />
+  <meta property="og:title" content="Luiz Luzuriaga — Portfolio Actuarial RPG" />
+  <meta property="og:description" content="Explora mi habitación y descubre mi perfil actuarial con minijuegos: tabla de mortalidad, cadena de Markov, Monte Carlo y prima pura." />
+  <meta property="og:url" content="https://luizluzuriaga.github.io/Actuariales/" />
+  <meta property="og:image" content="https://luizluzuriaga.github.io/Actuariales/img/og-card.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Habitación en pixel art con el título «Luiz Luzuriaga — Portfolio Actuarial RPG»" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Luiz Luzuriaga — Portfolio Actuarial RPG" />
+  <meta name="twitter:description" content="Explora mi habitación y descubre mi perfil actuarial con minijuegos." />
+  <meta name="twitter:image" content="https://luizluzuriaga.github.io/Actuariales/img/og-card.png" />
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "name": "Luiz Alberto Luzuriaga Izquierdo",
+    "jobTitle": "Estudiante de Máster en Ciencias Actuariales y Financieras",
+    "url": "https://luizluzuriaga.github.io/Actuariales/",
+    "alumniOf": { "@type": "CollegeOrUniversity", "name": "Universidad de Alcalá" },
+    "address": { "@type": "PostalAddress", "addressLocality": "Madrid", "addressCountry": "ES" },
+    "sameAs": [
+      "https://www.linkedin.com/in/luiz-luzuriaga-izquierdo",
+      "https://github.com/LuizLuzuriaga"
+    ]
+  }
+  </script>
+
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <noscript>
+    <p style="padding:24px;font-family:monospace;color:#e2d9ff">
+      Este portfolio necesita JavaScript. Mientras tanto: Luiz Luzuriaga, estudiante de Máster en Ciencias Actuariales
+      y Financieras (UAH). <a href="https://www.linkedin.com/in/luiz-luzuriaga-izquierdo" style="color:#6ab8ff">LinkedIn</a> ·
+      <a href="mailto:luzuriagaluiz@gmail.com" style="color:#6ab8ff">Email</a>
+    </p>
+  </noscript>
+
   <div id="intro-screen">
     <div id="intro-box">
       <div id="intro-pixel-art">
-        <canvas id="intro-canvas" width="80" height="80"></canvas>
+        <canvas id="intro-canvas" width="80" height="80" aria-hidden="true"></canvas>
       </div>
       <h1>Luiz Luzuriaga</h1>
       <p class="intro-tagline">Estudiante · Máster Ciencias Actuariales y Financieras</p>
       <p class="intro-sub">Un portfolio distinto. Explora mi habitación, interactúa con cada objeto y descubre mi perfil a través de minijuegos actuariales.</p>
       <div class="intro-links">
         <a href="https://www.linkedin.com/in/luiz-luzuriaga-izquierdo" target="_blank" rel="noopener">LinkedIn ↗</a>
+        <a href="https://github.com/LuizLuzuriaga" target="_blank" rel="noopener">GitHub ↗</a>
         <a href="mailto:luzuriagaluiz@gmail.com">Email ↗</a>
       </div>
-      <button id="start-btn">▶ Entrar a la habitación</button>
-      <p class="intro-controls">Muévete con ↑↓←→ · Interactúa con [E] · O haz clic en los objetos</p>
+      <button id="start-btn" type="button">▶ Entrar a la habitación</button>
+      <p class="intro-go-title">¿Prefieres ir directo? Abre una sección:</p>
+      <div class="intro-go" role="group" aria-label="Ir directamente a una sección">
+        <button type="button" data-go="window">📄 CV</button>
+        <button type="button" data-go="computer">💼 Proyectos</button>
+        <button type="button" data-go="desk">📊 Mortalidad</button>
+        <button type="button" data-go="board">🔗 Markov</button>
+        <button type="button" data-go="dice">🎲 Monte Carlo</button>
+        <button type="button" data-go="kitchen">📐 Prima pura</button>
+        <button type="button" data-go="bar">🏋️ Deporte</button>
+      </div>
+      <p class="intro-controls">Muévete con ↑↓←→ o WASD · Interactúa con [E] · O haz clic en los objetos</p>
     </div>
   </div>
- 
+
   <div id="game-screen" style="display:none">
     <div id="game-wrap">
-      <canvas id="canvas" width="680" height="480"></canvas>
- 
+      <canvas id="canvas" width="680" height="480" tabindex="0" role="application"
+              aria-label="Habitación interactiva. Muévete con las flechas o WASD y pulsa E junto a un objeto. Las mismas secciones están en el mapa de botones."></canvas>
+
       <div id="hud">
         <div id="name-tag">🎮 Luiz Luzuriaga — Actuario en Formación</div>
-        <div id="badges"></div>
-      </div>
- 
-      <div id="hint">← → ↑ ↓ para moverse · [E] para interactuar · Haz clic en los objetos</div>
- 
-      <div id="mobile-controls">
-        <div class="dpad">
-          <button id="btn-up" class="dpad-btn">▲</button>
-          <button id="btn-left" class="dpad-btn">◀</button>
-          <button id="btn-right" class="dpad-btn">▶</button>
-          <button id="btn-down" class="dpad-btn">▼</button>
-        </div>
-        <button id="btn-e" class="action-btn">E</button>
+        <div id="badges" aria-label="Secciones visitadas"></div>
       </div>
 
-      <div id="minimap">
+      <div id="hint" role="status">← → ↑ ↓ para moverse · [E] para interactuar · Haz clic en los objetos</div>
+
+      <div id="mobile-controls">
+        <div class="dpad">
+          <button type="button" id="btn-up" class="dpad-btn" aria-label="Arriba">▲</button>
+          <button type="button" id="btn-left" class="dpad-btn" aria-label="Izquierda">◀</button>
+          <button type="button" id="btn-right" class="dpad-btn" aria-label="Derecha">▶</button>
+          <button type="button" id="btn-down" class="dpad-btn" aria-label="Abajo">▼</button>
+        </div>
+        <button type="button" id="btn-e" class="action-btn" aria-label="Interactuar">E</button>
+      </div>
+
+      <nav id="minimap" aria-label="Secciones">
         <div class="mm-title">MAPA</div>
         <div class="mm-zones">
-          <div class="mm-zone" data-zone="desk" title="Mesa — Tabla de Mortalidad">📚</div>
-          <div class="mm-zone" data-zone="board" title="Pizarra — Cadena de Markov">📊</div>
-          <div class="mm-zone" data-zone="computer" title="Ordenador — Portfolio">💻</div>
-          <div class="mm-zone" data-zone="dice" title="Escritorio — Monte Carlo">🎲</div>
-          <div class="mm-zone" data-zone="bar" title="Barra — Deporte">🏋️</div>
-          <div class="mm-zone" data-zone="kitchen" title="Cocina — Prima Pura">🍳</div>
-          <div class="mm-zone" data-zone="window" title="Ventana — CV">📄</div>
+          <button type="button" class="mm-zone" data-zone="desk" title="Mesa — Tabla de Mortalidad" aria-label="Mesa: tabla de mortalidad">📚</button>
+          <button type="button" class="mm-zone" data-zone="board" title="Pizarra — Cadena de Markov" aria-label="Pizarra: cadena de Markov">📊</button>
+          <button type="button" class="mm-zone" data-zone="computer" title="Ordenador — Portfolio" aria-label="Ordenador: proyectos">💻</button>
+          <button type="button" class="mm-zone" data-zone="dice" title="Escritorio — Monte Carlo" aria-label="Escritorio: simulación Monte Carlo">🎲</button>
+          <button type="button" class="mm-zone" data-zone="bar" title="Barra — Deporte" aria-label="Barra: deporte">🏋️</button>
+          <button type="button" class="mm-zone" data-zone="kitchen" title="Cocina — Prima Pura" aria-label="Cocina: prima pura">🍳</button>
+          <button type="button" class="mm-zone" data-zone="window" title="Ventana — CV" aria-label="Ventana: currículum">📄</button>
         </div>
-      </div>
+      </nav>
     </div>
- 
+
     <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
       <div id="modal-box">
-        <button id="modal-close" aria-label="Cerrar">✕ Cerrar [Esc]</button>
+        <button type="button" id="modal-close" aria-label="Cerrar">✕ Cerrar [Esc]</button>
         <div id="modal-content"></div>
       </div>
     </div>
   </div>
- 
+
   <script src="game.js"></script>
   <script src="modals.js"></script>
   <script src="main.js"></script>

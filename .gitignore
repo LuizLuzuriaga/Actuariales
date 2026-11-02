@@ -1,8 +1,10 @@
-*
-!*/
-!.gitignore
-!*.qmd
-!*.ipynb
-!docs/**
+# Quarto / Jupyter
 /.quarto/
 **/*.quarto_ipynb
+.ipynb_checkpoints/
+_executed/
+
+# Sistema y editores
+.DS_Store
+Thumbs.db
+.vscode/

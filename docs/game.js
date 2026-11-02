@@ -9,8 +9,17 @@ const W = 680, H = 480;
  
 /* ---------- Teclado ---------- */
 const keys = {};
-window.addEventListener('keydown', e => { keys[e.key] = true; });
-window.addEventListener('keyup',   e => { keys[e.key] = false; });
+const FLECHAS = ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'];
+window.addEventListener('keydown', e => {
+  if (FLECHAS.includes(e.key) && !modalOpen && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) e.preventDefault();
+  keys[e.key] = true;
+});
+window.addEventListener('keyup', e => { keys[e.key] = false; });
+window.addEventListener('blur',  () => { for (const k in keys) keys[k] = false; });
+
+const HINT_DEFAULT = matchMedia('(pointer: coarse)').matches
+  ? 'Usa la cruz para moverte · pulsa E junto a un objeto o tócalo'
+  : '← → ↑ ↓ para moverse · [E] para interactuar · Haz clic en los objetos';
  
 /* ---------- Jugador ---------- */
 const player = {
@@ -192,7 +201,7 @@ function drawComputer() {
   ctx.fillText('$ PORTFOLIO.exe', 492, 145);
   ctx.fillText('> No-Vida.json', 492, 157);
   ctx.fillStyle = '#00cc66';
-  ctx.fillText('> Proyectos: 4', 492, 169);
+  ctx.fillText('> Proyectos: 5', 492, 169);
   ctx.fillStyle = '#00ff88';
   ctx.fillText('> OK ■', 492, 181);
   /* Soporte y base */
@@ -338,50 +347,54 @@ function drawPlant() {
  
 /* =================== JUGADOR (pixel art) =================== */
  
+function drawSprite(c, px, py, dir) {
+  /* Zapatos */
+  c.fillStyle = '#1a1a2a';
+  c.fillRect(px + 1,  py + 28 - 5, 8, 5);
+  c.fillRect(px + 11, py + 28 - 5, 8, 5);
+ 
+  /* Pantalón */
+  c.fillStyle = '#2a3a5a';
+  c.fillRect(px + 1,  py + 16, 8, 10);
+  c.fillRect(px + 11, py + 16, 8, 10);
+ 
+  /* Camisa */
+  c.fillStyle = '#3a7abf';
+  c.fillRect(px + 2, py + 8, 20 - 4, 10);
+ 
+  /* Cuello */
+  c.fillStyle = '#c8926a';
+  c.fillRect(px + 7, py + 6, 6, 4);
+ 
+  /* Cabeza */
+  c.fillStyle = '#c8926a';
+  c.fillRect(px + 4, py, 20 - 8, 9);
+ 
+  /* Pelo */
+  c.fillStyle = '#2a1a0a';
+  c.fillRect(px + 4, py - 3, 20 - 8, 5);
+  c.fillRect(px + 2, py, 4, 4);
+ 
+  /* Ojos (según dirección) */
+  c.fillStyle = '#1a1a2a';
+  if (dir !== 0) {
+    c.fillRect(px + 6,  py + 2, 2, 2);
+    c.fillRect(px + 12, py + 2, 2, 2);
+  }
+}
+
 function drawPlayer() {
   const px = Math.round(player.x - player.w / 2);
   const py = Math.round(player.y - player.h);
- 
+
   /* Sombra */
   ctx.fillStyle = 'rgba(0,0,0,0.3)';
   ctx.beginPath();
   ctx.ellipse(player.x, player.y + 1, 10, 4, 0, 0, Math.PI*2);
   ctx.fill();
- 
-  /* Zapatos */
-  ctx.fillStyle = '#1a1a2a';
-  ctx.fillRect(px + 1,  py + player.h - 5, 8, 5);
-  ctx.fillRect(px + 11, py + player.h - 5, 8, 5);
- 
-  /* Pantalón */
-  ctx.fillStyle = '#2a3a5a';
-  ctx.fillRect(px + 1,  py + 16, 8, 10);
-  ctx.fillRect(px + 11, py + 16, 8, 10);
- 
-  /* Camisa */
-  ctx.fillStyle = '#3a7abf';
-  ctx.fillRect(px + 2, py + 8, player.w - 4, 10);
- 
-  /* Cuello */
-  ctx.fillStyle = '#c8926a';
-  ctx.fillRect(px + 7, py + 6, 6, 4);
- 
-  /* Cabeza */
-  ctx.fillStyle = '#c8926a';
-  ctx.fillRect(px + 4, py, player.w - 8, 9);
- 
-  /* Pelo */
-  ctx.fillStyle = '#2a1a0a';
-  ctx.fillRect(px + 4, py - 3, player.w - 8, 5);
-  ctx.fillRect(px + 2, py, 4, 4);
- 
-  /* Ojos (según dirección) */
-  ctx.fillStyle = '#1a1a2a';
-  if (player.dir !== 0) {
-    ctx.fillRect(px + 6,  py + 2, 2, 2);
-    ctx.fillRect(px + 12, py + 2, 2, 2);
-  }
- 
+
+  drawSprite(ctx, px, py, player.dir);
+
   /* Indicador de interacción */
   if (nearHotspot) {
     ctx.fillStyle = '#af8fff';
@@ -432,7 +445,7 @@ function checkNear() {
     hintEl.textContent = nearHotspot.hint;
     hintEl.style.borderColor = nearHotspot.color;
   } else {
-    hintEl.textContent = '← → ↑ ↓ para moverse · [E] para interactuar · Haz clic en los objetos';
+    hintEl.textContent = HINT_DEFAULT;
     hintEl.style.borderColor = '#7c5cbf';
   }
 }
@@ -446,13 +459,14 @@ const btnE = document.getElementById('btn-e');
 
 function bindTouch(btn, key) {
   if (!btn) return;
-  const press = (e) => { e.preventDefault(); keys[key] = true; };
-  const release = (e) => { e.preventDefault(); keys[key] = false; };
-  btn.addEventListener('touchstart', press, {passive: false});
-  btn.addEventListener('touchend', release, {passive: false});
-  btn.addEventListener('mousedown', press);
-  btn.addEventListener('mouseup', release);
-  btn.addEventListener('mouseleave', release);
+  btn.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    keys[key] = true;
+    if (btn.setPointerCapture) btn.setPointerCapture(e.pointerId);
+  });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(ev =>
+    btn.addEventListener(ev, () => { keys[key] = false; }));
+  btn.addEventListener('contextmenu', e => e.preventDefault());
 }
 
 bindTouch(btnUp, 'ArrowUp');
@@ -467,30 +481,39 @@ if (btnE) {
       openModal(nearHotspot.id);
     }
   };
-  btnE.addEventListener('touchstart', interact, {passive: false});
-  btnE.addEventListener('mousedown', interact);
+  btnE.addEventListener('pointerdown', interact);
 }
  
 /* =================== BUCLE PRINCIPAL =================== */
  
 let lastTime = 0;
- 
+let looping = false;
+
+function startLoop() {
+  if (looping) return;
+  looping = true;
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
 function gameLoop(ts) {
-  if (typeof modalOpen !== 'undefined' && modalOpen) {
-    requestAnimationFrame(gameLoop);
-    return;
-  }
- 
-  const dt = Math.min(ts - lastTime, 50);
+  if (modalOpen) { looping = false; return; }   // se reanuda con startLoop() al cerrar
+
+  const dt = Math.max(0, Math.min(ts - lastTime, 50));
   lastTime = ts;
- 
+  const paso = player.speed * dt / 16.67;       // misma velocidad a 60 Hz que a 144 Hz
+
   /* Movimiento */
-  let moving = false;
-  if (keys['ArrowLeft']  || keys['a'] || keys['A']) { player.x -= player.speed; player.dir = 1; moving = true; }
-  if (keys['ArrowRight'] || keys['d'] || keys['D']) { player.x += player.speed; player.dir = 3; moving = true; }
-  if (keys['ArrowUp']    || keys['w'] || keys['W']) { player.y -= player.speed; player.dir = 0; moving = true; }
-  if (keys['ArrowDown']  || keys['s'] || keys['S']) { player.y += player.speed; player.dir = 2; moving = true; }
- 
+  let dx = 0, dy = 0;
+  if (keys['ArrowLeft']  || keys['a'] || keys['A']) { dx -= 1; player.dir = 1; }
+  if (keys['ArrowRight'] || keys['d'] || keys['D']) { dx += 1; player.dir = 3; }
+  if (keys['ArrowUp']    || keys['w'] || keys['W']) { dy -= 1; player.dir = 0; }
+  if (keys['ArrowDown']  || keys['s'] || keys['S']) { dy += 1; player.dir = 2; }
+  const moving = dx !== 0 || dy !== 0;
+  const norm = dx && dy ? Math.SQRT1_2 : 1;      // sin ir más rápido en diagonal
+  player.x += dx * paso * norm;
+  player.y += dy * paso * norm;
+
   /* Límites del mapa */
   player.x = Math.max(player.w / 2 + 4,   Math.min(W - player.w / 2 - 4, player.x));
   player.y = Math.max(player.h + 128,      Math.min(H - 62, player.y));
@@ -523,7 +546,7 @@ function gameLoop(ts) {
 /* Evento teclado para abrir modales */
 window.addEventListener('keydown', e => {
   if (e.key === 'e' || e.key === 'E') {
-    if (!modalOpen && nearHotspot && typeof openModal === 'function') {
+    if (!modalOpen && nearHotspot && typeof openModal === 'function' && !/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) {
       openModal(nearHotspot.id);
     }
   }
@@ -534,16 +557,19 @@ window.addEventListener('keydown', e => {
   }
 });
  
-/* Clic directo sobre el canvas → abrir modal del objeto clickeado */
+/* Posición del puntero en coordenadas del canvas (válida con cualquier escala) */
+function canvasPoint(e) {
+  const r = canvas.getBoundingClientRect();
+  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+}
+const hotspotEn = (p) => hotspots.find(h => p.x > h.x && p.x < h.x + h.w && p.y > h.y && p.y < h.y + h.h);
+
+/* Clic directo sobre el canvas → abre el panel del objeto */
 canvas.addEventListener('click', e => {
-  if (typeof modalOpen !== 'undefined' && modalOpen) return;
-  const rect  = canvas.getBoundingClientRect();
-  const scaleX = W / rect.width;
-  const mx = (e.clientX - rect.left) * scaleX;
-  const my = (e.clientY - rect.top)  * scaleX;
-  hotspots.forEach(h => {
-    if (mx > h.x && mx < h.x + h.w && my > h.y && my < h.y + h.h) {
-      if (typeof openModal === 'function') openModal(h.id);
-    }
-  });
+  if (modalOpen) return;
+  const h = hotspotEn(canvasPoint(e));
+  if (h) openModal(h.id);
+});
+canvas.addEventListener('mousemove', e => {
+  canvas.style.cursor = hotspotEn(canvasPoint(e)) ? 'pointer' : 'default';
 });
