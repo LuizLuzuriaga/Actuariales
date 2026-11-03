@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
+  <title>qx 3D — prueba del dormitorio</title>
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#04060b" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <canvas id="gl" aria-label="Dormitorio en 3D en primera persona"></canvas>
+  <div class="fx vig"></div>
+  <div class="fx grain"></div>
+
+  <div id="start">
+    <div class="inner">
+      <h1>q<small>x</small> <span>3D</span></h1>
+      <p class="sub">Prueba del dormitorio en primera persona</p>
+      <p class="blurb">Mismo despertar, otro motor. Mírate al espejo: lo que ves eres tú, con tu camisa, tu mochila y tu barba de semanas.</p>
+      <button type="button" class="btn primary" id="go">▶ Despertar</button>
+      <ul class="how">
+        <li><b>Ordenador:</b> clic para capturar el ratón · <kbd>WASD</kbd> moverte · <kbd>E</kbd> o clic en lo marcado · <kbd>Esc</kbd> soltar · <kbd>Shift</kbd> correr</li>
+        <li><b>Móvil:</b> arrastra con el pulgar izquierdo para andar y con el derecho para mirar · toca un objeto para ir hasta él</li>
+      </ul>
+      <p class="fine">Prueba técnica de un solo escenario. Nada se descarga: el modelado es procedural. Con <code>?debug</code> en la URL ves los fotogramas por segundo.</p>
+    </div>
+  </div>
+
+  <div id="hud" hidden>
+    <ul id="tasks" aria-label="Qué hacer"></ul>
+    <div id="clock">05:45</div>
+    <button type="button" class="chip" id="snd" aria-label="Activar sonido" aria-pressed="false">🔇</button>
+    <div id="cross" aria-hidden="true"></div>
+    <div id="prompt" hidden></div>
+    <div id="msg" hidden></div>
+    <div id="stickL" class="stick" hidden><i></i></div>
+    <div id="fps" hidden></div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Reflector.js"></script>
+  <script src="../beta/audio.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
