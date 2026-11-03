@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>qx — Un día en la vida de un actuario</title>
+  <meta name="description" content="Aventura interactiva en primera persona: un día en la vida de un actuario en formación, con datos reales de mortalidad del INE, chain-ladder y un GLM ajustado a mano." />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#04060b" />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='7' fill='%2304060b'/><text x='16' y='23' font-size='20' font-family='Georgia' font-style='italic' font-weight='700' text-anchor='middle' fill='%23ffb454'>q</text></svg>" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <noscript><p style="padding:24px">Esta aventura necesita JavaScript.</p></noscript>
+
+  <main id="title">
+    <div class="inner">
+      <h1>q<small>x</small></h1>
+      <p class="sub">Un día en la vida de un actuario</p>
+      <p class="tag">Todavía no certificado</p>
+      <p class="blurb">Tren hasta arriba, hojas de cálculo, café con gente que te cuenta su vida resuelta y, de vez en cuando, estadística de verdad.
+        Inspirado en hechos reales y exagerado con cariño. Los números son los del INE.</p>
+      <div class="row">
+        <button type="button" class="btn primary" id="go">▶ Empezar el día</button>
+        <button type="button" class="btn" id="ficha-title">📄 Saltar la historia</button>
+      </div>
+      <p class="fine">Versión de prueba: la mañana completa, hasta el café. Mira con el dedo o el ratón en los bordes, o con las flechas del teclado.
+        Sonido sintetizado, desactivado por defecto (botón 🔇).</p>
+    </div>
+  </main>
+
+  <div id="scene" class="hide">
+    <div id="stage"></div>
+    <div class="fx vig"></div>
+    <div class="fx grain"></div>
+    <div id="hud">
+      <span id="clock">06:00</span>
+      <span id="place"></span>
+      <span id="counter"></span>
+      <button type="button" class="chip" id="ficha-hud" aria-label="Abrir la ficha plana (saltar la historia)">📄 Ficha</button>
+      <button type="button" class="chip" id="snd" aria-label="Activar sonido" aria-pressed="false">🔇</button>
+    </div>
+    <button type="button" class="look" id="look-l" aria-label="Mirar a la izquierda">‹</button>
+    <button type="button" class="look" id="look-r" aria-label="Mirar a la derecha">›</button>
+    <div id="actions" aria-label="Qué puedes hacer aquí"></div>
+    <div id="dock" class="dock" aria-live="polite"></div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="audio.js"></script>
+  <script src="engine.js"></script>
+  <script src="art.js"></script>
+  <script src="minigames.js"></script>
+  <script src="story.js"></script>
+</body>
+</html>
