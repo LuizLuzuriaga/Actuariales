@@ -310,6 +310,42 @@
       lampGlow.material.opacity = 0.85 + Math.sin(t * 2.1) * 0.05;
       cL.rotation.y = Math.sin(t * 0.5) * 0.003; cR.rotation.y = -Math.sin(t * 0.45) * 0.003;
     });
+
+    /* ====================== Fusión de geometría estática (menos llamadas de dibujo) ====================== */
+    const BGU = THREE.BufferGeometryUtils;
+    function fuse(root, skip, onlyDirect) {
+      if (!BGU || !BGU.mergeBufferGeometries) return;
+      root.updateWorldMatrix(true, true);
+      const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), m4 = new THREE.Matrix4();
+      const buckets = new Map(), used = [];
+      const visit = (o) => {
+        if (!o.isMesh || o.type === 'Reflector' || o.renderOrder) return;
+        const m = o.material;
+        if (Array.isArray(m) || !m.isMeshStandardMaterial || m.transparent) return;
+        for (let p = o; p && p !== root; p = p.parent) if (skip.has(p)) return;
+        const key = m.uuid + (o.castShadow ? 'c' : 'n') + (o.receiveShadow ? 'r' : 'n');
+        const g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+        Object.keys(g.attributes).forEach((n) => { if (n !== 'position' && n !== 'normal' && n !== 'uv') g.deleteAttribute(n); });
+        if (!g.attributes.normal || !g.attributes.uv) return;
+        m4.multiplyMatrices(inv, o.matrixWorld); g.applyMatrix4(m4);
+        if (!buckets.has(key)) buckets.set(key, { m, cast: o.castShadow, recv: o.receiveShadow, list: [] });
+        buckets.get(key).list.push(g); used.push(o);
+      };
+      if (onlyDirect) root.children.slice().forEach(visit); else root.traverse(visit);
+      buckets.forEach((b) => {
+        if (b.list.length < 2) return;
+        const merged = new THREE.Mesh(BGU.mergeBufferGeometries(b.list, false), b.m); merged.castShadow = b.cast; merged.receiveShadow = b.recv; root.add(merged);
+        b.list.forEach((g) => g.dispose());
+      });
+      buckets.forEach((b) => { if (b.list.length < 2) b.list.forEach((g) => g.dispose()); });
+      used.forEach((o) => { const bucket = [...buckets.values()].find((b) => b.m === o.material && b.cast === o.castShadow && b.recv === o.receiveShadow); if (bucket && bucket.list.length >= 2 && o.parent) { o.parent.remove(o); o.geometry.dispose(); } });
+    }
+    const keep = new Set([R.ref.doorN, R.ref.shirt, R.ref.pants, R.ref.chairBags, R.ref.phone, cL, cR]);
+    R.stats = { antes: 0, despues: 0 };
+    scene.traverse((o) => { if (o.isMesh) R.stats.antes++; });
+    scene.children.filter((c) => c.isGroup).forEach((g) => fuse(g, keep, false));
+    fuse(scene, keep, true);
+    scene.traverse((o) => { if (o.isMesh) R.stats.despues++; });
     return R;
   };
 

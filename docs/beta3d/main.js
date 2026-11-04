@@ -19,6 +19,8 @@
   renderer.outputEncoding = THREE.sRGBEncoding;
   renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.25;
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false;                  // el mapa de sombras se redibuja un fotograma sí y otro no (casi todo es estático)
+  renderer.info.autoReset = false;                        // contamos todas las pasadas del fotograma: sombras, espejo y posproceso
 
   /* La cabeza solo existe para el espejo: la cámara principal (capa 0) no la ve; las cámaras virtuales del espejo sí. */
   const mainRender = renderer.render.bind(renderer);
@@ -210,9 +212,10 @@
   function picked(cx, cy) { return pickRay(new THREE.Vector2((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1)); }
   function tapAt(cx, cy) { const id = picked(cx, cy); if (id) interact(id); }
   let current = null; const promptEl = $('#prompt'), cross = $('#cross');
+  let rayTick = 0;
   function updatePrompt() {
     if (S.busy || !S.started) { promptEl.hidden = true; cross.classList.remove('on'); current = null; return; }
-    const id = pickRay(new THREE.Vector2(0, 0)); current = id && ACTS[id] && ACTS[id].enabled() ? id : null;
+    if (rayTick++ % 3 === 0) { const id = pickRay(new THREE.Vector2(0, 0)); current = id && ACTS[id] && ACTS[id].enabled() ? id : null; }   // el rayo no hace falta cada fotograma
     if (current) { promptEl.hidden = false; promptEl.textContent = (COARSE ? '' : 'E · ') + ACTS[current].label; cross.classList.add('on'); } else { promptEl.hidden = true; cross.classList.remove('on'); }
   }
 
@@ -224,6 +227,7 @@
   }
   window.addEventListener('resize', resize); resize();
 
+  let frameN = 0, lastCalls = 0, lastTris = 0;
   const clock = new THREE.Clock(); let alarmT = 0, frames = 0, tAdapt = 0, fpsT = 0, fpsN = 0, tier = 0;
   const fpsEl = $('#fps');
   function drawPhone(on, t) {
@@ -266,7 +270,9 @@
     R.tick.forEach((f) => f(dt, t));
 
     updatePrompt();
+    renderer.shadowMap.needsUpdate = (frameN++ % 2 === 0);
     if (!fx.render(t)) renderer.render(scene, camera);
+    lastCalls = renderer.info.render.calls; lastTris = renderer.info.render.triangles; renderer.info.reset();
 
     // calidad adaptable: primero resolución, luego bloom
     frames++; tAdapt += dt; fpsT += dt; fpsN++;
@@ -279,7 +285,7 @@
       }
       tAdapt = 0; frames = 0;
     }
-    if (DEBUG && fpsT > 0.5) { fpsEl.hidden = false; fpsEl.textContent = `${Math.round(fpsN / fpsT)} fps · ratio ${pr.toFixed(2)} · ${fx.on ? 'HDR+bloom' : 'directo'}${fx.bloom && !fx.bloom.enabled ? ' (sin bloom)' : ''}`; fpsT = 0; fpsN = 0; }
+    if (DEBUG && fpsT > 0.5) { fpsEl.hidden = false; fpsEl.textContent = `${Math.round(fpsN / fpsT)} fps · ${lastCalls} llamadas · ${Math.round(lastTris / 1000)}k tri · ratio ${pr.toFixed(2)} · ${fx.on ? 'HDR+bloom' : 'directo'}${fx.bloom && !fx.bloom.enabled ? ' (sin bloom)' : ''}`; fpsT = 0; fpsN = 0; }
   }
 
   /* ============================== Arranque ============================== */

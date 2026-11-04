@@ -232,5 +232,12 @@ window.QX = window.QX || {};
     g.computeVertexNormals(); return g;
   };
   Q.cable = (pts, r = 0.004) => new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(([x, y, z]) => new THREE.Vector3(x, y, z))), 40, r, 6, false);
-  Q.mat = (color, rough = 0.85, metal = 0, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: rough, metalness: metal }, extra));
+  /* Materiales idénticos se reutilizan: menos programas y más mallas fusionables */
+  const matCache = new Map();
+  Q.mat = (color, rough = 0.85, metal = 0, extra = {}) => {
+    if (Object.keys(extra).length) return new THREE.MeshStandardMaterial(Object.assign({ color, roughness: rough, metalness: metal }, extra));
+    const k = color + '|' + rough + '|' + metal;
+    if (!matCache.has(k)) matCache.set(k, new THREE.MeshStandardMaterial({ color, roughness: rough, metalness: metal }));
+    return matCache.get(k);
+  };
 })();
