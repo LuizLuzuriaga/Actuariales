@@ -46,7 +46,9 @@
 
   /* ============================== Mundo ============================== */
   const R = Q.buildRoom(scene, { pr, high: HIGH });
-  const A = Q.buildAvatar(scene);
+  const t0Av = performance.now();
+  const A = Q.buildAvatar(scene, { high: HIGH });
+  window.__avatarMs = Math.round(performance.now() - t0Av);
   scene.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) m.envMapIntensity = 0.28; }); });
   A.group.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m.isMeshStandardMaterial) m.envMapIntensity = 0.08; }); });
   const fx = Q.initFX(renderer, scene, camera, pr);
