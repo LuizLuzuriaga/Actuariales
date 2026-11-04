@@ -7,15 +7,15 @@
   Q.buildAvatar = (scene) => {
     const A = {};
     const avatar = new THREE.Group(); scene.add(avatar); A.group = avatar;
-    const put = (parent, geo, m, x = 0, y = 0, z = 0, o = {}) => { const me = new THREE.Mesh(geo, m); me.position.set(x, y, z); if (o.rx) me.rotation.x = o.rx; if (o.ry) me.rotation.y = o.ry; if (o.rz) me.rotation.z = o.rz; if (o.s) me.scale.set(...o.s); me.castShadow = o.cast !== false; parent.add(me); return me; };
+    const put = (parent, geo, m, x = 0, y = 0, z = 0, o = {}) => { const me = new THREE.Mesh(geo, m); me.position.set(x, y, z); if (o.rx) me.rotation.x = o.rx; if (o.ry) me.rotation.y = o.ry; if (o.rz) me.rotation.z = o.rz; if (o.s) me.scale.set(...o.s); me.castShadow = o.cast !== false; me.receiveShadow = true; parent.add(me); return me; };
     const grp = (parent, x = 0, y = 0, z = 0) => { const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g); return g; };
 
     /* ---- materiales ---- */
     const skinN = Q.pbr(256, 256, (g, hg, rg, w, h) => { const r = rng(2); g.fillStyle = '#c99a78'; g.fillRect(0, 0, w, h); hg.fillStyle = '#808080'; hg.fillRect(0, 0, w, h); for (let i = 0; i < 5000; i++) { hg.fillStyle = `rgba(${r() < 0.5 ? 0 : 255},${r() < 0.5 ? 0 : 255},${r() < 0.5 ? 0 : 255},${r() * 0.5})`; hg.fillRect(r() * w, r() * h, 1.5, 1.5); } }, { strength: 1.4, repeat: [3, 3] });
     const skin = new THREE.MeshStandardMaterial({ color: 0xcf9d7a, roughness: 0.6, normalMap: skinN.normalMap, normalScale: new THREE.Vector2(0.35, 0.35), emissive: 0x3a140a, emissiveIntensity: 0.07 });
-    const top = new THREE.MeshStandardMaterial({ color: 0x454b63, roughness: 0.85, normalMap: Q.tex.fabric([90, 96, 122], 3, 6).normalMap, normalScale: new THREE.Vector2(0.7, 0.7) });
-    top.normalMap.wrapS = top.normalMap.wrapT = THREE.RepeatWrapping; top.normalMap.repeat.set(10, 10);
-    const pants = new THREE.MeshStandardMaterial({ color: 0x2c3150, roughness: 0.9, normalMap: top.normalMap, normalScale: new THREE.Vector2(0.6, 0.6) });
+    const clothT = Q.tex.cloth([90, 96, 122], 3, 30), clothP = Q.tex.cloth([80, 84, 100], 11, 34);
+    const top = new THREE.MeshStandardMaterial({ color: 0x454b63, roughness: 0.85, normalMap: clothT.normalMap, roughnessMap: clothT.roughnessMap, normalScale: new THREE.Vector2(1.0, 1.0) });
+    const pants = new THREE.MeshStandardMaterial({ color: 0x2c3150, roughness: 0.9, normalMap: clothP.normalMap, roughnessMap: clothP.roughnessMap, normalScale: new THREE.Vector2(0.9, 0.9) });
     const shoeM = new THREE.MeshStandardMaterial({ color: 0x6a6f80, roughness: 0.95 });
     const sole = mat(0x15161a, 0.7);
     A.mats = { top, pants, shoeM, skin };
@@ -61,6 +61,8 @@
       put(wrist, new THREE.CylinderGeometry(0.03, 0.026, 0.04, 12), skin, 0, -0.005, 0);
       const hand = grp(wrist, 0, -0.03, 0);
       put(hand, rbox(0.082, 0.085, 0.03, 0.012), skin, 0, -0.05, 0);
+      put(hand, new THREE.SphereGeometry(0.02, 10, 8), skin, -0.04 * s, -0.045, -0.002, { s: [1, 1.3, 0.9] });                    // base del pulgar
+      [-0.03, -0.01, 0.01, 0.03].forEach((kx) => put(hand, new THREE.SphereGeometry(0.0105, 8, 6), skin, kx, -0.093, 0.004));     // nudillos
       const fingers = [];
       [-0.03, -0.01, 0.01, 0.03].forEach((x, i) => {
         const f1 = grp(hand, x, -0.093, 0), len = [0.04, 0.046, 0.044, 0.035][i];
@@ -92,13 +94,21 @@
       put(head, new THREE.SphereGeometry(0.0145, 12, 10), mat(0xf2f2f4, 0.2), 0.036 * s, 0.025, -0.1);                  // ojos
       put(head, new THREE.CircleGeometry(0.0072, 14), new THREE.MeshBasicMaterial({ color: 0x2c1a0e }), 0.036 * s, 0.025, -0.1148);
       put(head, new THREE.CircleGeometry(0.0034, 10), new THREE.MeshBasicMaterial({ color: 0x050505 }), 0.036 * s, 0.025, -0.1151);
+      put(head, new THREE.CircleGeometry(0.0013, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), 0.0375 * s, 0.0268, -0.1153);
+      put(head, new THREE.SphereGeometry(0.02, 10, 8), skin, 0.05 * s, -0.025, -0.085, { s: [1, 0.7, 0.7] });                       // pómulo
+      put(head, rbox(0.034, 0.004, 0.006, 0.0015), mat(0x2a1a12, 0.8), 0.036 * s, 0.043, -0.1, { rz: -0.1 * s });                  // pestañas
       put(head, rbox(0.04, 0.008, 0.01, 0.003), hairM, 0.038 * s, 0.05, -0.098, { rz: -0.12 * s });                      // cejas
       put(head, new THREE.SphereGeometry(0.0145, 10, 8), skin, 0.036 * s, 0.04, -0.097, { s: [1.15, 0.5, 0.5] });          // párpado
     });
     put(head, new THREE.SphereGeometry(0.019, 12, 10), skin, 0, -0.012, -0.113, { s: [0.9, 1.35, 1.1] });               // nariz
-    put(head, rbox(0.042, 0.007, 0.01, 0.003), mat(0x5a2a22, 0.6), 0, -0.07, -0.103);                                  // boca
+    put(head, rbox(0.04, 0.0045, 0.01, 0.0018), mat(0x4a2018, 0.55), 0, -0.071, -0.104);                                // boca
+    put(head, rbox(0.036, 0.007, 0.01, 0.003), mat(0x8a4a3e, 0.5), 0, -0.078, -0.103);                                  // labio inferior
+    put(head, new THREE.SphereGeometry(0.011, 8, 6), skin, 0, -0.052, -0.14 + 0.03, { s: [1.5, 1, 0.7] });                // surco
+    put(head, new THREE.SphereGeometry(0.012, 8, 6), skin, 0, -0.118, -0.04, { s: [1, 1, 1] });                           // nuez/cuello
     put(head, new THREE.SphereGeometry(0.105, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), hairM, 0, 0.012, 0.008, { s: [0.94, 1.18, 1.06], rx: 0.1 }); // pelo corto
     put(head, new THREE.SphereGeometry(0.06, 16, 12), hairM, 0, 0.1, -0.04, { s: [1.1, 0.55, 1.3] });                    // volumen superior
+    put(head, new THREE.SphereGeometry(0.05, 14, 10), hairM, 0.03, 0.095, -0.075, { s: [1.3, 0.5, 0.8], rz: -0.25 });      // flequillo peinado
+    [-1, 1].forEach((s) => put(head, new THREE.SphereGeometry(0.03, 10, 8), hairM, 0.09 * s, 0.015, 0.01, { s: [0.5, 1.5, 1.2] })); // patillas
     put(head, new THREE.SphereGeometry(0.098, 22, 14, Math.PI * 0.18, Math.PI * 0.64, Math.PI * 0.48, Math.PI * 0.34), beardM, 0, -0.01, -0.015, { s: [0.97, 1.18, 1.08], ry: Math.PI }); // barba de semanas
     put(head, rbox(0.055, 0.013, 0.012, 0.004), beardM, 0, -0.053, -0.108);                                                // bigote
     head.traverse((o) => { if (o.isMesh) o.layers.set(1); });
@@ -118,7 +128,6 @@
     const strap = new THREE.CatmullRomCurve3([new THREE.Vector3(0.11, 1.5, 0), new THREE.Vector3(0.06, 1.38, -0.125), new THREE.Vector3(-0.1, 1.15, -0.13), new THREE.Vector3(-0.22, 0.97, -0.07), new THREE.Vector3(-0.22, 0.98, 0.07), new THREE.Vector3(-0.1, 1.15, 0.13), new THREE.Vector3(0.06, 1.38, 0.125)], true);
     put(bagG, new THREE.TubeGeometry(strap, 50, 0.014, 6, true), mat(0x3a2414, 0.7));
 
-    avatar.traverse((o) => { if (o.isMesh && o.layers.mask === 1) o.receiveShadow = false; });
 
     /* ---- estados ---- */
     A.dress = (on) => {

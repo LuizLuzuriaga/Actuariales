@@ -24,7 +24,7 @@
 
     /* ---- materiales ---- */
     const T = {
-      wood: tex.wood(3), paint: tex.paint([66, 82, 118], 5), paintCeil: tex.paint([120, 124, 138], 6),
+      wood: tex.wood(3), paint: tex.paint([66, 82, 118], 5), paintCeil: tex.paint([168, 172, 186], 6),
       walnut: tex.veneer([78, 50, 30], 9), wardrobe: tex.veneer([96, 66, 42], 21), oak: tex.veneer([120, 88, 58], 31),
       duvet: tex.fabric([52, 70, 118], 7, 6), sheet: tex.fabric([188, 192, 205], 8, 8), pillow: tex.fabric([196, 200, 212], 9, 8),
       rug: tex.rug(11), leather: tex.leather([92, 58, 34], 13), cordura: tex.cordura([20, 22, 28], 15),
@@ -192,7 +192,10 @@
     /* ====================== Espejo ====================== */
     const MR = { x: 2.19, y: 1.3, z: 1.2, w: 0.64, h: 1.54 }; Q.MIRROR = MR;
     const mscale = high ? 1.55 : 0.95;                                   // el reflejo es lo que más se mira de cerca
+    const OrigRT = THREE.WebGLRenderTarget;                                   // el reflejo con suavizado de bordes (MSAA) si hay WebGL2
+    if (THREE.WebGLMultisampleRenderTarget) THREE.WebGLRenderTarget = function (w, h, o) { return new THREE.WebGLMultisampleRenderTarget(w, h, o); };
     const mirror = new THREE.Reflector(new THREE.PlaneGeometry(MR.w, MR.h), { clipBias: 0.003, textureWidth: Math.floor(560 * mscale), textureHeight: Math.floor(1280 * mscale), color: 0x9aa2ae });
+    THREE.WebGLRenderTarget = OrigRT;
     mirror.position.set(MR.x - 0.003, MR.y, MR.z); mirror.rotation.y = -Math.PI / 2; scene.add(mirror); R.g.mirror = mirror;
     const mf = grp(scene); R.g.mirrorFrame = mf;
     const fx = MR.x + 0.008;
@@ -262,6 +265,12 @@
     put(bag, rbox(0.32, 0.22, 0.1, 0.03, 4), M.leather, 0, 0, 0); put(bag, rbox(0.32, 0.12, 0.105, 0.02, 4), M.leather, 0, 0.07, 0.004); put(bag, rbox(0.04, 0.08, 0.012, 0.004), M.brass, 0, 0.0, -0.058);
     put(bag, new THREE.TorusGeometry(0.1, 0.008, 6, 20, 3.0), mat(0x3a2414, 0.7), 0, 0.12, 0, { rz: Math.PI / 2 - 0.1 });
     R.obst.push(); R.g.bags = bags;
+    // sudadera gris colgada del respaldo
+    const hood = new THREE.MeshStandardMaterial({ color: 0x545a68, roughness: 0.95, map: T.felt.map, normalMap: T.felt.normalMap, side: THREE.DoubleSide });
+    put(chair, fold(0.44, 0.5, 30, 20, (u, v) => Math.sin(u * 22 + v * 4) * 0.022 * (1 - v * 0.5) + Math.sin(v * 15) * 0.012), hood, 0, 0.68, 0.268, { ry: Math.PI });
+    put(chair, fold(0.2, 0.34, 14, 10, (u, v) => Math.sin(u * 12) * 0.02), hood, 0.22, 0.6, 0.27, { ry: Math.PI, rz: 0.2 });
+    // toalla sobre el radiador
+    put(rad, fold(1.0, 0.36, 40, 12, (u, v) => Math.sin(u * 30) * 0.012 + (1 - v) * 0.04), new THREE.MeshStandardMaterial({ color: 0xd8dde8, roughness: 1, map: T.sheet.map, normalMap: T.sheet.normalMap, side: THREE.DoubleSide }), 0.2, 0.0, 0.07, { rx: -0.1 });
 
     /* ====================== Alfombra, zapatillas de estar en casa, cuadros ====================== */
     put(scene, new THREE.PlaneGeometry(1.9, 1.3), M.rug, 0.45, 0.008, 0.5, { rx: -Math.PI / 2, cast: false });

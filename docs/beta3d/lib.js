@@ -129,6 +129,24 @@ window.QX = window.QX || {};
         rg.fillStyle = '#fafafa'; rg.fillRect(0, 0, w, h);
       }, { strength: 2.4, rough: true });
     },
+    cloth(base = [90, 96, 122], seed = 3, folds = 26) {                // prenda: trama + pliegues suaves
+      const r = Q.rng(seed);
+      return pbr(512, 512, (g, hg, rg, w, h) => {
+        g.fillStyle = `rgb(${base})`; g.fillRect(0, 0, w, h);
+        hg.fillStyle = '#808080'; hg.fillRect(0, 0, w, h);
+        const soft = 'filter' in hg;
+        if (soft) hg.filter = 'blur(5px)';
+        for (let i = 0; i < folds; i++) {
+          const x = r() * w, y = r() * h, len = 90 + r() * 240, a = (r() - 0.5) * 1.1;
+          hg.strokeStyle = r() < 0.5 ? 'rgba(255,255,255,.55)' : 'rgba(0,0,0,.55)'; hg.lineWidth = 6 + r() * 16;
+          hg.beginPath(); hg.moveTo(x, y); hg.quadraticCurveTo(x + Math.sin(a) * len * 0.6 + 20, y + len * 0.5, x + Math.sin(a) * len, y + len); hg.stroke();
+        }
+        if (soft) hg.filter = 'none';
+        for (let y = 0; y < h; y += 4) for (let x = 0; x < w; x += 4) { hg.fillStyle = ((x + y) / 4) % 2 ? 'rgba(255,255,255,.07)' : 'rgba(0,0,0,.07)'; hg.fillRect(x, y, 4, 4); }
+        speckle(g, w, h, 3000, 0.1, 1, '255,255,255', r); speckle(g, w, h, 3000, 0.1, 1, '0,0,0', r);
+        rg.fillStyle = '#ececec'; rg.fillRect(0, 0, w, h);
+      }, { strength: 3.4, repeat: [2, 2], rough: true });
+    },
     leather(base = [88, 56, 34], seed = 13) {
       const r = Q.rng(seed);
       return pbr(256, 256, (g, hg, rg, w, h) => {
