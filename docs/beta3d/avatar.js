@@ -93,13 +93,12 @@
     [-1, 1].forEach((s) => {
       put(head, new THREE.SphereGeometry(0.02, 10, 8), skin, 0.095 * s, 0.0, 0.0, { s: [0.5, 1.2, 0.8] });              // orejas
       put(head, new THREE.SphereGeometry(0.0145, 12, 10), mat(0xf2f2f4, 0.2), 0.036 * s, 0.025, -0.1);                  // ojos
-      put(head, new THREE.CircleGeometry(0.0072, 14), new THREE.MeshBasicMaterial({ color: 0x2c1a0e }), 0.036 * s, 0.025, -0.1148);
-      put(head, new THREE.CircleGeometry(0.0034, 10), new THREE.MeshBasicMaterial({ color: 0x050505 }), 0.036 * s, 0.025, -0.1151);
+      put(head, new THREE.CircleGeometry(0.0072, 14), new THREE.MeshBasicMaterial({ color: 0x2c1a0e }), 0.036 * s, 0.025, -0.1148, { ry: Math.PI });
+      put(head, new THREE.CircleGeometry(0.0034, 10), new THREE.MeshBasicMaterial({ color: 0x050505 }), 0.036 * s, 0.025, -0.1151, { ry: Math.PI });
       A.lids = A.lids || []; A.lids.push(put(head, new THREE.SphereGeometry(0.0168, 10, 8), skin, 0.036 * s, 0.025, -0.1, { s: [1, 0.02, 1.05] }));   // párpado que parpadea
-      put(head, new THREE.CircleGeometry(0.0013, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), 0.0375 * s, 0.0268, -0.1153);
-      put(head, new THREE.SphereGeometry(0.02, 10, 8), skin, 0.05 * s, -0.025, -0.085, { s: [1, 0.7, 0.7] });                       // pómulo
+      put(head, new THREE.CircleGeometry(0.0013, 8), new THREE.MeshBasicMaterial({ color: 0xffffff }), 0.0375 * s, 0.0268, -0.1153, { ry: Math.PI });
       put(head, rbox(0.034, 0.004, 0.006, 0.0015), mat(0x2a1a12, 0.8), 0.036 * s, 0.043, -0.1, { rz: -0.1 * s });                  // pestañas
-      put(head, rbox(0.04, 0.008, 0.01, 0.003), hairM, 0.038 * s, 0.05, -0.098, { rz: -0.12 * s });                      // cejas
+      put(head, rbox(0.046, 0.0115, 0.012, 0.004), hairM, 0.038 * s, 0.05, -0.098, { rz: -0.14 * s });                     // cejas marcadas
       put(head, new THREE.SphereGeometry(0.0145, 10, 8), skin, 0.036 * s, 0.04, -0.097, { s: [1.15, 0.5, 0.5] });          // párpado
     });
     put(head, new THREE.SphereGeometry(0.019, 12, 10), skin, 0, -0.012, -0.113, { s: [0.9, 1.35, 1.1] });               // nariz
@@ -107,12 +106,16 @@
     put(head, rbox(0.036, 0.007, 0.01, 0.003), mat(0x8a4a3e, 0.5), 0, -0.078, -0.103);                                  // labio inferior
     put(head, new THREE.SphereGeometry(0.011, 8, 6), skin, 0, -0.052, -0.14 + 0.03, { s: [1.5, 1, 0.7] });                // surco
     put(head, new THREE.SphereGeometry(0.012, 8, 6), skin, 0, -0.118, -0.04, { s: [1, 1, 1] });                           // nuez/cuello
-    put(head, new THREE.SphereGeometry(0.105, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.5), hairM, 0, 0.012, 0.008, { s: [0.94, 1.18, 1.06], rx: 0.1 }); // pelo corto
-    put(head, new THREE.SphereGeometry(0.06, 16, 12), hairM, 0, 0.1, -0.04, { s: [1.1, 0.55, 1.3] });                    // volumen superior
-    put(head, new THREE.SphereGeometry(0.05, 14, 10), hairM, 0.03, 0.095, -0.075, { s: [1.3, 0.5, 0.8], rz: -0.25 });      // flequillo peinado
+    put(head, new THREE.SphereGeometry(0.105, 24, 16, 0, Math.PI * 2, 0, Math.PI * 0.36), hairM, 0, 0.02, 0.008, { s: [0.94, 1.18, 1.06], rx: 0.1 }); // parte alta del pelo
+    [-1, 1].forEach((s) => put(head, new THREE.SphereGeometry(0.1, 18, 10, s > 0 ? Math.PI * 0.25 : Math.PI * 1.25, Math.PI * 0.5, Math.PI * 0.3, Math.PI * 0.25), beardM, 0, 0.01, 0.0, { s: [0.95, 1.18, 1.06] })); // degradado en las sienes
+    put(head, new THREE.SphereGeometry(0.06, 16, 12), hairM, 0, 0.118, -0.015, { s: [1.0, 0.8, 1.9], rx: -0.28 });         // tupé peinado hacia atrás
+    put(head, new THREE.SphereGeometry(0.05, 14, 10), hairM, 0.0, 0.1, -0.085, { s: [1.2, 0.55, 0.9], rx: -0.35 });         // frente del tupé
     [-1, 1].forEach((s) => put(head, new THREE.SphereGeometry(0.03, 10, 8), hairM, 0.09 * s, 0.015, 0.01, { s: [0.5, 1.5, 1.2] })); // patillas
-    put(head, new THREE.SphereGeometry(0.098, 22, 14, Math.PI * 0.18, Math.PI * 0.64, Math.PI * 0.48, Math.PI * 0.34), beardM, 0, -0.01, -0.015, { s: [0.97, 1.18, 1.08], ry: Math.PI }); // barba de semanas
-    put(head, rbox(0.055, 0.013, 0.012, 0.004), beardM, 0, -0.053, -0.108);                                                // bigote
+    const beardSolid = new THREE.MeshStandardMaterial({ color: 0x1a110b, roughness: 0.8, normalMap: hairTex.normalMap, normalScale: new THREE.Vector2(0.6, 0.6) });
+    put(head, new THREE.SphereGeometry(0.1, 26, 14, Math.PI * 0.14, Math.PI * 0.72, Math.PI * 0.55, Math.PI * 0.34), beardSolid, 0, -0.012, -0.012, { s: [0.985, 1.2, 1.1], ry: Math.PI }); // barba poblada en la mandíbula
+    put(head, new THREE.SphereGeometry(0.1, 26, 14, Math.PI * 0.1, Math.PI * 0.8, Math.PI * 0.42, Math.PI * 0.2), beardM, 0, -0.012, -0.014, { s: [0.99, 1.2, 1.1], ry: Math.PI });     // pelusa que sube a los pómulos
+    put(head, rbox(0.06, 0.016, 0.014, 0.005), beardM, 0, -0.053, -0.108);                                                // bigote
+    put(head, new THREE.SphereGeometry(0.0062, 8, 6), mat(0x050505, 0.25, 0.6), 0.096, -0.02, 0.0);                          // pendiente negro
     head.traverse((o) => { if (o.isMesh) o.layers.set(1); });
     A.neck.layers.set(1);
 
