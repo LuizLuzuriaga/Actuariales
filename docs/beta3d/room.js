@@ -152,10 +152,12 @@
 
     /* ====================== Armario ====================== */
     const wr = grp(scene); R.g.wardrobe = wr;
-    put(wr, rbox(0.62, 2.22, 1.64, 0.012), mat(0x2a211a, 0.9), 1.89, 1.11, -0.2);                                              // carcasa interior
+    const inner = mat(0x3a2e24, 0.9);                                                                                           // carcasa hueca: laterales, divisoria y suelo
+    put(wr, rbox(0.6, 2.2, 0.03, 0.006), inner, 1.9, 1.11, -1.015); put(wr, rbox(0.6, 2.2, 0.03, 0.006), inner, 1.9, 1.11, 0.615); put(wr, rbox(0.58, 2.1, 0.022, 0.005), inner, 1.9, 1.11, -0.2);
+    put(wr, rbox(0.6, 0.06, 1.64, 0.008), inner, 1.9, 0.06, -0.2);
     put(wr, rbox(0.05, 2.22, 1.64, 0.01), M.wardrobe, 2.17, 1.11, -0.2);                                                       // trasera
     put(wr, rbox(0.62, 0.05, 1.64, 0.01), M.wardrobe, 1.89, 2.23, -0.2); put(wr, rbox(0.66, 0.08, 1.7, 0.012), M.wardrobe, 1.88, 2.27, -0.2);   // techo y cornisa
-    put(wr, rbox(0.58, 0.04, 1.6, 0.008), M.wardrobe, 1.9, 1.5, -0.2);                                                          // balda
+    put(wr, rbox(0.58, 0.04, 1.6, 0.008), inner, 1.9, 2.08, -0.2);                                                          // balda
     put(wr, new THREE.CylinderGeometry(0.012, 0.012, 1.55, 10), M.steel, 1.9, 1.88, -0.2, { rx: Math.PI / 2 });                // barra
     const shirtMats = [0xe7e9ee, 0xcfd3dc, 0x1c1d24, 0x3a3f4a, 0x8d9ab4, 0xe2d8c8];
     for (let i = 0; i < 10; i++) { const z = -0.9 + i * 0.072 + (i > 3 ? 0.08 : 0); if (i === 4) continue;
@@ -189,8 +191,8 @@
 
     /* ====================== Espejo ====================== */
     const MR = { x: 2.19, y: 1.3, z: 1.2, w: 0.64, h: 1.54 }; Q.MIRROR = MR;
-    const mscale = Math.min(pr, 1.25) * (high ? 1 : 0.7);
-    const mirror = new THREE.Reflector(new THREE.PlaneGeometry(MR.w, MR.h), { clipBias: 0.003, textureWidth: Math.floor(560 * mscale), textureHeight: Math.floor(1280 * mscale), color: 0xb4bcc8 });
+    const mscale = high ? 1.55 : 0.95;                                   // el reflejo es lo que más se mira de cerca
+    const mirror = new THREE.Reflector(new THREE.PlaneGeometry(MR.w, MR.h), { clipBias: 0.003, textureWidth: Math.floor(560 * mscale), textureHeight: Math.floor(1280 * mscale), color: 0x9aa2ae });
     mirror.position.set(MR.x - 0.003, MR.y, MR.z); mirror.rotation.y = -Math.PI / 2; scene.add(mirror); R.g.mirror = mirror;
     const mf = grp(scene); R.g.mirrorFrame = mf;
     const fx = MR.x + 0.008;
@@ -198,8 +200,8 @@
     put(mf, rbox(0.04, MR.h + 0.18, 0.09, 0.012), M.brass, fx, MR.y, MR.z - MR.w / 2 - 0.045); put(mf, rbox(0.04, MR.h + 0.18, 0.09, 0.012), M.brass, fx, MR.y, MR.z + MR.w / 2 + 0.045);
     [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([a, b]) => put(mf, new THREE.SphereGeometry(0.035, 14, 10), M.brass, fx - 0.005, MR.y + a * (MR.h / 2 + 0.045), MR.z + b * (MR.w / 2 + 0.1)));
     const smudge = Q.cvs(256, 512), sg = smudge.getContext('2d'), sr = rng(9); sg.filter = 'blur(2px)';
-    for (let i = 0; i < 24; i++) { sg.fillStyle = `rgba(255,255,255,${0.04 + sr() * 0.08})`; sg.beginPath(); sg.ellipse(sr() * 256, sr() * 512, 6 + sr() * 26, 4 + sr() * 12, sr() * 3, 0, 7); sg.fill(); }
-    for (let i = 0; i < 120; i++) { sg.fillStyle = `rgba(255,255,255,${sr() * 0.14})`; sg.fillRect(sr() * 256, sr() * 512, 1.5, 1.5); }
+    for (let i = 0; i < 24; i++) { sg.fillStyle = `rgba(255,255,255,${0.012 + sr() * 0.03})`; sg.beginPath(); sg.ellipse(sr() * 256, sr() * 512, 6 + sr() * 26, 4 + sr() * 12, sr() * 3, 0, 7); sg.fill(); }
+    for (let i = 0; i < 120; i++) { sg.fillStyle = `rgba(255,255,255,${sr() * 0.07})`; sg.fillRect(sr() * 256, sr() * 512, 1.5, 1.5); }
     put(scene, new THREE.PlaneGeometry(MR.w, MR.h), new THREE.MeshBasicMaterial({ map: Q.toTex(smudge), transparent: true, depthWrite: false, toneMapped: false }), MR.x - 0.0015, MR.y, MR.z, { ry: -Math.PI / 2, cast: false, recv: false });
 
     /* ====================== Puerta ====================== */
@@ -276,6 +278,7 @@
 
     /* ====================== Luces y atmósfera ====================== */
     scene.add(new THREE.HemisphereLight(0x4a5c90, 0x120d0a, 0.62));
+    const faceLight = new THREE.PointLight(0xffe4c8, 0.5, 3.2, 2); faceLight.position.set(1.0, 2.2, 1.1); scene.add(faceLight);   // luz cálida de techo para ver bien la cara en el espejo
     const fill = new THREE.PointLight(0x8aa0d8, 0.35, 6, 2); fill.position.set(0, 2.3, 0.2); scene.add(fill);
     const moon = new THREE.DirectionalLight(0x5878b8, 0.3); moon.position.set(2, 3, -4); scene.add(moon);
     const street = new THREE.SpotLight(0xff9a50, 12, 12, 0.34, 0.6, 1.2);

@@ -12,8 +12,8 @@
 
     /* ---- materiales ---- */
     const skinN = Q.pbr(256, 256, (g, hg, rg, w, h) => { const r = rng(2); g.fillStyle = '#c99a78'; g.fillRect(0, 0, w, h); hg.fillStyle = '#808080'; hg.fillRect(0, 0, w, h); for (let i = 0; i < 5000; i++) { hg.fillStyle = `rgba(${r() < 0.5 ? 0 : 255},${r() < 0.5 ? 0 : 255},${r() < 0.5 ? 0 : 255},${r() * 0.5})`; hg.fillRect(r() * w, r() * h, 1.5, 1.5); } }, { strength: 1.4, repeat: [3, 3] });
-    const skin = new THREE.MeshStandardMaterial({ color: 0xcf9d7a, roughness: 0.6, normalMap: skinN.normalMap, normalScale: new THREE.Vector2(0.35, 0.35), emissive: 0x3a140a, emissiveIntensity: 0.18 });
-    const top = new THREE.MeshStandardMaterial({ color: 0x59607a, roughness: 0.85, normalMap: Q.tex.fabric([90, 96, 122], 3, 6).normalMap, normalScale: new THREE.Vector2(0.7, 0.7) });
+    const skin = new THREE.MeshStandardMaterial({ color: 0xcf9d7a, roughness: 0.6, normalMap: skinN.normalMap, normalScale: new THREE.Vector2(0.35, 0.35), emissive: 0x3a140a, emissiveIntensity: 0.07 });
+    const top = new THREE.MeshStandardMaterial({ color: 0x454b63, roughness: 0.85, normalMap: Q.tex.fabric([90, 96, 122], 3, 6).normalMap, normalScale: new THREE.Vector2(0.7, 0.7) });
     top.normalMap.wrapS = top.normalMap.wrapT = THREE.RepeatWrapping; top.normalMap.repeat.set(10, 10);
     const pants = new THREE.MeshStandardMaterial({ color: 0x2c3150, roughness: 0.9, normalMap: top.normalMap, normalScale: new THREE.Vector2(0.6, 0.6) });
     const shoeM = new THREE.MeshStandardMaterial({ color: 0x6a6f80, roughness: 0.95 });
@@ -122,7 +122,7 @@
 
     /* ---- estados ---- */
     A.dress = (on) => {
-      top.color.setHex(on ? 0x2c5fb6 : 0x59607a); pants.color.setHex(on ? 0x3b3f48 : 0x2c3150);
+      top.color.setHex(on ? 0x234a94 : 0x454b63); pants.color.setHex(on ? 0x2a2d35 : 0x2c3150);
       shoeM.color.setHex(on ? 0x0c0c10 : 0x6a6f80); shoeM.roughness = on ? 0.35 : 0.95;
       A.collar.visible = on; A.buttons.visible = on;
       A.shoes.forEach((s) => s.scale.set(1, on ? 1.15 : 0.8, 1));
@@ -134,10 +134,10 @@
       A.legs[0].hip.rotation.x = sw; A.legs[1].hip.rotation.x = -sw;
       A.legs[0].knee.rotation.x = Math.max(0, -Math.sin(ph + 1.2)) * 0.7 * walk; A.legs[1].knee.rotation.x = Math.max(0, Math.sin(ph + 1.2)) * 0.7 * walk;
       const L = A.arms[0], Rr = A.arms[1];
-      L.sh.rotation.x = -Math.sin(ph) * 0.45 * walk - 0.12; L.el.rotation.x = -0.2 - Math.max(0, Math.sin(ph)) * 0.3 * walk; L.sh.rotation.z = 0.06;
+      L.sh.rotation.x = -Math.sin(ph) * 0.45 * walk + 0.1; L.el.rotation.x = 0.2 + Math.max(0, Math.sin(ph)) * 0.3 * walk; L.sh.rotation.z = 0.06;
       const k = A.reach;
-      Rr.sh.rotation.x = lerp(Math.sin(ph) * 0.45 * walk - 0.12, -(1.12 + clamp(pitch, -1, 0.4) * 0.55), k);
-      Rr.sh.rotation.z = lerp(-0.06, -0.12, k); Rr.el.rotation.x = lerp(-0.2, -0.45, k); Rr.curl(0.25 + k * 0.55);
+      Rr.sh.rotation.x = lerp(Math.sin(ph) * 0.45 * walk + 0.1, Math.PI / 2 + clamp(pitch, -1.2, 0.4) * 0.95 + 0.08, k);
+      Rr.sh.rotation.z = lerp(-0.06, -0.3, k); Rr.el.rotation.x = lerp(0.2, 0.4, k); Rr.curl(0.25 + k * 0.55);
       A.torso.scale.y = 1 + Math.sin(t * 1.6) * 0.004;
     };
     A.dress(false);

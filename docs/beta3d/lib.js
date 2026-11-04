@@ -206,7 +206,8 @@ window.QX = window.QX || {};
     g.translate(0, 0, -(d - 2 * r) / 2);
     return g;
   };
-  Q.lathe = (pts, seg = 32) => new THREE.LatheGeometry(pts.map(([x, y]) => new THREE.Vector2(x, y)), seg);
+  /* Los perfiles se recorren siempre de abajo arriba: así las normales salen hacia fuera */
+  Q.lathe = (pts, seg = 32) => { const p = pts[0][1] > pts[pts.length - 1][1] ? pts.slice().reverse() : pts; return new THREE.LatheGeometry(p.map(([x, y]) => new THREE.Vector2(x, y)), seg); };
   Q.fold = (w, h, sx, sy, fn) => {
     const g = new THREE.PlaneGeometry(w, h, sx, sy), p = g.attributes.position;
     for (let i = 0; i < p.count; i++) { const u = p.getX(i) / w + 0.5, v = p.getY(i) / h + 0.5; p.setZ(i, fn(u, v)); }

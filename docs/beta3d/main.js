@@ -46,6 +46,7 @@
   const R = Q.buildRoom(scene, { pr, high: HIGH });
   const A = Q.buildAvatar(scene);
   scene.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m.isMeshStandardMaterial || m.isMeshPhysicalMaterial) m.envMapIntensity = 0.28; }); });
+  A.group.traverse((o) => { if (o.material) (Array.isArray(o.material) ? o.material : [o.material]).forEach((m) => { if (m.isMeshStandardMaterial) m.envMapIntensity = 0.08; }); });
   const fx = Q.initFX(renderer, scene, camera, pr);
   if (!fx.on) { renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.outputEncoding = THREE.sRGBEncoding; }
   else document.querySelectorAll('.fx').forEach((e) => { e.style.display = 'none'; });
@@ -80,7 +81,7 @@
   const ACTS = {
     movil: { label: 'Apagar el despertador', stand: [-0.4, -0.85], look: [-0.5, 0.55, -1.56], reach: true, enabled: () => S.alarmOn, run: actMovil },
     armario: { label: 'Abrir el armario y vestirte', stand: [-0.05, -0.2], look: [2.0, 1.45, -0.55], reach: true, enabled: () => !S.dressed, run: actArmario },
-    espejo: { label: 'Mirarte al espejo', stand: [0.85, 1.2], look: [2.19, 1.5, 1.2], enabled: () => true, run: actEspejo },
+    espejo: { label: 'Mirarte al espejo', stand: [1.2, 1.2], look: [2.19, 1.5, 1.2], enabled: () => true, run: actEspejo },
     bolsos: { label: 'Cargar la mochila y el bolso', stand: [-0.55, 1.0], look: [-1.2, 0.72, 1.15], reach: true, enabled: () => !S.bag, run: actBolsos },
     puerta: { label: 'Salir de casa', stand: [0.05, 1.0], look: [0.05, 1.15, 1.8], reach: true, enabled: () => true, run: actPuerta },
     cama: { label: 'Mirar la cama', stand: [-0.4, 0.05], look: [-1.5, 0.5, -0.4], enabled: () => true, run: async () => { await say('Tu cama, todavía caliente. Tiene un 100 % de retención y cero rentabilidad.'); } },
@@ -113,7 +114,7 @@
     const sx = P.x, sz = P.z, sy = P.yaw, sp = P.pitch, a = lookAngles(stand[0], EYE, stand[1], look[0], look[1], look[2]);
     const dist = Math.hypot(stand[0] - sx, stand[1] - sz), d = clamp(dist * 560, 500, 1800);
     await tween(d, (e) => { P.x = lerp(sx, stand[0], e); P.z = lerp(sz, stand[1], e); P.yaw = sy + angDiff(a.yaw, sy) * e; P.pitch = lerp(sp, a.pitch, e); P.walk = dist > 0.05 ? 1 : 0; });
-    P.walk = 0;
+    P.walk = 0; P.bodyYaw = P.yaw;                                  // el cuerpo termina mirando a lo mismo que tú
   }
   async function interact(id) {
     const a = ACTS[id]; if (!a || S.busy) return;
@@ -161,6 +162,7 @@
   }
 
   /* ============================== Entrada ============================== */
+  function lockPointer() { if (COARSE || !canvas.requestPointerLock) return; try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => { }); } catch (e) { } }
   const keys = {};
   window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; if (!S.started || S.busy) return; if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') { if (current) interact(current); } });
   window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
@@ -196,7 +198,7 @@
       if (t.moved < 10 && performance.now() - t.t0 < 400 && !S.busy) tapAt(e.clientX, e.clientY);
     } else {
       if (document.pointerLockElement === canvas) { if (!S.busy && current) interact(current); }
-      else if (mouse && mouse.moved < 5 && !S.busy) { const hit = picked(e.clientX, e.clientY); if (hit) interact(hit); else if (!COARSE && canvas.requestPointerLock) canvas.requestPointerLock(); }
+      else if (mouse && mouse.moved < 5 && !S.busy) { const hit = picked(e.clientX, e.clientY); if (hit) interact(hit); else lockPointer(); }
       mouse = null;
     }
   };
@@ -285,7 +287,7 @@
   $('#snd').addEventListener('click', () => { const on = Sound.toggle(); $('#snd').textContent = on ? '🔊' : '🔇'; $('#snd').setAttribute('aria-pressed', on); if (on) Sound.ambience('room'); });
   $('#go').addEventListener('click', async () => {
     $('#start').style.display = 'none'; $('#hud').hidden = false; S.started = true; S.busy = true;
-    if (!COARSE && canvas.requestPointerLock) { try { canvas.requestPointerLock(); } catch (e) { } }
+    lockPointer();
     await say(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.',
       { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true },
       COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.']);
