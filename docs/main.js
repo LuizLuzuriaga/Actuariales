@@ -69,7 +69,7 @@
   const S = { time: '05:45', min: 345, alarmOn: true, dressed: false, bag: false, mirror: false, busy: true, started: false, ended: false, lastProgress: 0, did: new Set(), tasks: { alarm: false, dress: false, bag: false, out: false } };
   const fmt = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   /* Nivel de pista 0-4: base por escenario, más el tiempo perdido en casa y +1 por cada 3 de descuido (máx. +2) */
-  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
+  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2, lobby: 2, planta: 3 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
   function advance(min) { S.min += min; Sound.clue = clueLevel(); S.time = fmt(S.min); $('#clock').textContent = S.time; }
   const P = { x: -0.35, z: -0.55, yaw: 0, pitch: 0, bodyYaw: 0, vx: 0, vz: 0, walk: 0, bob: 0 };
   const EYE = Q.EYE;
@@ -363,6 +363,25 @@
     await AZC.play(API); inScript = false;
     setTasks([['Entrar en la aseguradora', true]]);
     await fade(true);
+    await startOficina();
+  }
+
+  let LOB = null, PLA = null;
+  async function startOficina() {
+    S.busy = true; inScript = true; $('#hud').hidden = false;
+    await fade(true);
+    if (!LOB) LOB = Q.buildOficina(renderer, envTex, 'lobby');
+    LOB.exit = false; enterWorld(LOB, 'lobby'); setTime('08:05'); setTasks([['Subir a la planta 4', false]]);
+    if (window.Sound && Sound.on) Sound.ambience('office');
+    await fade(false);
+    await LOB.play(API);
+    await fade(true);
+    if (!PLA) PLA = Q.buildOficina(renderer, envTex, 'planta');
+    PLA.hecho = PLA.cafe = false; enterWorld(PLA, 'planta'); setTime('08:12'); setTasks([['Abrir el modelo en tu mesa', false], ['Tomar un café', false]]);
+    await fade(false);
+    await PLA.play(API); inScript = false;
+    setTasks([['Abrir el modelo en tu mesa', true], ['Tomar un café', true]]);
+    await fade(true);
     finishDay();
   }
 
@@ -563,6 +582,7 @@
     if (/[?&]anden/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]tren/.test(location.search)) { S.alarmOn = false; startTrain(); return; }
     if (/[?&]azca/.test(location.search)) { S.alarmOn = false; startAzca(); return; }
+    if (/[?&]oficina/.test(location.search)) { S.alarmOn = false; startOficina(); return; }
     const how = COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
     if (store('intro')) tip([how]);
     else { store('intro', '1'); tip(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.', { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true }, how]); }
