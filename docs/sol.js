@@ -84,15 +84,25 @@
     /* ---------- gente que pasea; en el apocalipsis, la que huye ---------- */
     const walkers = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 300 + i, yaw: () => 0 }); const z = -6 + rnd() * 13, dir = i % 2 ? 1 : -1; w.group.position.set(-11 + rnd() * 22, 0, z); root.add(w.group); walkers.push({ g: w.group, dir, v: 0.7 + rnd() * 0.5, z }); }
     const infected = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0], [0.7, 0.4]], { seed: 400 + i, yaw: () => 0 }); w.group.visible = false; root.add(w.group); const gate = [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]][i % 5]; w.group.position.set(gate[0], 0, gate[1]); infected.push({ g: w.group, v: 1.0 + rnd() * 0.7, ph: rnd() * 6, start: gate }); }
-    W.setApoc = (on) => { W.apoc = on; sky.material.map = on ? skyB : skyA; sky.material.needsUpdate = true; scene.fog.color.set(on ? 0x4a1810 : 0x4a4058); scene.background.set(on ? 0x3a1008 : 0x3a3350); sun.color.set(on ? 0xff4a20 : 0xff9a60); hemi.color.set(on ? 0xa05040 : 0x8a82ac); infected.forEach((z) => { z.g.visible = on; }); };
+    W.infected = infected;
+    /* ---------- fuego, humo y coche volcado: solo cuando llega el fin ---------- */
+    const fxg = new THREE.Group(); fxg.visible = false; root.add(fxg);
+    { const car = put(new THREE.BoxGeometry(2.2, 0.8, 1.1), std(0x4a1a1a, 0.4, { metalness: 0.5 }), 6.0, 0.55, -6.0, fxg); car.rotation.set(0.3, 0.5, 1.2); put(new THREE.BoxGeometry(1.2, 0.5, 1.0), std(0x2a0e0e, 0.5), 5.6, 0.9, -6.0, fxg).rotation.set(0.3, 0.5, 1.2);
+      [[-12, 1.2, -2], [9, 1.2, -8], [-1, 1.2, 9], [12, 1.0, 5]].forEach(([x, y, z]) => { const l = new THREE.PointLight(0xff6a20, 1.4, 12, 2); l.position.set(x, y, z); fxg.add(l); lamps.push(l); const [c, g] = cv(64, 64); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,180,70,.95)'); gr.addColorStop(1, 'rgba(255,60,10,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.toTex(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); sp.position.set(x, 1.4, z); sp.scale.setScalar(3.2); fxg.add(sp); W.tick.push((dt, t) => { sp.scale.setScalar(2.8 + Math.sin(t * 9 + x) * 0.5); }); });
+      const [sc, sg] = cv(128, 128); const sr = sg.createRadialGradient(64, 64, 0, 64, 64, 64); sr.addColorStop(0, 'rgba(40,34,32,.7)'); sr.addColorStop(1, 'rgba(40,34,32,0)'); sg.fillStyle = sr; sg.fillRect(0, 0, 128, 128);
+      for (let i = 0; i < 8; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.toTex(sc), transparent: true, depthWrite: false, opacity: 0.55, fog: false })); sp.position.set(-14 + i * 4, 6 + (i % 3) * 3, -9 + (i % 4) * 4); sp.scale.setScalar(9); fxg.add(sp); W.tick.push((dt, t) => { sp.position.y = 6 + ((i * 2 + t * 0.8) % 12); }); } }
+    // boca de metro: cartel verde para el refugio
+    put(new THREE.PlaneGeometry(1.8, 0.5), emis(0x30d070, 1.6), -10.5, 2.55, 3.15);
+    W.setApoc = (on) => { W.apoc = on; sky.material.map = on ? skyB : skyA; sky.material.needsUpdate = true; scene.fog.color.set(on ? 0x4a1810 : 0x4a4058); scene.background.set(on ? 0x3a1008 : 0x3a3350); sun.color.set(on ? 0xff4a20 : 0xff9a60); hemi.color.set(on ? 0xa05040 : 0x8a82ac); infected.forEach((z) => { z.g.visible = on; }); fxg.visible = on; };
     W.tick.push((dt, t) => {
       walkers.forEach((w) => { if (W.apoc) { w.g.position.x += (w.g.position.x < 0 ? -1 : 1) * 3.6 * dt; w.g.rotation.y = w.g.position.x < 0 ? -Math.PI / 2 : Math.PI / 2; if (Math.abs(w.g.position.x) > 17) w.g.visible = false; }
         else { w.g.position.x += w.dir * w.v * dt; if (w.g.position.x > 11.5) w.dir = -1; if (w.g.position.x < -11.5) w.dir = 1; w.g.rotation.y = w.dir > 0 ? Math.PI / 2 : -Math.PI / 2; } });
-      if (W.apoc && W.api) { const P = W.api.P; infected.forEach((z) => { const dx = P.x - z.g.position.x, dz = P.z - z.g.position.z, d = Math.hypot(dx, dz) || 1; if (d > 1.6) { z.g.position.x += dx / d * z.v * dt; z.g.position.z += dz / d * z.v * dt; } z.g.rotation.y = Math.atan2(dx, dz); z.g.rotation.z = Math.sin(t * 3 + z.ph) * 0.12; }); }
       if (W.apoc) lamps.forEach((l, i) => { l.intensity = 0.5 + 0.5 * Math.max(0, Math.sin(t * 4 + i * 2)); });
     });
 
     /* ---------- interacciones ---------- */
+    W.acts.arma = { label: 'Coger una silla de la terraza', stand: [4.6, 3.4], look: [5.6, 0.5, 4.2], enabled: () => W.apocOn && !W.armed, run: async (api) => { W.armed = true; Q.apoc.pick(); await api.say('Una silla metálica de terraza. Pesa justo lo que debe pesar un argumento. F para empujar con ella.'); } };
     W.acts.cerveza = { label: 'Pedir unas cañas', stand: [3.0, 4.3], look: [2.6, 0.9, 2.6], enabled: () => !W.barra, run: async (api) => { W.barra = true; await api.say(['El camarero te planta dos cañas con una espuma de ingeniería y un aperitivo que cuesta más que la cerveza.', 'Brindas por el consumo privado, que es lo único que sube en esta ciudad.']); } };
     W.acts.km0 = { label: 'Mirar el Kilómetro Cero', stand: [0, -3.8], look: [0, 0, -5.6], enabled: () => true, run: async (api) => { await api.say(['Kilómetro Cero: desde aquí se miden todas las carreteras de España. Todo está a una distancia positiva de este punto, que es, técnicamente, la mejor definición de «centro».', { text: 'Cualquier medida necesita un origen. En el mercado laboral, también.', think: true }]); } };
     W.acts.oso = { label: 'Mirar el oso y el madroño', stand: [5.4, -0.6], look: [7, 1.4, -2.5], enabled: () => true, run: async (api) => { await api.say(['El oso y el madroño: el símbolo de Madrid. El oso se come las frutas del árbol que, a su vez, depende de que el oso se las coma. Un ciclo cerrado. Los actuarios lo llaman «reaseguro»; los demás, «amistad».']); } };
@@ -117,8 +127,10 @@
       if (window.Sound && Sound.on) Sound.siren(5);
       await say(['De pronto, el ruido de la plaza cambia. Primero una sirena. Luego otra, más cerca. Los paseantes aceleran, luego corren.', 'El cielo se vuelve de un naranja antinatural. Las farolas parpadean. En la boca de la calle Mayor se mueve algo que no camina como un vecino.']);
       W.setApoc(true); if (window.Sound && Sound.on) { Sound.shout(0.07); setTimeout(() => Sound.shout(0.07), 700); }
-      await free(9000, 'Los infectados entran por todas las calles · sobrevive {s} s', null);
-      return 'apoc';
+      Q.apoc.start(W, { refuge: [-10.5, 5.3], r: 1.9, refugeLabel: 'boca del metro', enemies: infected.map((z) => ({ g: z.g, v: z.v * 1.9, ph: z.ph })),
+        quips: [['Chelu', '¡A la boca del metro! Arriba hay turistas y abajo hay cobertura. Elige.'], ['Amor', 'No te pares. Huir es una conducta adaptativa, no una derrota.'], ['Chelu', 'Si pierdes una vida, recuerda: el seguro no cubre mordiscos.'], ['Mario', 'Pregunta técnica: ¿con qué frecuencia mueren los asegurados? Es para la tarifa.'], ['Amor', 'Coge algo contundente. Un argumento, una silla, lo que tengas a mano.']], onEnd: () => { } });
+      await free(1e9, 'Corre (Shift) hasta la boca del metro, la flecha roja · F empuja a los infectados · puedes coger una silla de la terraza', () => W.apocRes);
+      return W.apocRes || 'muerto';
     };
     return W;
   };

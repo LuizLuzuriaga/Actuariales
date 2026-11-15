@@ -56,25 +56,31 @@
       const zs = []; for (let k = 0; k < 10; k++) { const w = Q.buildCrowd([[0, 0]], { seed: 500 + k, yaw: () => -Math.PI / 2 }); w.group.position.set(bounds.minX - 1.0 - (k % 3) * 0.7, 0, -3.6 + k * 0.8); root.add(w.group); zs.push({ g: w.group, ph: k * 1.7, x0: w.group.position.x, z0: w.group.position.z }); }
       const rl = new THREE.PointLight(0xff2a18, 0, 12, 2); rl.position.set(-4.4, 1.5, 0); scene.add(rl);
       const shards = []; for (let k = 0; k < 26; k++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.1 + Math.random() * 0.2, 0.02, 0.1 + Math.random() * 0.2), new THREE.MeshStandardMaterial({ color: 0xaab8c4, roughness: 0.1, transparent: true, opacity: 0.7 })); s.visible = false; s.userData.v = new THREE.Vector3(1 + Math.random() * 2.5, 1 + Math.random() * 2, (Math.random() - 0.5) * 3); scene.add(s); shards.push(s); }
-      W.breach = false; let bt = 0;
+      W.zs = zs; W.breach = false; let bt = 0;
       W.doBreach = () => { W.breach = true; glass.visible = false; shards.forEach((s) => { s.visible = true; s.position.set(bounds.minX + 0.1, 0.7 + Math.random() * 1.8, -1.2 + Math.random() * 2.4); }); };
       W.tick.push((dt, t) => { rl.intensity = 1.6 * Math.max(0, Math.sin(t * 5)) * (W.breach ? 1.5 : 1);
         if (!W.breach) zs.forEach((z) => { z.g.position.x = z.x0 + 0.08 * Math.abs(Math.sin(t * 6 + z.ph)); z.g.rotation.z = Math.sin(t * 2.4 + z.ph) * 0.1; if (glass.material.opacity < 0.5) glass.material.opacity += 0; });
-        else { bt += dt; const P = W.api && W.api.P; zs.forEach((z, i) => { if (!P) return; const dx = P.x - z.g.position.x, dz = P.z - z.g.position.z, d = Math.hypot(dx, dz) || 1; if (bt > i * 0.12 && d > 1.4) { z.g.position.x += dx / d * 2.9 * dt; z.g.position.z += dz / d * 2.9 * dt; } z.g.rotation.y = Math.atan2(dx, dz); });
+        else { bt += dt;
           shards.forEach((s) => { if (s.position.y > 0.02) { s.userData.v.y -= 9 * dt; s.position.addScaledVector(s.userData.v, dt); s.rotation.x += dt * 4; } else s.position.y = 0.02; }); } });
     }
 
+    // puerta de la cocina: el refugio
+    put(new THREE.BoxGeometry(0.1, 2.1, 0.9), std(0x2f3a30, 0.6), bounds.maxX - 0.06, 1.05, -2.8); put(new THREE.PlaneGeometry(0.7, 0.22), emis(0x36d070, 1.8), bounds.maxX - 0.13, 2.3, -2.8).rotation.y = -Math.PI / 2;
     /* ---------- interacciones ---------- */
     W.acts.barra = { label: 'Pedir un café', stand: [0, -1.9], look: [0, 1.2, bounds.minZ + 0.7], enabled: () => !W.barra, run: async (api) => {
       W.barra = true; await api.say(['Un café solo, dos euros y unas monedas que no devuelven ninguna rentabilidad.', 'La máquina gruñe, escupe y te lo entrega con la dignidad de quien lleva doce años en el mismo turno.']); } };
+    W.acts.arma = { label: 'Coger una silla', stand: [-1.2, -1.0], look: [-2.2, 0.6, -1.8], enabled: () => W.apocOn && !W.armed, run: async (api) => { W.armed = true; Q.apoc.pick(); await api.say('Una silla de madera maciza. Perfecta para estudiar las propiedades del hueso temporal. F para empujar con ella.'); } };
     W.acts.ventana = { label: 'Mirar por la ventana', stand: [-3.7, 0], look: [-5, 1.6, 0], enabled: () => true, run: async (api) => {
       if (apoc) { W.pistas = 9; await api.say(['Fuera hay gente pegada al cristal. Muchos. Quietos, con la cabeza ladeada, mirando dentro.', { text: 'Nadie los ha llamado. Nadie los ha parado. Es lo que pasa cuando todo se va dejando para luego.', think: true }]); }
       else await api.say(['La calle despierta: un camión de reparto, tres oficinistas con vasos de cartón, una paloma que se lo piensa.', { text: 'Todo el mundo va a algún sitio. Tú, también. Casi.', think: true }]); } };
     W.acts.chelu = { label: 'Hablar con Chelu', stand: [2.2, 1.6], look: [3.7, 1.5, 0.4], enabled: () => W.barra && !W.exit, run: async (api) => {
       const { say, choose, S } = api, n = W.ronda++;
       if (apoc) { W.zombi = true; await say(['—Qué pinta tienes —dice Chelu sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpea el marco. Luego, otra cosa. Luego, todas.']);
-        W.doBreach(); if (window.Sound && Sound.on) { Sound.glass(); setTimeout(() => Sound.shout(0.08), 500); Sound.growl(0.9); } await api.wait(2600);
-        await say(['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'Chelu se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Y es lo último que llegas a oír.']); W.exit = true; return; }
+        W.doBreach(); if (window.Sound && Sound.on) { Sound.glass(); setTimeout(() => Sound.shout(0.08), 500); Sound.growl(0.9); } await api.wait(1800);
+        await say(['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'Chelu se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Corre.']);
+        Q.apoc.start(W, { refuge: [bounds.maxX - 0.7, -2.8], r: 1.5, refugeLabel: 'puerta de la cocina', enemies: W.zs.map((z, i) => ({ g: z.g, v: 2.2 + 0.04 * i, stun: i * 0.2, ph: z.ph })),
+          quips: [['Amor', 'Si estás en la cafetería: la cocina siempre tiene salida de emergencia. Es una norma, no una opinión.'], ['Mario', 'No es por meter prisa, pero este evento no está tarificado.'], ['Chelu', 'Soy yo. Sigo siendo yo. Más o menos. Quiero una caña.']], onEnd: () => { W.exit = true; } });
+        return; }
       if (n === 0) {
         await say(['—Pensaba que no llegabas —dice Chelu, con una caña vacía ya delante de las nueve de la mañana—. ¿Cómo va la cosa?']);
         const r = await choose([{ id: 'a', label: '«Bien, con el modelo de tarificación casi listo»', hint: 'Hablas de trabajo' }, { id: 'b', label: '«Tirando. ¿Y tú?»', hint: 'Conversación sin compromiso' }, { id: 'c', label: '«Fatal. Lo dejaría todo»', hint: 'Sinceridad' }], 'Primera ronda');
@@ -96,7 +102,7 @@
       await say(apoc ? ['La cafetería de la planta baja. El cristal de la ventana tiembla de una forma que el cristal no debería.', 'Chelu ya está en su mesa.']
         : ['La cafetería de la planta baja. Olor a tostada y a lunes aunque sea otro día. Hay café de verdad y mesas pequeñas con gente pequeña.', 'Chelu ya está en su mesa, con un vaso que ya no tiene nada dentro.']);
       await free(1e9, 'Pide algo en la barra · habla con Chelu (tres rondas) · mira por la ventana', () => W.exit);
-      return { score: W.score, zombi: W.zombi };
+      return { score: W.score, zombi: W.zombi, res: W.apocRes };
     };
     return W;
   };

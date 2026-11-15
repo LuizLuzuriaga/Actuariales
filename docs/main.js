@@ -299,7 +299,7 @@
     document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
   }
 
-  const FINALES_TOTAL = 9;
+  const FINALES_TOTAL = 11;
   function finalScreen(clave, title, text) {
     let vistos = []; try { vistos = JSON.parse(store('ends') || '[]'); } catch (e) { }
     if (!vistos.includes(clave)) { vistos.push(clave); store('ends', JSON.stringify(vistos)); }
@@ -397,8 +397,10 @@
     enterWorld(SOL, 'sol'); setTime('19:10'); setTasks([['Tomar unas cañas con Chelu', false]]);
     if (window.Sound && Sound.on) Sound.ambience('street');
     await fade(false);
-    await SOL.play(API); inScript = false;
+    const sr = await SOL.play(API); inScript = false;
+    if (window.Quick) { }
     await fade(true);
+    if (sr === 'refugio') { finalScreen('solrefugio', 'Último metro a Nuevos Ministerios', 'Bajas las escaleras del metro de Sol con Chelu a rastras y una silla de terraza en la mano. Abajo, un vigilante con cara de funcionario te pide el billete. Se lo enseñas. Los infectados, no. Hay cosas que ni el fin del mundo se salta: la validación del título de transporte.'); return; }
     finalScreen('sol', 'Cañas al fin del mundo', 'El tren se fue, la caña llegó y el apocalipsis, también. Te pilla en una terraza de Sol con una cerveza a medias, un oso de bronce que no pestañea y Chelu diciendo que, bien mirado, esto sale más barato que la hipoteca. La probabilidad de que acabara así era del 0,3 %. La de que acabara en algún sitio, del cien.');
   }
 
@@ -440,7 +442,8 @@
     const r = await CAF.play(API); inScript = false;
     await fade(true);
     const pct = Math.round(simulate(S.min + 6 * (S.descuido || 0)).p * 100), sc = r.score + (S.mini >= (S.miniMax || 8) - 1 ? 1 : S.mini <= 2 ? -1 : 0);
-    if (r.zombi) finalScreen('zombi', 'Apocalipsis zombi', 'Todo lo que fuiste dejando para luego se ha acumulado en la calle. Cuando el cristal cede, la primera persona en entrar es Chelu. Los reservas ya no importan; la tarificación tampoco. Quedan, eso sí, unas ventanas encendidas en la torre de enfrente: alguien sigue trabajando.');
+    if (r.zombi && r.res === 'refugio') finalScreen('caferefugio', 'Refugio en la cocina', 'Entras en la cocina de un portazo y echas el cerrojo. El cocinero te mira, mira la puerta que tiembla y te ofrece, con una calma admirable, una tostada. Sobrevivís a base de tostadas, tres turnos y un chiste de actuarios por hora. La probabilidad de morir hoy bajó del 100 % al 61 %: avance estadísticamente histórico.');
+    else if (r.zombi) finalScreen('zombi', 'Apocalipsis zombi', 'Todo lo que fuiste dejando para luego se ha acumulado en la calle. Cuando el cristal cede, la primera persona en entrar es Chelu. Los reservas ya no importan; la tarificación tampoco. Quedan, eso sí, unas ventanas encendidas en la torre de enfrente: alguien sigue trabajando.');
     else if (sc <= -2) finalScreen('cervezas', 'Cervezas con Chelu', 'Una caña. Luego otra. A las once ya habéis arreglado el sector asegurador. Tu móvil vibra sobre la mesa con el nombre de Mario, que no contestas con una devoción casi profesional.');
     else if (sc < 2 && pct < 85) finalScreen('despedido', 'Despedido', 'Llegas tarde con la cabeza gacha y el café en la mano. En tu mesa hay una caja de cartón y un post-it con una frase educada. El modelo de tarificación seguirá funcionando sin ti. Es lo peor y lo mejor que se puede decir de un modelo.');
     else if (sc >= 2) finalScreen('cafe1', 'Café para uno', 'Cumples: factores correctos, reserva cuadrada, café frío a tu lado. Chelu te escribe «¿cañas?» y lo dejas en visto con una paz que antes no tenías. Estás solo con el triángulo, y por una vez el triángulo está de tu lado.');
