@@ -455,6 +455,9 @@
   let CAF = null;
   async function startCafe() {
     S.busy = true; inScript = true; $('#hud').hidden = false;
+    /* Descuido total (0-9): trenes dejados pasar, despertadores aplazados, minutos perdidos en casa y minijuegos mal resueltos */
+    if (!S.descTotal) { const mm = S.miniMax || 8, md = S.mini == null ? 0 : (S.mini < mm / 2 ? 2 : S.mini < mm - 1 ? 1 : 0);
+      S.descTotal = Math.min(9, (S.descuido || 0) + Math.min(3, S.snooze || 0) + Math.min(3, Math.max(0, Math.floor(((S.min || 345) - 345) / 10))) + md); S.descuido = S.descTotal; }
     const apoc = (S.descuido || 0) >= 7;
     let r, retryCaf = false;
     for (;;) {
