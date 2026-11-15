@@ -103,9 +103,7 @@
       merged(pil, whiteM);
       const fr = []; winX.forEach(([c, w]) => { fr.push(bx(w + 0.08, 0.05, 0.07, c, 0.97, zw), bx(w + 0.08, 0.05, 0.07, c, 2.03, zw), bx(0.05, 1.12, 0.07, c - w / 2, 1.5, zw), bx(0.05, 1.12, 0.07, c + w / 2, 1.5, zw)); }); merged(fr, frameM);
       // exterior: tiras de luz que pasan (textura que se desplaza)
-      const [oc, g] = cv(1024, 128); const gr = g.createLinearGradient(0, 0, 0, 128); gr.addColorStop(0, '#0a0d14'); gr.addColorStop(1, '#171a22'); g.fillStyle = gr; g.fillRect(0, 0, 1024, 128);
-      const rr = Q.rng(31 + s); for (let x = 0; x < 1024; x += 128) { g.fillStyle = 'rgba(255,196,120,.85)'; g.fillRect(x + rr() * 20, 36 + rr() * 20, 5, 54); g.fillStyle = 'rgba(255,196,120,.18)'; g.fillRect(x - 14 + rr() * 20, 20, 36, 90); }
-      for (let i = 0; i < 40; i++) { g.fillStyle = `rgba(${rr() < 0.5 ? 255 : 120},${rr() < 0.5 ? 200 : 160},${rr() < 0.5 ? 120 : 255},${0.25 + rr() * 0.5})`; g.fillRect(rr() * 1024, 8 + rr() * 112, 2 + rr() * 5, 2 + rr() * 5); }
+      const [oc, g] = cv(1024, 128); g.fillStyle = '#030406'; g.fillRect(0, 0, 1024, 128); const rr = Q.rng(31 + s); for (let x = 0; x < 1024; x += 256) { g.fillStyle = 'rgba(40,52,70,.10)'; g.fillRect(x + rr() * 40, 0, 3, 128); }   // túnel: negro, con un brillo apenas perceptible de vez en cuando
       const ot = tx(oc); ot.wrapS = THREE.RepeatWrapping; ot.repeat.set(3, 1); outT.push(ot);
       const outs = put(new THREE.PlaneGeometry(14, 1.12), new THREE.MeshBasicMaterial({ map: ot, toneMapped: false }), 0, 1.5, 1.62 * s); outs.rotation.y = rot;
       const gl = put(new THREE.PlaneGeometry(14, 1.12), new THREE.MeshStandardMaterial({ color: 0x8aa0aa, transparent: true, opacity: 0.1, roughness: 0.03, metalness: 0.4, depthWrite: false }), 0, 1.5, 1.335 * s); gl.rotation.y = rot; tag(gl, 'ventana');
@@ -123,7 +121,7 @@
         ['Alcalá', 'Vicálvaro', 'Vallecas', 'Entrevías', 'Atocha', 'Recoletos', 'N. Ministerios', 'Chamartín'].forEach((n, i) => { const x = 110 + i * 260; g.fillStyle = i === 3 ? '#e8a23a' : '#d6d0c2'; g.beginPath(); g.arc(x, 56, i === 3 ? 12 : 9, 0, R2); g.fill(); g.fillStyle = '#b8b2a4'; g.font = '24px Arial'; g.textAlign = 'center'; g.fillText(n, x, 28); });
         put(new THREE.PlaneGeometry(12.5, 0.16), new THREE.MeshStandardMaterial({ map: tx(k), emissive: 0x333333, emissiveMap: tx(k), roughness: 0.5 }), 0, 2.15, 1.3 * s).rotation.y = rot; }
     });
-    W.tick.push((dt, t) => { outT.forEach((o, i) => { o.offset.x = (i ? -1 : 1) * t * 0.35; }); flick.forEach((l, i) => { l.intensity = 0.15 + Math.max(0, Math.sin(t * 5.5 + i * 2)) * 0.55; }); W.sway.roll = Math.sin(t * 1.15) * 0.005 + Math.sin(t * 3.7) * 0.0018; W.sway.y = Math.sin(t * 2.4) * 0.01; });
+    W.tick.push((dt, t) => { outT.forEach((o, i) => { o.offset.x = (i ? -1 : 1) * t * 0.12; }); flick.forEach((l) => { l.intensity = 0; }); W.sway.roll = Math.sin(t * 1.15) * 0.005 + Math.sin(t * 3.7) * 0.0018; W.sway.y = Math.sin(t * 2.4) * 0.01; });
 
     /* ---------- asientos de tela con reposacabezas, barras, asas colgantes y extintor ---------- */
     { const cush = [], back = [], frame = [];

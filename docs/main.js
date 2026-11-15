@@ -55,6 +55,7 @@
 
   /* ============================== Mundo ============================== */
   const R = Q.buildRoom(scene, { pr, high: HIGH });
+  Q.attachStreet && Q.attachStreet(scene, R, () => clueLevel());                  // la calle de la ventana, con vida
   const t0Av = performance.now();
   const A = Q.buildAvatar(scene, { high: HIGH });
   window.__avatarMs = Math.round(performance.now() - t0Av);
@@ -67,7 +68,9 @@
   /* ============================== Estado ============================== */
   const S = { time: '05:45', min: 345, alarmOn: true, dressed: false, bag: false, mirror: false, busy: true, started: false, ended: false, lastProgress: 0, did: new Set(), tasks: { alarm: false, dress: false, bag: false, out: false } };
   const fmt = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
-  function advance(min) { S.min += min; S.time = fmt(S.min); $('#clock').textContent = S.time; }
+  /* Nivel de pista 0-4: base por escenario, más el tiempo perdido en casa y +1 por cada 3 de descuido (máx. +2) */
+  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
+  function advance(min) { S.min += min; Sound.clue = clueLevel(); S.time = fmt(S.min); $('#clock').textContent = S.time; }
   const P = { x: -0.35, z: -0.55, yaw: 0, pitch: 0, bodyYaw: 0, vx: 0, vz: 0, walk: 0, bob: 0 };
   const EYE = Q.EYE;
   function lookAngles(fx0, fy, fz, tx, ty, tz) { const dx = tx - fx0, dz = tz - fz, dy = ty - fy; return { yaw: Math.atan2(-dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)) }; }
@@ -247,7 +250,7 @@
     ROOM = w.bounds; OBST = w.obst; TICK = w.tick; ACTS = w.acts; ACT_ROOTS = w.actRoots; WORLD = name;
     P.x = w.spawn[0]; P.z = w.spawn[1]; P.vx = P.vz = 0; P.walk = 0;
     const a = lookAngles(P.x, EYE, P.z, w.look[0], w.look[1], w.look[2]); P.yaw = P.bodyYaw = a.yaw; P.pitch = a.pitch;
-    current = null; $('#prompt').hidden = true; renderer.shadowMap.needsUpdate = true;
+    Sound.clue = clueLevel(); current = null; $('#prompt').hidden = true; renderer.shadowMap.needsUpdate = true;
     const hb = $('#act2'); if (w.hudAct) { hb.textContent = w.hudAct.label; hb.hidden = false; HUDKEY = w.hudAct.key; HUDID = w.hudAct.id; hb.onclick = () => { if (!S.busy) interact(HUDID); }; } else { hb.hidden = true; HUDKEY = null; }
   }
   function choose(options, title) {

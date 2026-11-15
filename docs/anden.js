@@ -170,7 +170,7 @@
       for (let k = 1; k <= 4; k++) {
         setTime2(hh(t0 + k * 6));
         W.setBoard(`C-2  TREN ${k}`, k < 4 ? 'COMPLETO' : 'AÚN HAY HUECO*'); W.setTrainGap(k === 4); train.position.x = 60;
-        await trainTo(TX, 3200, true);
+        await trainTo(TX, 3200, true); if (window.Sound && Sound.on) { Sound.brake(); setTimeout(() => Sound.doorBeep(), 1100); }
         await say([[
           'Llega el primero. Va hasta arriba: la gente se pega a los cristales como pegatinas. Dos personas se bajan con la dignidad intacta, y no cabe nadie más.',
           'Segundo tren. Mismo problema, distinta cara en la ventana. La ocupación del cercanías es una constante universal.',
@@ -198,7 +198,7 @@
           await say(['Lo dejas pasar. Rezas por una cosa: que el siguiente venga con un poco menos de gente.', 'Spoiler: no. Pero uno siempre reza.', 'Lo dejas pasar. Ya vas por tres. La esperanza de vida de tu paciencia es de unos cuatro minutos.'][Math.min(k, 3) - 1]);
         }
         if (k === 2 && !pensado) { pensado = true; await say([{ text: 'Dos trenes seguidos y la misma imagen: el andén lleno de gente de entre 40 y 50 años, pegada a las puertas.', think: true }, { text: '¿Por qué la curva de mortalidad no se mueve hacia ahí? Si lo hiciera, este andén sería una tabla de vida.', think: true }]); await chart(); }
-        await trainTo(-60, 2600, true);
+        if (window.Sound && Sound.on) Sound.doorBeep(); await trainTo(-60, 2600, true);
         if (k < 4) await free(10000, 'Siguiente tren en {s} s');
       }
       return 'cervezas';
