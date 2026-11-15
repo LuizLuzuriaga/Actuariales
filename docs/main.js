@@ -433,13 +433,14 @@
       await LOB.play(API);
       await fade(true);
     }
-    let pr, retryPla = false;
+    let pr, retryPla = false, p2 = /[?&]fase2/.test(location.search);
     for (;;) {
-      PLA = Q.buildOficina(renderer, envTex, 'planta', { retry: retryPla });
+      PLA = Q.buildOficina(renderer, envTex, 'planta', { retry: retryPla, phase2: p2 });
       window.__qx && (window.__qx.PLA = PLA); PLA.hecho = PLA.cafe = false; enterWorld(PLA, 'planta'); setTime('08:12'); setTasks([['Abrir el modelo en tu mesa', false], ['Tomar un café', false]]);
       await fade(false);
       pr = await PLA.play(API);
-      if (pr !== 'atrapado') break;
+      if (pr !== 'atrapado' && pr !== 'atrapado2') break;
+      if (pr === 'atrapado2') p2 = true;
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
       await deathCard('Parte de la planta 4', 'La bacteria negra te alcanza entre dos cubículos. No duele: simplemente dejas de ser una persona y pasas a ser un patrón en la moqueta. Vuelve a empezar la carrera desde el ascensor.');
@@ -670,11 +671,13 @@
   $('#cam').addEventListener('click', toggleCam); if (third) $('#cam').textContent = '🧍';
   $('#snd').addEventListener('click', () => { CFG.sound = !Sound.on; saveCfg(); setSound(CFG.sound); });
   if (CFG.quality !== 'auto') applyQuality(CFG.quality);
+  { const lv = $('#cfgLevel'), gobtn = $('#cfgGo'); if (lv && gobtn) gobtn.addEventListener('click', () => { const v = lv.options[lv.selectedIndex].value, i = lv.selectedIndex; if (i === 0) return; location.href = location.pathname + (v ? '?' + v + '&auto=1' : '?auto=1'); }); }
   const go = $('#go');
-  requestAnimationFrame(() => requestAnimationFrame(() => { go.disabled = false; go.textContent = '▶ Despertar'; go.focus(); }));   // el botón se activa cuando ya hay un fotograma dibujado
+  requestAnimationFrame(() => requestAnimationFrame(() => { go.disabled = false; go.textContent = '▶ Despertar'; go.focus(); if (/[?&]auto=1/.test(location.search)) go.click(); }));   // con auto=1 (selector de niveles) arranca solo   // el botón se activa cuando ya hay un fotograma dibujado
   go.addEventListener('click', () => {
     $('#start').style.display = 'none'; $('#hud').hidden = false; S.started = true; S.busy = false; S.lastProgress = performance.now();
     lockPointer(); if (CFG.sound) setSound(true);
+    if (/[?&]camino/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]anden/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]tren/.test(location.search)) { S.alarmOn = false; startTrain(); return; }
     if (/[?&]azca/.test(location.search)) { S.alarmOn = false; startAzca(); return; }

@@ -154,6 +154,7 @@ const Sound = (() => {
     knock(n = 3, v = 1) { for (let i = 0; i < n; i++) { blip(85, 0.11, 'sine', 0.28 * v, i * 0.32); blip(140, 0.05, 'triangle', 0.1 * v, i * 0.32); } },
     scratch(v = 1) { for (let i = 0; i < 5; i++) burst(2400 + Math.random() * 1200, 0.18, 0.06 * v); },
     moto(v = 1) { for (let i = 0; i < 14; i++) blip(70 + i * 16 + Math.random() * 10, 0.2, 'sawtooth', 0.07 * v, i * 0.13); burst(260, 1.8, 0.1 * v); },
+    shot() { burst(1100, 0.16, 0.5); blip(140, 0.14, 'square', 0.22); blip(70, 0.2, 'sawtooth', 0.12, 0.02); },
     growl(v = 1) { blip(46 + Math.random() * 12, 1.0, 'sawtooth', 0.17 * v); blip(70, 0.7, 'square', 0.06 * v, 0.05); burst(170, 0.9, 0.2 * v); },
     scuttle(v = 1) { for (let i = 0; i < 6; i++) blip(900 + Math.random() * 700, 0.025, 'square', 0.035 * v, i * 0.05); },
     whoosh() { burst(400, 1.6, 0.25); burst(1200, 1.2, 0.08); },

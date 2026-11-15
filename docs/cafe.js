@@ -53,11 +53,13 @@
     { const C = Q.buildCrowd([[3.7, 0.4]], { seed: 12, yaw: () => Math.PI / 2 }); root.add(C.group); C.obst.forEach((o) => W.obst.push(o)); tag(C.group, 'chelu'); }
     /* si todo se ha ido al garete: gente fuera, pegada al cristal, y destellos rojos */
     if (apoc) {
-      const zs = []; for (let k = 0; k < 10; k++) { const w = Q.buildCrowd([[0, 0]], { seed: 500 + k, yaw: () => -Math.PI / 2 }); w.group.position.set(bounds.minX - 1.0 - (k % 3) * 0.7, 0, -3.6 + k * 0.8); root.add(w.group); zs.push({ g: w.group, ph: k * 1.7, x0: w.group.position.x, z0: w.group.position.z }); }
+      const zs = []; for (let k = 0; k < 10; k++) { const w = Q.buildCrowd([[0, 0]], { seed: 500 + k, yaw: () => -Math.PI / 2, zombie: true }); w.group.position.set(bounds.minX - 1.0 - (k % 3) * 0.7, 0, -3.6 + k * 0.8); root.add(w.group); zs.push({ g: w.group, ph: k * 1.7, x0: w.group.position.x, z0: w.group.position.z }); }
       const rl = new THREE.PointLight(0xff2a18, 0, 12, 2); rl.position.set(-4.4, 1.5, 0); scene.add(rl);
       const shards = []; for (let k = 0; k < 26; k++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.1 + Math.random() * 0.2, 0.02, 0.1 + Math.random() * 0.2), new THREE.MeshStandardMaterial({ color: 0xaab8c4, roughness: 0.1, transparent: true, opacity: 0.7 })); s.visible = false; s.userData.v = new THREE.Vector3(1 + Math.random() * 2.5, 1 + Math.random() * 2, (Math.random() - 0.5) * 3); scene.add(s); shards.push(s); }
       W.zs = zs; W.breach = false; let bt = 0;
-      W.doBreach = () => { W.breach = true; glass.visible = false; shards.forEach((s) => { s.visible = true; s.position.set(bounds.minX + 0.1, 0.7 + Math.random() * 1.8, -1.2 + Math.random() * 2.4); }); };
+      const gun = new THREE.Group(); put(new THREE.BoxGeometry(0.2, 0.1, 0.04), std(0x14161a, 0.3, { metalness: 0.7 }), 0, 0, 0, gun); put(new THREE.BoxGeometry(0.06, 0.12, 0.04), std(0x14161a, 0.3, { metalness: 0.7 }), -0.06, -0.09, 0, gun); put(new THREE.BoxGeometry(0.28, 0.035, 0.035), std(0x2a2d33, 0.25, { metalness: 0.9 }), 0.08, 0.04, 0, gun);
+      gun.position.set(1.6, 1.12, bounds.minZ + 0.7); gun.rotation.y = 0.4; tag(gun, 'pistola'); W.gunMesh = gun; gun.visible = false; { const l = new THREE.PointLight(0xffe0a0, 0.5, 2.5, 2); l.position.set(0, 0.3, 0); gun.add(l); }
+      W.doBreach = () => { W.breach = true; glass.visible = false; if (!Q.apoc.hasGun()) gun.visible = true; shards.forEach((s) => { s.visible = true; s.position.set(bounds.minX + 0.1, 0.7 + Math.random() * 1.8, -1.2 + Math.random() * 2.4); }); };
       W.tick.push((dt, t) => { rl.intensity = 1.6 * Math.max(0, Math.sin(t * 5)) * (W.breach ? 1.5 : 1);
         if (!W.breach) zs.forEach((z) => { z.g.position.x = z.x0 + 0.08 * Math.abs(Math.sin(t * 6 + z.ph)); z.g.rotation.z = Math.sin(t * 2.4 + z.ph) * 0.1; if (glass.material.opacity < 0.5) glass.material.opacity += 0; });
         else { bt += dt;
@@ -78,6 +80,7 @@
     };
     W.acts.barra = { label: 'Pedir un café', stand: [0, -1.9], look: [0, 1.2, bounds.minZ + 0.7], enabled: () => !W.barra, run: async (api) => {
       W.barra = true; await api.say(['Un café solo, dos euros y unas monedas que no devuelven ninguna rentabilidad.', 'La máquina gruñe, escupe y te lo entrega con la dignidad de quien lleva doce años en el mismo turno.']); } };
+    W.acts.pistola = { label: 'Coger la pistola de la barra', stand: [1.6, -2.0], look: [1.6, 1.1, bounds.minZ + 0.7], enabled: () => W.apocOn && !!W.gunMesh && !Q.apoc.hasGun(), run: async (api) => { Q.apoc.giveGun(); W.gunMesh.visible = false; await api.say(['Detrás de la barra, junto a la cafetera, el camarero guardaba una pistola «por si acaso». Doce balas.', { text: 'Siempre dije que el café ponía nervioso, pero esto es nuevo. Clic para disparar.', think: true }]); } };
     W.acts.arma = { label: 'Coger una silla', stand: [-1.2, -1.0], look: [-2.2, 0.6, -1.8], enabled: () => W.apocOn && !W.armed, run: async (api) => { W.armed = true; Q.apoc.pick(); await api.say('Una silla de madera maciza. Perfecta para estudiar las propiedades del hueso temporal. F para empujar con ella.'); } };
     W.acts.ventana = { label: 'Mirar por la ventana', stand: [-3.7, 0], look: [-5, 1.6, 0], enabled: () => true, run: async (api) => {
       if (apoc) { W.pistas = 9; await api.say(['Fuera hay gente pegada al cristal. Muchos. Quietos, con la cabeza ladeada, mirando dentro.', { text: 'Nadie los ha llamado. Nadie los ha parado. Es lo que pasa cuando todo se va dejando para luego.', think: true }]); }

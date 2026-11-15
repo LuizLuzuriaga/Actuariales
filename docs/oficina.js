@@ -13,6 +13,7 @@
     const bounds = planta ? { minX: -13, maxX: 13, minZ: -11, maxZ: 11 } : { minX: -6.5, maxX: 6.5, minZ: -4.6, maxZ: 4.6 };
     const W = { scene, obst: [], tick: [], acts: {}, actRoots: [], bounds, spawn: planta ? [0, 8.8] : [0, 3.6], look: planta ? [0, 1.4, -4] : [0, 1.5, -4.5], exit: false, pistas: 0 };
     const root = new THREE.Group(); scene.add(root);
+    if (planta && opts.phase2) { W.spawn = [MX + 0.1, MZ + 1.5]; W.look = [0, 1.4, 9]; }                                             // reintento de la segunda persecución: empiezas en tu mesa
     const rnd = Q.rng(planta ? 5151 : 5050);
     const std = (color, rough = 0.85, extra = {}) => new THREE.MeshStandardMaterial(Object.assign({ color, roughness: rough }, extra));
     const emis = (color, k = 1) => new THREE.MeshBasicMaterial({ color: new THREE.Color(color).multiplyScalar(k), toneMapped: false });
@@ -95,7 +96,8 @@
         const [px2, pz2] = P(-0.5 + rnd() * 0.3, -0.7); const pp = bx(0.28, 0.01, 0.2, 0, 0.77, 0); pp.rotateY(rnd() * 3); pp.translate(px2, 0, pz2); paper.push(pp);
         box(x, z, 2.3, 2.3); };
       for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) { const x = -7.8 + i * 4.2, z = -8 + j * 3.4; if (i === 2 && j === 3) continue; if (i === 4 && j === 0) continue; cub(x, z, (i + j) % 2 ? 0 : Math.PI, false); cubs.push([x, z, (i + j) % 2 ? 0 : Math.PI]); }
-      cub(MX, MZ, 0, true);                                                           // tu mesa: dos monitores
+      cub(MX, MZ, 0, true);
+      { const trig = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.9, 2.6), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); trig.position.set(MX, 0.95, MZ + 0.2); root.add(trig); tag(trig, 'mesa'); }                // zona para apuntar: pulsa E cerca de tu mesa                                                           // tu mesa: dos monitores
       merged(wall, std(0x9a9786, 0.95)); merged(desk, std(0xb4b09c, 0.7)); merged(mon, std(0xc8c2a8, 0.6)); merged(scr, new THREE.MeshStandardMaterial({ color: 0x0a0c0b, roughness: 0.25, metalness: 0.2, emissive: 0x0b140f })); merged(chair, std(0x1a2236, 0.85)); merged(paper, std(0xdedacc, 0.9));
       // pantallas de tu mesa: dos ventanas con luz propia
       { const [c, g] = cv(128, 96); g.fillStyle = '#0c1a14'; g.fillRect(0, 0, 128, 96); g.fillStyle = '#5ce0a0'; for (let i = 0; i < 8; i++) g.fillRect(8, 10 + i * 10, 20 + ((i * 37) % 80), 3); const t = Q.toTex(c);
@@ -118,10 +120,16 @@
           st.ng -= dt; st.ns -= dt; if (window.Sound && Sound.on) { if (st.ng <= 0) { Sound.growl(1 - Math.min(0.8, d / 16)); st.ng = 1.6 + d * 0.14; } if (st.ns <= 0) { Sound.scuttle(1 - Math.min(0.8, d / 16)); st.ns = 0.45; } }
           if (d < 0.95) { st.on = false; W.caught = true; } }); }
       // flecha roja hacia tu mesa
-      let arrow = null, lab = null;
+      W.tgt = [MX, MZ + 1]; let arrow = null, lab = null, sitBtn = null, downBtn = null;
       W.showArrow = () => { arrow = document.createElement('div'); arrow.id = 'flecha'; arrow.innerHTML = '<svg viewBox="0 0 60 80" width="54" height="72"><path d="M30 2 L58 40 H40 V78 H20 V40 H2 Z" fill="#c4202c" stroke="#2a0508" stroke-width="3"/></svg><b></b>'; document.body.appendChild(arrow); lab = arrow.querySelector('b'); };
-      W.hideArrow = () => { if (arrow) { arrow.remove(); arrow = null; } };
-      W.tick.push(() => { if (!arrow || !W.api) return; const P = W.api.P, dx = MX - P.x, dz = MZ + 1 - P.z; let rel = Math.atan2(-dx, -dz) - P.yaw; rel = ((rel + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; arrow.firstChild.style.transform = 'rotate(' + (-rel) + 'rad)'; lab.textContent = Math.round(Math.hypot(dx, dz)) + ' m'; });
+      W.hideArrow = () => { if (arrow) { arrow.remove(); arrow = null; } if (sitBtn) { sitBtn.remove(); sitBtn = null; } if (downBtn) { downBtn.remove(); downBtn = null; } };
+      W.tick.push(() => { const near = !W.sat && W.api && !W.api.S.busy && Math.hypot(W.api.P.x - MX, W.api.P.z - (MZ + 1.3)) < 4.2;                  // botón «Sentarte» al llegar a tu mesa
+        if (near && !sitBtn) { sitBtn = document.createElement('button'); sitBtn.type = 'button'; sitBtn.id = 'sentarse'; sitBtn.textContent = ('ontouchstart' in window ? '' : 'E · ') + 'Sentarte y trabajar'; sitBtn.addEventListener('click', () => window.__qx && window.__qx.interact('mesa')); document.body.appendChild(sitBtn); }
+        else if (!near && sitBtn) { sitBtn.remove(); sitBtn = null; }
+        const nearDown = W.up && !W.exit && W.api && !W.api.S.busy && Math.hypot(W.api.P.x, W.api.P.z - 9.3) < 4.5;                  // botón «Bajar» al llegar al ascensor
+        if (nearDown && !downBtn) { downBtn = document.createElement('button'); downBtn.type = 'button'; downBtn.id = 'sentarse'; downBtn.textContent = ('ontouchstart' in window ? '' : 'E · ') + 'Bajar por el ascensor'; downBtn.addEventListener('click', () => window.__qx && window.__qx.interact('salir')); document.body.appendChild(downBtn); }
+        else if (!nearDown && downBtn) { downBtn.remove(); downBtn = null; } });
+      W.tick.push(() => { if (!arrow || !W.api) return; const P = W.api.P, dx = W.tgt[0] - P.x, dz = W.tgt[1] - P.z; let rel = Math.atan2(-dx, -dz) - P.yaw; rel = ((rel + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; arrow.firstChild.style.transform = 'rotate(' + (-rel) + 'rad)'; lab.textContent = Math.round(Math.hypot(dx, dz)) + ' m'; });
       // cocina: encimera con la cafetera
       { const g = new THREE.Group(); g.position.set(10.9, 0, 2.0); root.add(g); merged([bx(0.7, 0.9, 3.4, 0, 0.45, 0), bx(0.8, 0.05, 3.5, 0, 0.92, 0)], std(0xb9b6a6, 0.6), g);
         merged([bx(0.35, 0.5, 0.3, 0, 1.2, -0.4), bx(0.3, 0.08, 0.28, 0, 1.0, -0.4)], std(0x2a2a2a, 0.4, { metalness: 0.5 }), g); put(new THREE.BoxGeometry(0.04, 0.04, 0.02), emis(0xff4030, 2), 0.1, 1.35, -0.25, g);
@@ -143,7 +151,7 @@
         const { say, free } = api; await say(['El vestíbulo. Terrazo gris, fluorescentes y un cartel rojo sin una letra. No hace falta una marca: lo sabes de memoria.', 'Aquí se cruza el torno de la entrada con el de la salida. Solo uno de los dos se usa de verdad.']);
         await free(1e9, 'Cruza el torno · llama al ascensor cuando quieras', () => W.exit); return 'subir'; };
     } else {
-      W.acts.mesa = { label: 'Sentarte y trabajar', stand: [MX + 0.1, MZ + 1.5], look: [MX, 0.95, MZ - 0.85], enabled: () => !W.sat, run: async (api) => {
+      W.acts.mesa = { label: 'Sentarte y trabajar', stand: [MX + 0.1, MZ + 1.5], look: [MX, 0.95, MZ - 0.85], enabled: () => !W.sat && !!W.api && Math.hypot(W.api.P.x - MX, W.api.P.z - (MZ + 1.3)) < 4.2, run: async (api) => {
         W.sat = true; W.chase.on = false; W.mon.group.visible = false; W.hideArrow();
         await api.say(['Te dejas caer en la silla. El ruido se detiene de golpe, como si alguien hubiera bajado una palanca.', 'Las dos pantallas se encienden solas: a la izquierda el modelo de tarificación, a la derecha el triángulo de reservas.']);
         api.S.busy = true; const a = await Q.miniGLM(); api.S.busy = true; const b = await Q.miniReservas(); api.S.busy = true; api.S.mini = a.score + b.score; api.S.miniMax = a.max + b.max;
@@ -151,17 +159,24 @@
         let c = 'quedar'; while (c === 'quedar') { c = await api.choose([{ id: 'levantar', label: 'Levantarte', hint: 'Estirar las piernas y ver cómo está la planta' }, { id: 'quedar', label: 'Quedarte un minuto más', hint: 'Mirar la pantalla sin leerla' }], 'Has terminado por ahora'); if (c === 'quedar') await api.say('Un minuto más. La pantalla te devuelve la mirada.'); }
         W.gente.visible = true; W.up = true;
         await api.say(['Te levantas. La planta, que estaba vacía, ahora respira: teclados, un teléfono sin atender, alguien arrastra una silla.', { text: 'Han estado aquí todo el rato. O han vuelto cuando ya no hacía falta tenerles miedo.', think: true }]); } };
-      W.acts.salir = { label: 'Bajar por el ascensor', stand: [0, 9.3], look: [0, 1.4, bounds.maxZ], enabled: () => W.up, run: async (api) => { await api.say('Pulsas el botón. Planta baja. Un café con Chelu te espera, o eso dice el móvil.'); W.exit = true; } };
+      W.acts.salir = { label: 'Bajar por el ascensor', stand: [0, 9.3], look: [0, 1.4, bounds.maxZ], enabled: () => W.up && !!W.api && Math.hypot(W.api.P.x, W.api.P.z - 9.3) < 4.5, run: async (api) => { W.chase.on = false; W.mon.group.visible = false; W.hideArrow(); await api.say('Pulsas el botón. Planta baja. Un café con Chelu te espera, o eso dice el móvil.'); W.exit = true; } };
       W.acts.cocina = { label: 'Ir a por un café', stand: [9.4, 2.0], look: [10.9, 1.2, 2.0], enabled: () => true, run: async (api) => { await api.say(['La cafetera hace un ruido de motor viejo y entrega algo marrón y caliente.', 'Sabe a deber algo. Aun así te lo bebes: es lo único de la planta que se calienta a propósito.']); W.cafe = true; } };
       W.acts.reloj = { label: 'Mirar el reloj', stand: [5, -9.4], look: [5, 2.0, bounds.minZ], enabled: () => true, run: async (api) => { W.pistas++; await api.say(['El reloj marca las cuatro y cuarto. Hace un mes también marcaba las cuatro y cuarto.', { text: 'Aquí el tiempo no pasa. Se factura.', think: true }]); } };
       W.acts.emergencia = { label: 'Mirar la puerta de emergencia', stand: [10.4, -9.0], look: [11.0, 1.1, bounds.minZ], enabled: () => true, run: async (api) => { W.pistas++; await api.say(['Salida de emergencia. La barra antipánico tiene polvo. Nadie ha entrado ni salido por aquí en meses.', { text: 'Al otro lado de las cristaleras, el pasillo oscuro sigue otra veintena de metros más. Y luego otra.', think: true }]); } };
       W.play = async (api) => {
         W.api = api; const { say, free } = api;
         if (opts.retry) await say(['Otra vez. Las puertas se abren, el ruido ya viene detrás y tu mesa sigue al fondo a la izquierda. Corre.']); else await say(['Planta 4. Las puertas del ascensor se abren a una moqueta gris que huele a cable caliente.', 'Filas de cubículos, fluorescentes que zumban y, al fondo, una oscuridad más larga de lo que debería.', 'Tu mesa está al fondo, a la izquierda. Y detrás de ti, algo grande y negro acaba de salir del pasillo.']);
+        if (!opts.phase2) {
         W.mon.group.visible = true; W.chase.on = true; W.chase.t = 0; W.showArrow();
         await free(1e9, '¡CORRE! (Shift) · sigue la flecha roja hasta tu mesa, al fondo a la izquierda, y siéntate', () => W.up || W.caught);
         if (W.caught) { W.hideArrow(); if (window.Sound && Sound.on) Sound.growl(1.6); await say(['Notas algo frío y poligonal en los tobillos. Las patas se cruzan sobre ti como un alambre.', 'La moqueta te parece, por primera vez, cómoda.']); return 'atrapado'; }
-        await free(1e9, 'Pasea por la planta · el ascensor, cuando quieras', () => W.exit); return 'listo'; };
+        } else { W.sat = true; W.up = true; W.gente.visible = true; }
+        // la bacteria vuelve cuando te levantas: segunda persecución hasta el ascensor
+        await say(opts.phase2 ? ['Otra vez desde tu mesa: la bacteria vuelve a despegarse de la pared. El ascensor sigue al fondo. Corre.'] : ['Mientras tus compañeros teclean como si nada, el pasillo del fondo se oscurece. Algo muy largo y negro se despega de la pared: la bacteria vuelve, y nadie levanta la vista.', { text: 'Siempre ha estado aquí. Solo espera a que te levantes para ir a buscarte.', think: true }]);
+        W.tgt = [0, 9.0]; W.mon.group.position.set(-12.2, 0, -10.3); W.mon.group.visible = true; W.chase.on = true; W.chase.t = 0; W.chase.nextSurge = 6; W.caught = false; W.showArrow();
+        await free(1e9, '¡CORRE al ascensor! (Shift) · sigue la flecha roja y pulsa E para bajar', () => W.exit || W.caught);
+        if (W.caught) { W.hideArrow(); if (window.Sound && Sound.on) Sound.growl(1.6); await say(['Las patas largas te atrapan a medio camino del ascensor. Tus compañeros siguen tecleando sin levantar la vista.']); return 'atrapado2'; }
+        return 'listo'; };
     }
     function S_desc(api, n) { api.S.descuido = (api.S.descuido || 0) + n; }
     return W;

@@ -88,6 +88,22 @@
     <label class="row"><input type="checkbox" id="cfgSound" /> Sonido</label>
     <label class="row"><input type="checkbox" id="cfgCalm" /> Reducir el balanceo de la cámara</label>
     <label>Calidad gráfica <select id="cfgQ"><option value="auto">Automática</option><option value="alta">Alta</option><option value="baja">Baja (más fluida)</option></select></label>
+    <label>Niveles <select id="cfgLevel">
+      <option value="">— elegir nivel —</option>
+      <option value="">1 · Dormitorio (empezar de cero)</option>
+      <option value="camino">2 · Calles de Vallecas y andén</option>
+      <option value="anden">3 · Andén de cercanías (y escaleras)</option>
+      <option value="tren">4 · Tren</option>
+      <option value="azca">5 · Azca, la plaza</option>
+      <option value="oficina">6 · Oficina: vestíbulo</option>
+      <option value="planta">7 · Planta 4: la bacteria y tu mesa</option>
+      <option value="planta&fase2">7b · Planta 4: huida final al ascensor</option>
+      <option value="cafe&desc=0">8 · Cafetería</option>
+      <option value="cafe&desc=8">8b · Cafetería: apocalipsis</option>
+      <option value="sol">9 · Puerta del Sol: cañas con Chelu</option>
+      <option value="sol&apoc">9b · Sol: apocalipsis y Dani Moto</option>
+    </select></label>
+    <button type="button" class="btn" id="cfgGo">Ir al nivel</button>
     <button type="button" class="btn" id="cfgClose">Cerrar</button>
   </div>
   <div id="panel" hidden role="dialog" aria-label="Contenido"></div>
