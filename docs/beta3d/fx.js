@@ -2,7 +2,7 @@
 (() => {
   const Q = window.QX;
   const FinalShader = {
-    uniforms: { tDiffuse: { value: null }, time: { value: 0 }, exposure: { value: 1.2 }, resolution: { value: new THREE.Vector2(1, 1) }, grain: { value: 0.045 }, vig: { value: 0.62 }, ca: { value: 0.0022 } },
+    uniforms: { tDiffuse: { value: null }, time: { value: 0 }, exposure: { value: 0.98 }, resolution: { value: new THREE.Vector2(1, 1) }, grain: { value: 0.07 }, vig: { value: 0.8 }, ca: { value: 0.0022 } },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
     fragmentShader: `
       uniform sampler2D tDiffuse; uniform float time, exposure, grain, vig, ca; uniform vec2 resolution; varying vec2 vUv;
@@ -19,7 +19,7 @@
         col = pow(col, vec3(1.0 / 2.2));
         float v = smoothstep(0.95, 0.2, length(d) * 1.25);
         col *= mix(1.0 - vig, 1.0, v);
-        col = mix(col, vec3(dot(col, vec3(0.299, 0.587, 0.114))), 0.08);
+        col = mix(col, vec3(dot(col, vec3(0.299, 0.587, 0.114))), 0.42); col *= vec3(0.97, 1.0, 0.96); col = pow(col, vec3(1.08));
         col += (hash(vUv * resolution + fract(time) * 100.0) - 0.5) * grain * (1.0 - dot(col, vec3(0.33)) * 0.6);
         gl_FragColor = vec4(col, 1.0);
       }`,
@@ -37,7 +37,7 @@
       if (rt.samples !== undefined) rt.samples = 4;
       const composer = new THREE.EffectComposer(renderer, rt);
       composer.addPass(new THREE.RenderPass(scene, camera));
-      const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.48, 0.65, 0.9);
+      const bloom = new THREE.UnrealBloomPass(new THREE.Vector2(innerWidth, innerHeight), 0.3, 0.6, 0.92);
       composer.addPass(bloom);
       const fin = new THREE.ShaderPass(FinalShader);
       composer.addPass(fin);
