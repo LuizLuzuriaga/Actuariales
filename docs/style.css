@@ -136,3 +136,23 @@ code { font: 12px Consolas, monospace; color: #8fae8f; }
 .ficha .sk span { position: relative; padding-left: 8px; font: 13px var(--serif); line-height: 20px; color: var(--bone); }
 .ficha .sk span { z-index: 2; text-shadow: 0 1px 2px #000; }
 #sheet, #sheet .card { scrollbar-width: thin; scrollbar-color: #3b342c #050507; }
+
+#flecha { position: fixed; top: 120px; left: 50%; transform: translateX(-50%); z-index: 20; text-align: center; pointer-events: none; filter: drop-shadow(0 0 8px rgba(196,32,44,.7)); }
+#flecha svg { display: block; margin: 0 auto; }
+#flecha b { display: block; color: #e8b0b0; font: 600 13px Georgia, serif; text-shadow: 0 1px 3px #000; }
+#mini { position: fixed; inset: 0; z-index: 40; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.72); }
+#mini[hidden] { display: none; }
+#mini .mcard { width: min(620px, 92vw); max-height: 92vh; overflow: auto; background: #0a0b0d; border: 1px solid #3a3326; box-shadow: 0 0 0 3px #0a0b0d, 0 0 0 4px #2a251b; padding: 22px 26px; color: #d8d2c0; font-family: Georgia, serif; }
+#mini small { color: #8a8470; letter-spacing: .12em; text-transform: uppercase; font-size: 11px; }
+#mini h3 { margin: 6px 0 12px; font-weight: 400; font-size: 20px; }
+#mini table { border-collapse: collapse; margin: 8px 0 14px; font: 14px ui-monospace, Consolas, monospace; }
+#mini td, #mini th { border: 1px solid #2f2b22; padding: 4px 10px; text-align: right; color: #cfc9b6; }
+#mini .mopt, #mini .mnext { display: block; width: 100%; text-align: left; margin: 6px 0; padding: 10px 14px; background: #111317; color: #e0dac8; border: 1px solid #3a3326; font: 15px Georgia, serif; cursor: pointer; }
+#mini .mopt:hover, #mini .mnext:hover { border-color: #c98d3a; }
+#mini .mopt.ok { border-color: #4f9a6a; background: #0f1a14; }
+#mini .mopt.no { border-color: #9a4f4f; background: #1a0f0f; }
+#mini kbd { margin-right: 10px; color: #c98d3a; font-family: ui-monospace, Consolas, monospace; }
+#mini .mfb { min-height: 2.6em; color: #b8b29c; font-size: 14px; margin: 8px 0; }
+#mini input[type=range] { width: 100%; margin: 10px 0; accent-color: #c98d3a; }
+#mini .mbar { height: 8px; background: #1a1c20; margin: 4px 0 10px; }
+#mini .mbar i { display: block; height: 100%; background: #c98d3a; }

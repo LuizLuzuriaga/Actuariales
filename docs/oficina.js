@@ -6,7 +6,7 @@
   const RED = 0x7c1219;
 
   Q.buildOficina = (renderer, envTex, kind) => {
-    const planta = kind === 'planta';
+    const planta = kind === 'planta', MX = -11.7, MZ = -9.0;   // tu mesa: la del fondo a la izquierda
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(planta ? 0x14150f : 0x1c1d20); scene.fog = new THREE.FogExp2(planta ? 0x1a1b14 : 0x202226, planta ? 0.05 : 0.04);
     if (envTex) scene.environment = envTex;
@@ -81,7 +81,8 @@
         const lv = []; for (let i = 0; i < 9; i++) { const a = i * 0.7, q = new THREE.ConeGeometry(0.1, 0.9, 5); q.translate(0, 0.45, 0); q.rotateZ(0.45); q.rotateY(a); q.translate(0, 0.5, 0); lv.push(q); } merged(lv, std(0x35402e, 0.8), g); box(5.5, -3.6, 0.7, 0.7); }
     } else {
       /* ---------- PLANTA 4 ---------- */
-      logo(-6, 2.0, bounds.minZ + 0.08, 0, 1.3); logo(0, 1.9, bounds.maxZ - 0.08, Math.PI, 1.0);
+      logo(-6, 2.0, bounds.minZ + 0.08, 0, 1.3); logo(5, 1.9, bounds.maxZ - 0.08, Math.PI, 1.0);
+      const cubs = [];
       const wall = [], desk = [], mon = [], scr = [], chair = [], paper = [];
       const cub = (x, z, ry, mine) => { const c = Math.cos(ry), s = Math.sin(ry), P = (lx, lz) => [x + lx * c + lz * s, z - lx * s + lz * c];
         const part = (lx, lz, w, d) => { const [px, pz] = P(lx, lz), q = bx(w, 1.5, d, 0, 0.75, 0); q.rotateY(ry); q.translate(px, 0, pz); wall.push(q); };
@@ -93,12 +94,33 @@
         const [chx, chz] = P(0.1, -0.1); const ch = bx(0.5, 0.06, 0.5, 0, 0.5, 0); ch.rotateY(ry + (rnd() - 0.5) * 0.9); ch.translate(chx, 0, chz); chair.push(ch); const bk = bx(0.46, 0.5, 0.06, 0, 0.82, 0.22); bk.rotateY(ry + 0.2); bk.translate(chx, 0, chz); chair.push(bk);
         const [px2, pz2] = P(-0.5 + rnd() * 0.3, -0.7); const pp = bx(0.28, 0.01, 0.2, 0, 0.77, 0); pp.rotateY(rnd() * 3); pp.translate(px2, 0, pz2); paper.push(pp);
         box(x, z, 2.3, 2.3); };
-      for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) { const x = -9.6 + i * 4.2, z = -8 + j * 3.4; if (i === 2 && j === 3) continue; if (i === 4 && j === 0) continue; cub(x, z, (i + j) % 2 ? 0 : Math.PI, false); }
-      cub(0.2, 5.0, 0, true);                                                           // tu mesa: dos monitores
+      for (let i = 0; i < 5; i++) for (let j = 0; j < 4; j++) { const x = -7.8 + i * 4.2, z = -8 + j * 3.4; if (i === 2 && j === 3) continue; if (i === 4 && j === 0) continue; cub(x, z, (i + j) % 2 ? 0 : Math.PI, false); cubs.push([x, z, (i + j) % 2 ? 0 : Math.PI]); }
+      cub(MX, MZ, 0, true);                                                           // tu mesa: dos monitores
       merged(wall, std(0x9a9786, 0.95)); merged(desk, std(0xb4b09c, 0.7)); merged(mon, std(0xc8c2a8, 0.6)); merged(scr, new THREE.MeshStandardMaterial({ color: 0x0a0c0b, roughness: 0.25, metalness: 0.2, emissive: 0x0b140f })); merged(chair, std(0x1a2236, 0.85)); merged(paper, std(0xdedacc, 0.9));
       // pantallas de tu mesa: dos ventanas con luz propia
       { const [c, g] = cv(128, 96); g.fillStyle = '#0c1a14'; g.fillRect(0, 0, 128, 96); g.fillStyle = '#5ce0a0'; for (let i = 0; i < 8; i++) g.fillRect(8, 10 + i * 10, 20 + ((i * 37) % 80), 3); const t = Q.toTex(c);
-        [-0.2, 0.6].forEach((dx) => { const p = put(new THREE.PlaneGeometry(0.33, 0.26), new THREE.MeshBasicMaterial({ map: t, toneMapped: false }), 0.2 + dx, 0.95, 5.0 - 0.8 + 0.215); }); }
+        [-0.4, 0.4].forEach((dx) => { put(new THREE.PlaneGeometry(0.33, 0.26), new THREE.MeshBasicMaterial({ map: t, toneMapped: false }), MX + dx, 0.95, MZ - 0.85 + 0.215); }); }
+      // ascensor de vuelta, en la pared de atrás junto a donde apareces
+      { const g = new THREE.Group(); g.position.set(0, 0, bounds.maxZ - 0.06); g.rotation.y = Math.PI; root.add(g); merged([bx(1.5, 2.3, 0.08, -0.85, 1.15, 0), bx(1.5, 2.3, 0.08, 0.85, 1.15, 0)], std(0x7f858a, 0.28, { metalness: 0.9 }), g); put(new THREE.BoxGeometry(0.04, 2.3, 0.09), std(0x1a1a1a), 0, 1.15, 0.01, g); tag(g, 'salir'); }
+      // compañeros: aparecen cuando te levantas (unos de pie en sus puestos, otros paseando por los pasillos)
+      W.gente = new THREE.Group(); W.gente.visible = false; root.add(W.gente); W.walkers = [];
+      { const spots = cubs.filter((c, i) => i % 3 !== 1).map(([x, z, ry]) => [x + (ry ? 0.1 : -0.1), z + (ry ? -0.35 : 0.35)]); const C = Q.buildCrowd(spots, { seed: 91, yaw: (r) => r() * 6.28 }); W.gente.add(C.group); C.obst.forEach((q) => W.obst.push(q));
+        [-5.7, -1.5, 2.7, 6.9].forEach((ax, k) => { const w = Q.buildCrowd([[0, 0]], { seed: 120 + k, yaw: () => 0 }); w.group.position.set(ax, 0, -9 + k * 3); W.gente.add(w.group); W.walkers.push({ g: w.group, v: 0.9 + k * 0.12, dir: k % 2 ? 1 : -1 }); }); }
+      W.tick.push((dt) => { if (!W.gente.visible) return; W.walkers.forEach((w) => { w.g.position.z += w.dir * w.v * dt; if (w.g.position.z > 3.2) w.dir = -1; if (w.g.position.z < -9.6) w.dir = 1; w.g.rotation.y = w.dir > 0 ? 0 : Math.PI; }); });
+      // la bacteria
+      { const mon = Q.buildBacteria(); mon.group.visible = false; mon.group.position.set(6, 0, 10.4); root.add(mon.group); W.mon = mon;
+        const st = W.chase = { on: false, t: 0, ng: 0, ns: 0 }, touch = 'ontouchstart' in window;
+        W.tick.push((dt, t) => { if (!mon.group.visible) return; mon.update(t, st.on ? 1.5 : 0.6); if (!st.on || !W.api || W.api.S.busy) return;
+          const P = W.api.P; st.t += dt; if (st.t < 2.5) return;
+          const dx = P.x - mon.group.position.x, dz = P.z - mon.group.position.z, d = Math.hypot(dx, dz) || 1, v = (touch ? 1.45 : 2.45) + Math.min(0.45, (st.t - 2.5) * 0.03);
+          mon.group.position.x += dx / d * v * dt; mon.group.position.z += dz / d * v * dt; mon.group.rotation.y = Math.atan2(dx, dz);
+          st.ng -= dt; st.ns -= dt; if (window.Sound && Sound.on) { if (st.ng <= 0) { Sound.growl(1 - Math.min(0.8, d / 16)); st.ng = 1.6 + d * 0.14; } if (st.ns <= 0) { Sound.scuttle(1 - Math.min(0.8, d / 16)); st.ns = 0.45; } }
+          if (d < 0.95) { st.on = false; W.caught = true; } }); }
+      // flecha roja hacia tu mesa
+      let arrow = null, lab = null;
+      W.showArrow = () => { arrow = document.createElement('div'); arrow.id = 'flecha'; arrow.innerHTML = '<svg viewBox="0 0 60 80" width="54" height="72"><path d="M30 2 L58 40 H40 V78 H20 V40 H2 Z" fill="#c4202c" stroke="#2a0508" stroke-width="3"/></svg><b></b>'; document.body.appendChild(arrow); lab = arrow.querySelector('b'); };
+      W.hideArrow = () => { if (arrow) { arrow.remove(); arrow = null; } };
+      W.tick.push(() => { if (!arrow || !W.api) return; const P = W.api.P, dx = MX - P.x, dz = MZ + 1 - P.z; let rel = Math.atan2(-dx, -dz) - P.yaw; rel = ((rel + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; arrow.firstChild.style.transform = 'rotate(' + (-rel) + 'rad)'; lab.textContent = Math.round(Math.hypot(dx, dz)) + ' m'; });
       // cocina: encimera con la cafetera
       { const g = new THREE.Group(); g.position.set(10.9, 0, 2.0); root.add(g); merged([bx(0.7, 0.9, 3.4, 0, 0.45, 0), bx(0.8, 0.05, 3.5, 0, 0.92, 0)], std(0xb9b6a6, 0.6), g);
         merged([bx(0.35, 0.5, 0.3, 0, 1.2, -0.4), bx(0.3, 0.08, 0.28, 0, 1.0, -0.4)], std(0x2a2a2a, 0.4, { metalness: 0.5 }), g); put(new THREE.BoxGeometry(0.04, 0.04, 0.02), emis(0xff4030, 2), 0.1, 1.35, -0.25, g);
@@ -120,19 +142,25 @@
         const { say, free } = api; await say(['El vestíbulo. Terrazo gris, fluorescentes y un cartel rojo sin una letra. No hace falta una marca: lo sabes de memoria.', 'Aquí se cruza el torno de la entrada con el de la salida. Solo uno de los dos se usa de verdad.']);
         await free(1e9, 'Cruza el torno · llama al ascensor cuando quieras', () => W.exit); return 'subir'; };
     } else {
-      W.acts.mesa = { label: 'Sentarte en tu mesa', stand: [0.2, 6.3], look: [0.2, 0.95, 4.2], enabled: () => true, run: async (api) => {
-        await api.say(['Tu mesa: dos monitores de tubo, una taza con restos de café del jueves y un post-it con una contraseña que no es la contraseña.', 'En la izquierda, el modelo de tarificación. En la derecha, el triángulo de reservas. Los dos llevan abiertos desde ayer.']);
-        const r = await api.choose([{ id: 'glm', label: 'Modelo de tarificación (GLM)', hint: 'Poisson para la frecuencia, gamma para la severidad, enlace logarítmico' }, { id: 'cl', label: 'Triángulo de reservas (chain-ladder)', hint: 'Factores de desarrollo y la cola que nadie quiere estimar' }, { id: 'nada', label: 'Mirar el techo', hint: 'Hoy no me sale nada' }], 'Qué abres primero');
-        if (r === 'glm') await api.say(['Frecuencia ~ Poisson, severidad ~ Gamma, enlace log. La prima pura sale limpia: coherente, estable y con un coeficiente que te mira mal.', { text: 'Cada variable que añades explica un poco más y se entiende un poco menos.', think: true }]);
-        else if (r === 'cl') await api.say(['Los factores de desarrollo bajan como siempre hasta el último año, y ahí la cola decide si duermes. Chain-ladder dice una cifra. La realidad dirá otra, más tarde.', { text: 'Reservar es apostar con buenas maneras.', think: true }]);
-        else { await api.say('Cuarenta y ocho placas de techo. Dos fluorescentes muertos. Una mancha con forma de Portugal.'); S_desc(api, 1); }
-        W.hecho = true; } };
+      W.acts.mesa = { label: 'Sentarte y trabajar', stand: [MX + 0.1, MZ + 1.5], look: [MX, 0.95, MZ - 0.85], enabled: () => !W.sat, run: async (api) => {
+        W.sat = true; W.chase.on = false; W.mon.group.visible = false; W.hideArrow();
+        await api.say(['Te dejas caer en la silla. El ruido se detiene de golpe, como si alguien hubiera bajado una palanca.', 'Las dos pantallas se encienden solas: a la izquierda el modelo de tarificación, a la derecha el triángulo de reservas.']);
+        api.S.busy = true; const a = await Q.miniGLM(); api.S.busy = true; const b = await Q.miniReservas(); api.S.busy = true; api.S.mini = a.score + b.score; api.S.miniMax = a.max + b.max;
+        await api.say(a.score + b.score >= a.max + b.max - 1 ? ['Las dos cuadran. Por un momento, la oficina entera te parece razonable.'] : ['Algo no cuadra, pero con suficiente formato nadie lo notará.']);
+        let c = 'quedar'; while (c === 'quedar') { c = await api.choose([{ id: 'levantar', label: 'Levantarte', hint: 'Estirar las piernas y ver cómo está la planta' }, { id: 'quedar', label: 'Quedarte un minuto más', hint: 'Mirar la pantalla sin leerla' }], 'Has terminado por ahora'); if (c === 'quedar') await api.say('Un minuto más. La pantalla te devuelve la mirada.'); }
+        W.gente.visible = true; W.up = true;
+        await api.say(['Te levantas. La planta, que estaba vacía, ahora respira: teclados, un teléfono sin atender, alguien arrastra una silla.', { text: 'Han estado aquí todo el rato. O han vuelto cuando ya no hacía falta tenerles miedo.', think: true }]); } };
+      W.acts.salir = { label: 'Bajar por el ascensor', stand: [0, 9.3], look: [0, 1.4, bounds.maxZ], enabled: () => W.up, run: async (api) => { await api.say('Pulsas el botón. Planta baja. Un café con Chelu te espera, o eso dice el móvil.'); W.exit = true; } };
       W.acts.cocina = { label: 'Ir a por un café', stand: [9.4, 2.0], look: [10.9, 1.2, 2.0], enabled: () => true, run: async (api) => { await api.say(['La cafetera hace un ruido de motor viejo y entrega algo marrón y caliente.', 'Sabe a deber algo. Aun así te lo bebes: es lo único de la planta que se calienta a propósito.']); W.cafe = true; } };
       W.acts.reloj = { label: 'Mirar el reloj', stand: [5, -9.4], look: [5, 2.0, bounds.minZ], enabled: () => true, run: async (api) => { W.pistas++; await api.say(['El reloj marca las cuatro y cuarto. Hace un mes también marcaba las cuatro y cuarto.', { text: 'Aquí el tiempo no pasa. Se factura.', think: true }]); } };
       W.acts.emergencia = { label: 'Mirar la puerta de emergencia', stand: [10.4, -9.0], look: [11.0, 1.1, bounds.minZ], enabled: () => true, run: async (api) => { W.pistas++; await api.say(['Salida de emergencia. La barra antipánico tiene polvo. Nadie ha entrado ni salido por aquí en meses.', { text: 'Al otro lado de las cristaleras, el pasillo oscuro sigue otra veintena de metros más. Y luego otra.', think: true }]); } };
       W.play = async (api) => {
-        const { say, free } = api; await say(['Planta 4. Las puertas del ascensor se abren a una moqueta gris que huele a cable caliente.', 'Filas de cubículos, fluorescentes que zumban y, al fondo, una oscuridad que parece más larga de lo que debería.', 'Hoy hay poca gente. O la que hay no se mueve.']);
-        await free(1e9, 'Siéntate en tu mesa (la de los dos monitores) · el café está a la derecha', () => W.hecho && W.cafe); return 'listo'; };
+        W.api = api; const { say, free } = api;
+        await say(['Planta 4. Las puertas del ascensor se abren a una moqueta gris que huele a cable caliente.', 'Filas de cubículos, fluorescentes que zumban y, al fondo, una oscuridad más larga de lo que debería.', 'Tu mesa está al fondo, a la izquierda. Y detrás de ti, algo grande y negro acaba de salir del pasillo.']);
+        W.mon.group.visible = true; W.chase.on = true; W.chase.t = 0; W.showArrow();
+        await free(1e9, '¡CORRE! (Shift) · sigue la flecha roja hasta tu mesa, al fondo a la izquierda, y siéntate', () => W.up || W.caught);
+        if (W.caught) { W.hideArrow(); if (window.Sound && Sound.on) Sound.growl(1.6); await say(['Notas algo frío y poligonal en los tobillos. Las patas se cruzan sobre ti como un alambre.', 'La moqueta te parece, por primera vez, cómoda.']); return 'atrapado'; }
+        await free(1e9, 'Pasea por la planta · el ascensor, cuando quieras', () => W.exit); return 'listo'; };
     }
     function S_desc(api, n) { api.S.descuido = (api.S.descuido || 0) + n; }
     return W;

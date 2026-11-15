@@ -69,7 +69,7 @@
   const S = { time: '05:45', min: 345, alarmOn: true, dressed: false, bag: false, mirror: false, busy: true, started: false, ended: false, lastProgress: 0, did: new Set(), tasks: { alarm: false, dress: false, bag: false, out: false } };
   const fmt = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   /* Nivel de pista 0-4: base por escenario, más el tiempo perdido en casa y +1 por cada 3 de descuido (máx. +2) */
-  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2, lobby: 2, planta: 3 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
+  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2, lobby: 2, planta: 3, cafe: 3 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
   function advance(min) { S.min += min; Sound.clue = clueLevel(); S.time = fmt(S.min); $('#clock').textContent = S.time; }
   const P = { x: -0.35, z: -0.55, yaw: 0, pitch: 0, bodyYaw: 0, vx: 0, vz: 0, walk: 0, bob: 0 };
   const EYE = Q.EYE;
@@ -289,6 +289,12 @@
     document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
   }
 
+  const FINALES_TOTAL = 8;
+  function finalScreen(clave, title, text) {
+    let vistos = []; try { vistos = JSON.parse(store('ends') || '[]'); } catch (e) { }
+    if (!vistos.includes(clave)) { vistos.push(clave); store('ends', JSON.stringify(vistos)); }
+    endScreen(title, text + ' <small style="display:block;margin-top:14px;opacity:.7">Finales vistos: ' + vistos.length + ' de ' + FINALES_TOTAL + '.</small>');
+  }
   /* Fin del recorrido: lo que antes cerraba la habitación, ahora cierra la mañana entera */
   function finishDay() { S.ended = true; $('#hud').hidden = true; $('#hint').hidden = true; if (document.pointerLockElement) document.exitPointerLock(); showEnd(); }
 
@@ -313,7 +319,7 @@
       <p class="lede">Sales de casa a las ${fmt(S.min)}. Con un trayecto que dura 62 min de media (desviación 14) y la oficina a las 07:35, el modelo de 2.000 trayectorias dice:${delay ? ` (Los trenes que dejaste pasar en el andén suman ${delay} min.)` : ''}</p>
       <div class="stats"><div><b>${pct} %</b><span>probabilidad de llegar a tiempo</span></div><div><b>${fmt(Math.round(r.mediana))}</b><span>llegada mediana</span></div><div><b>${fmt(Math.round(r.p90))}</b><span>percentil 90</span></div></div>
       <ul class="did">${hechos.map(([k, t]) => `<li class="${S.did.has(k) ? 'y' : ''}">${t}</li>`).join('')}</ul>
-      <p class="fine">Cada detalle que miras cuesta minutos y cambia la probabilidad. Finales vistos: ${vistos.length} de 3.</p>
+      <p class="fine">Cada detalle que miras cuesta minutos y cambia la probabilidad. Finales vistos: ${vistos.length} de ${FINALES_TOTAL}.</p>
       <p class="links"><a href="https://www.linkedin.com/in/luiz-luzuriaga-izquierdo" target="_blank" rel="noopener">LinkedIn</a> · <a href="https://github.com/LuizLuzuriaga" target="_blank" rel="noopener">GitHub</a> · <a href="https://luizluzuriaga.github.io/" target="_blank" rel="noopener">Web de Luiz</a></p>
       <button class="btn primary" id="again">↻ Otra mañana</button></div>`;
 
@@ -333,7 +339,7 @@
     } else {
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
-      endScreen('Cervezas con Chelu', 'Dejas pasar el cuarto tren. Miras el panel, miras el móvil y Chelu escribe: «¿Cañas?». La probabilidad de decir que no era del 0,3 %. Esperanza de vida laboral: cero días. Esperanza de vida social: al alza.');
+      finalScreen('cervezas', 'Cervezas con Chelu', 'Dejas pasar el cuarto tren. Miras el panel, miras el móvil y Chelu escribe: «¿Cañas?». La probabilidad de decir que no era del 0,3 %. Esperanza de vida laboral: cero días. Esperanza de vida social: al alza.');
     }
   }
 
@@ -370,19 +376,45 @@
   async function startOficina() {
     S.busy = true; inScript = true; $('#hud').hidden = false;
     await fade(true);
-    if (!LOB) LOB = Q.buildOficina(renderer, envTex, 'lobby');
-    LOB.exit = false; enterWorld(LOB, 'lobby'); setTime('08:05'); setTasks([['Subir a la planta 4', false]]);
-    if (window.Sound && Sound.on) Sound.ambience('office');
-    await fade(false);
-    await LOB.play(API);
-    await fade(true);
+    if (!/[?&]planta/.test(location.search)) {
+      if (!LOB) LOB = Q.buildOficina(renderer, envTex, 'lobby');
+      LOB.exit = false; enterWorld(LOB, 'lobby'); setTime('08:05'); setTasks([['Subir a la planta 4', false]]);
+      if (window.Sound && Sound.on) Sound.ambience('office');
+      await fade(false);
+      await LOB.play(API);
+      await fade(true);
+    }
     if (!PLA) PLA = Q.buildOficina(renderer, envTex, 'planta');
-    PLA.hecho = PLA.cafe = false; enterWorld(PLA, 'planta'); setTime('08:12'); setTasks([['Abrir el modelo en tu mesa', false], ['Tomar un café', false]]);
+    window.__qx && (window.__qx.PLA = PLA); PLA.hecho = PLA.cafe = false; enterWorld(PLA, 'planta'); setTime('08:12'); setTasks([['Abrir el modelo en tu mesa', false], ['Tomar un café', false]]);
     await fade(false);
-    await PLA.play(API); inScript = false;
+    const pr = await PLA.play(API); inScript = false;
+    if (pr === 'atrapado') {
+      if (window.Sound && Sound.on) Sound.bad();
+      await fade(true);
+      finalScreen('atrapado', 'Parte de la planta 4', 'La bacteria negra te alcanza entre dos cubículos. No duele: simplemente dejas de ser una persona y pasas a ser un patrón en la moqueta. Mañana, alguien se sentará en tu mesa y notará un frío raro en las piernas. Los reservas del trimestre no se ven afectadas.');
+      return;
+    }
     setTasks([['Abrir el modelo en tu mesa', true], ['Tomar un café', true]]);
     await fade(true);
-    finishDay();
+    await startCafe();
+  }
+
+  let CAF = null;
+  async function startCafe() {
+    S.busy = true; inScript = true; $('#hud').hidden = false;
+    const apoc = (S.descuido || 0) >= 7;
+    CAF = Q.buildCafe(renderer, envTex, apoc);
+    enterWorld(CAF, 'cafe'); setTime('09:10'); setTasks([['Pedir un café', false], ['Hablar con Chelu', false]]);
+    if (window.Sound && Sound.on) Sound.ambience('cafe');
+    await fade(false);
+    const r = await CAF.play(API); inScript = false;
+    await fade(true);
+    const pct = Math.round(simulate(S.min + 6 * (S.descuido || 0)).p * 100), sc = r.score + (S.mini >= (S.miniMax || 8) - 1 ? 1 : S.mini <= 2 ? -1 : 0);
+    if (r.zombi) finalScreen('zombi', 'Apocalipsis zombi', 'Todo lo que fuiste dejando para luego se ha acumulado en la calle. Cuando el cristal cede, la primera persona en entrar es Chelu. Los reservas ya no importan; la tarificación tampoco. Quedan, eso sí, unas ventanas encendidas en la torre de enfrente: alguien sigue trabajando.');
+    else if (sc <= -2) finalScreen('cervezas', 'Cervezas con Chelu', 'Una caña. Luego otra. A las once ya habéis arreglado el sector asegurador. Tu móvil vibra sobre la mesa con el nombre de Mario, que no contestas con una devoción casi profesional.');
+    else if (sc < 2 && pct < 85) finalScreen('despedido', 'Despedido', 'Llegas tarde con la cabeza gacha y el café en la mano. En tu mesa hay una caja de cartón y un post-it con una frase educada. El modelo de tarificación seguirá funcionando sin ti. Es lo peor y lo mejor que se puede decir de un modelo.');
+    else if (sc >= 2) finalScreen('cafe1', 'Café para uno', 'Cumples: factores correctos, reserva cuadrada, café frío a tu lado. Chelu te escribe «¿cañas?» y lo dejas en visto con una paz que antes no tenías. Estás solo con el triángulo, y por una vez el triángulo está de tu lado.');
+    else finishDay();
   }
 
   /* ---- Panel de contenido ---- */
@@ -477,6 +509,7 @@
     if (on) { g.fillStyle = '#ff6b6b'; g.beginPath(); g.arc(128, 380, 44, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '22px Segoe UI'; g.fillText('Parar', 128, 388); }
     R.ref.phoneTex.needsUpdate = true;
   }
+  let holdW = 0;
   function frame() {
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
@@ -486,7 +519,8 @@
       if (keys['arrowleft']) P.yaw += 1.8 * dt; if (keys['arrowright']) P.yaw -= 1.8 * dt;
       fx0 += moveVec.x; fz -= moveVec.y;
       const len = Math.hypot(fx0, fz); if (len > 1) { fx0 /= len; fz /= len; }
-      const sp = keys['shift'] ? 3.0 : 1.7, sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
+      holdW = fz > 0 ? Math.min(4, holdW + dt) : Math.max(0, holdW - dt * 3);                    // 4 s hacia delante: hasta +30 % de velocidad
+      const sp = (keys['shift'] ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
       const tvx = (-sy * fz + cy * fx0) * sp, tvz = (-cy * fz - sy * fx0) * sp;
       P.vx = lerp(P.vx, tvx, Math.min(1, dt * 9)); P.vz = lerp(P.vz, tvz, Math.min(1, dt * 9));
       const [nx, nz] = collide(P.x + P.vx * dt, P.z + P.vz * dt); P.x = nx; P.z = nz; P.walk = Math.min(1, Math.hypot(P.vx, P.vz) / 1.5);
@@ -544,7 +578,7 @@
   function toast(text) { if (toasted) return; toasted = true; toastEl.textContent = text; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { toastEl.hidden = true; }, 6000); }
   const NEXT = [['alarm', 'el móvil de la mesilla, que suena y brilla'], ['dress', 'el armario'], ['bag', 'la silla con la mochila y el bolso'], ['out', 'la puerta']];
   function updateHint() {
-    if (!S.started || S.busy || S.ended || !cfgEl.hidden || performance.now() - S.lastProgress < 30000) { hintEl.hidden = true; return; }
+    if (WORLD !== 'bed' || !S.started || S.busy || S.ended || !cfgEl.hidden || performance.now() - S.lastProgress < 30000) { hintEl.hidden = true; return; }
     const n = NEXT.find(([k]) => !S.tasks[k]); if (!n) { hintEl.hidden = true; return; }
     hintEl.textContent = 'Pista: mira hacia ' + n[1] + '.'; hintEl.hidden = false;
   }
@@ -582,7 +616,8 @@
     if (/[?&]anden/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]tren/.test(location.search)) { S.alarmOn = false; startTrain(); return; }
     if (/[?&]azca/.test(location.search)) { S.alarmOn = false; startAzca(); return; }
-    if (/[?&]oficina/.test(location.search)) { S.alarmOn = false; startOficina(); return; }
+    if (/[?&]cafe/.test(location.search)) { S.alarmOn = false; S.descuido = +(location.search.match(/desc=(\d+)/) || [0, 0])[1]; startCafe(); return; }
+    if (/[?&](oficina|planta|cafe)/.test(location.search) && !/[?&]cafe/.test(location.search)) { S.alarmOn = false; startOficina(); return; }
     const how = COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
     if (store('intro')) tip([how]);
     else { store('intro', '1'); tip(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.', { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true }, how]); }
