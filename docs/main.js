@@ -338,6 +338,20 @@
     const r = await TRN.play(API); inScript = false;
     setTasks([['Llegar a Nuevos Ministerios', true]]);
     await fade(true);
+    await startAzca();
+  }
+
+  let AZC = null;
+  async function startAzca() {
+    S.busy = true; inScript = true; $('#hud').hidden = false;
+    await fade(true);
+    if (!AZC) AZC = Q.buildAzca(renderer, envTex);
+    enterWorld(AZC, 'azca'); setTime('07:55'); setTasks([['Entrar en la aseguradora', false]]);
+    if (window.Sound && Sound.on) Sound.ambience('street');
+    await fade(false);
+    await AZC.play(API); inScript = false;
+    setTasks([['Entrar en la aseguradora', true]]);
+    await fade(true);
     finishDay();
   }
 
@@ -460,7 +474,7 @@
     let ex = P.x + Math.cos(P.yaw) * bobX, ey = EYE + bobY, ez = P.z - Math.sin(P.yaw) * bobX;
     if (camK > 0.01) {                                          // tercera persona: detrás y algo por encima, sin atravesar paredes ni techo
       const cp = Math.cos(P.pitch), fx1 = -Math.sin(P.yaw) * cp, fy1 = Math.sin(P.pitch), fz1 = -Math.cos(P.yaw) * cp;
-      const zMin = ROOM.minZ + (WORLD === 'bed' ? 0.2 : -0.4), top = WORLD === 'bed' ? 2.4 : 3.1;
+      const zMin = ROOM.minZ + (WORLD === 'bed' ? 0.2 : -0.4), top = WORLD === 'bed' ? 2.4 : WORLD === 'azca' ? 30 : 3.1;
       let d = 2.6 * camK, cx = ex, cy = ey, cz = ez;
       for (let i = 0; i < 40; i++) { cx = ex - fx1 * d; cy = ey - fy1 * d + 0.35 * camK; cz = ez - fz1 * d; if (cx > ROOM.minX + 0.2 && cx < ROOM.maxX - 0.2 && cz > zMin && cz < ROOM.maxZ - 0.2 && cy > 0.25 && cy < top) break; d *= 0.9; }
       ex = cx; ey = cy; ez = cz;
@@ -537,6 +551,7 @@
     lockPointer(); if (CFG.sound) setSound(true);
     if (/[?&]anden/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]tren/.test(location.search)) { S.alarmOn = false; startTrain(); return; }
+    if (/[?&]azca/.test(location.search)) { S.alarmOn = false; startAzca(); return; }
     const how = COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
     if (store('intro')) tip([how]);
     else { store('intro', '1'); tip(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.', { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true }, how]); }
