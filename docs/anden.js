@@ -197,7 +197,7 @@
           S.descuido = (S.descuido || 0) + 1;
           await say(['Lo dejas pasar. Rezas por una cosa: que el siguiente venga con un poco menos de gente.', 'Spoiler: no. Pero uno siempre reza.', 'Lo dejas pasar. Ya vas por tres. La esperanza de vida de tu paciencia es de unos cuatro minutos.'][Math.min(k, 3) - 1]);
         }
-        if (k === 2 && !pensado) { pensado = true; await say([{ text: 'Dos trenes seguidos y la misma imagen: el andén lleno de gente de entre 40 y 50 años, pegada a las puertas.', think: true }, { text: '¿Por qué la curva de mortalidad no se mueve hacia ahí? Si lo hiciera, este andén sería una tabla de vida.', think: true }]); await chart(); }
+        if (k === 2 && !pensado) { pensado = true; await say([{ text: 'Dos trenes seguidos y la misma imagen: el andén lleno de gente de entre 40 y 50 años, pegada a las puertas.', think: true, block: true }, { text: '¿Por qué la curva de mortalidad no se mueve hacia ahí? Si lo hiciera, este andén sería una tabla de vida.', think: true, block: true }]); await chart(); }
         if (window.Sound && Sound.on) Sound.doorBeep(); await trainTo(-60, 2600, true);
         if (k < 4) await free(10000, 'Siguiente tren en {s} s');
       }

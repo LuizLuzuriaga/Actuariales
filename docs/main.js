@@ -151,7 +151,15 @@
     }
     if (id === tipId) { msg.hidden = true; tipWake = null; }
   }
-  function say(lines) { if (!Array.isArray(lines)) lines = [lines]; tipId++; tipWake = null; S.busy = true; return (async () => { for (const l of lines) await sayOne(typeof l === 'string' ? { text: l } : l); S.busy = false; })(); }
+  /* Textos: lo clave bloquea hasta pulsar (interactuar, decisiones, pensamientos con block:true); los pensamientos y comentarios de fondo
+     (think:true) salen como aviso que no para el juego y se va solo. */
+  function say(lines) {
+    if (!Array.isArray(lines)) lines = [lines];
+    const soft = lines.filter((l) => l && typeof l === 'object' && l.think && !l.block), hard = lines.filter((l) => !soft.includes(l));
+    if (!hard.length) { if (soft.length) tip(soft); return Promise.resolve(); }
+    tipId++; tipWake = null; S.busy = true;
+    return (async () => { for (const l of hard) await sayOne(typeof l === 'string' ? { text: l } : l); S.busy = false; if (soft.length) tip(soft); })();
+  }
   function sayOne({ text, think }) {
     return new Promise((resolve) => {
       const id = ++typingId; msg.hidden = false; msg.innerHTML = `<p class="${think ? 'think' : ''}"></p>`;
