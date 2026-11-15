@@ -171,6 +171,7 @@
       await say(T); W.doorShake = 0;
       const x1 = P.x, y1 = P.dy; await tween(1800, (e) => { P.x = x1 - 3.5 * e; P.dy = y1 * (1 - e); P.walk = 1; }); P.walk = 0; P.dy = 0; } };
     W.tick.push((dt, t) => { if (W.doorMesh) { const k = W.doorShake || 0; W.doorMesh.position.x = 9.12 + (k ? Math.max(0, Math.sin(t * 22)) * 0.012 * Math.min(k, 3) : 0); } });
+    const sleep0 = (ms) => new Promise((r) => setTimeout(r, ms));
     W.play = async (api) => {
       const { say, choose, tween, wait, setTime, free, P, S, chart } = api;
       const hh = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -183,21 +184,31 @@
       for (let k = 1; k <= 2; k++) {
         setTime2(hh(t0 + k * 7));
         W.setBoard(`C-2  TREN ${k}`, k < 2 ? 'COMPLETO' : 'AÚN HAY HUECO*'); W.setTrainGap(k === 2); train.position.x = 60;
-        await trainTo(TX, 3200, true); if (window.Sound && Sound.on) { Sound.brake(); setTimeout(() => Sound.doorBeep(), 1100); }
-        await say([[
-          'Llega el primero. Va hasta arriba: la gente se pega a los cristales como pegatinas. Dos personas se bajan con la dignidad intacta, y no cabe nadie más.',
-          'Segundo tren. Se ve algo de hueco entre un abrigo y una axila. Es tu momento… o tu excusa.'][k - 1]]);
+        S.busy = true; api.cine({ pos: [-8, 1.7, 3.0], look: () => [Math.max(train.position.x - 3, -2), 1.6, TZ] });         // plano del tren entrando, sin primera ni tercera persona
+        await trainTo(TX, 3400, true); api.cine(null); S.busy = false;                                       // y de vuelta a ti, con libertad para moverte
+        if (window.Sound && Sound.on) { Sound.brake(); setTimeout(() => Sound.doorBeep(), 900); }
+        say([{ think: true, text: [
+          'Llega el primero. Va hasta arriba: la gente se pega a los cristales como pegatinas.',
+          'Segundo tren. Se ve algo de hueco entre un abrigo y una axila. Es tu momento… o tu excusa.'][k - 1] }]);
         const base = [0.04, 0.22][k - 1], p = k < 2 ? Math.max(0.01, base - 0.012 * (S.snooze || 0)) : 1;
-        const accion = await choose([
-          { id: 'empujar', label: 'Empujar y meterte como puedas', hint: k < 2 ? `Probabilidad de subir ≈ ${(p * 100).toFixed(0)} %` : 'Probabilidad de subir ≈ 100 % (es el último que te sirve)' },
-          { id: 'pasar', label: k < 2 ? 'Dejar pasar este tren' : 'Dejar pasar también este y ver qué pasa', hint: k < 2 ? 'Sin riesgo. Con culpa.' : 'Si pierdes este, hoy no llegas a trabajar.' }], `Tren ${k}. ¿Qué haces?`);
+        const accion = await new Promise((res) => {                                                     // barra de decisión: no bloquea, tienes 16 s y puedes moverte
+          const el = document.createElement('div'); el.id = 'trenbar'; el.setAttribute('role', 'group');
+          el.innerHTML = `<b>Tren ${k}: ¿qué haces?</b><button type="button" data-k="empujar"><kbd>1</kbd> Empujar y meterte como puedas<small>${k < 2 ? 'Probabilidad de subir ≈ ' + (p * 100).toFixed(0) + ' %' : 'Probabilidad de subir ≈ 100 %: es el último que te sirve'}</small></button><button type="button" data-k="pasar"><kbd>2</kbd> ${k < 2 ? 'Dejar pasar este tren' : 'Dejar pasar también este'}<small>${k < 2 ? 'Sin riesgo. Con culpa.' : 'Si lo pierdes, hoy no llegas a trabajar'}</small></button><i></i>`;
+          document.body.appendChild(el); const bar = el.querySelector('i'); const t0 = performance.now();
+          const done = (v) => { clearInterval(iv); window.removeEventListener('keydown', onKey); el.remove(); res(v); };
+          const onKey = (e) => { if (e.key === '1') done('empujar'); else if (e.key === '2') done('pasar'); };
+          window.addEventListener('keydown', onKey); el.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => done(b.dataset.k)));
+          const iv = setInterval(() => { const f = (performance.now() - t0) / 16000; bar.style.width = (100 - f * 100) + '%'; if (f >= 1) done('pasar'); }, 100);
+        });
+        S.busy = true;
         if (accion === 'empujar') {
           const sx = P.x, sz = P.z;
           await tween(520, (e) => { P.z = sz - 0.9 * Math.sin(e * Math.PI / 2); P.walk = 1; });
           if (Math.random() < p) {
             if (window.Sound && Sound.on) Sound.ok();
             await say(k === 1 ? ['¡Has subido a la primera! Era un suceso del 1 %. Hoy has gastado toda la suerte de la semana.'] : ['Entras en el hueco imposible. Las puertas se cierran detrás de tu mochila. Estás dentro.']);
-            { const x0 = P.x, z0 = P.z; await tween(1500, (e) => { P.x = x0 + (W.doorX - x0) * e; P.z = z0 + (-1.9 - z0) * e; P.walk = 1; }); P.walk = 0; }
+            api.cine({ pos: [7.5, 1.7, 3.0], look: () => [train.position.x * 0.8, 1.6, TZ] });                    // plano del tren saliendo de la estación
+            if (window.Sound && Sound.on) Sound.doorBeep(); await sleep0(900); await trainTo(-60, 3600, true); api.cine(null);
             return 'subido';
           }
           if (window.Sound && Sound.on) Sound.bad();

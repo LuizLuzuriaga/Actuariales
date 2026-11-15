@@ -193,3 +193,25 @@ code { font: 12px Consolas, monospace; color: #8fae8f; }
 #apocframe .roman { position: absolute; left: 26px; bottom: 18px; font: 700 clamp(44px, 7vw, 84px) Georgia, 'Times New Roman', serif; letter-spacing: .06em; color: #8c0a12; text-shadow: 0 0 14px rgba(140,10,18,.7), 0 2px 0 #2a0204; }
 #apocframe .ammo { position: absolute; right: 26px; bottom: 22px; font: 22px/1 ui-monospace, Consolas, monospace; color: #b3202a; letter-spacing: .12em; text-shadow: 0 0 8px rgba(140,10,18,.6); }
 #vidas .shoot { background: #1a0f0f; color: #e0dac8; border: 1px solid #8c0a12; padding: 5px 10px; font: 13px Georgia, serif; cursor: pointer; }
+
+#saltar { position: fixed; right: 18px; bottom: 74px; z-index: 27; padding: 10px 16px; background: rgba(10,11,13,.94); color: #f0e8d4; border: 1px solid #c98d3a; font: 15px Georgia, serif; cursor: pointer; box-shadow: 0 0 16px rgba(201,141,58,.3); }
+#saltar kbd { margin-left: 8px; color: #c98d3a; font-family: ui-monospace, Consolas, monospace; }
+#saltar:hover { background: #1a140a; }
+
+#ticker { position: fixed; top: 10px; left: 50%; transform: translateX(-50%) translateY(-140%); z-index: 29; max-width: min(640px, 92vw); display: flex; gap: 12px; align-items: baseline; padding: 7px 14px; background: rgba(10,11,13,.94); border: 1px solid #3a3326; border-left: 4px solid #c98d3a; color: #e6dfcd; font: 14px/1.35 Georgia, serif; pointer-events: none; opacity: 0; transition: transform .4s, opacity .4s; }
+#ticker.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+#ticker b { font: 700 11px ui-monospace, Consolas, monospace; letter-spacing: .12em; color: #c98d3a; white-space: nowrap; }
+#ticker.warn { border-left-color: #d46a2a; } #ticker.warn b { color: #d46a2a; }
+#ticker.hot { border-left-color: #c0202c; background: rgba(30,6,8,.95); } #ticker.hot b { color: #e0303c; }
+
+#trenbar { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); z-index: 26; width: min(640px, 94vw); display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 12px 14px 16px; background: rgba(8,9,11,.94); border: 1px solid #3a3326; }
+#trenbar b { grid-column: 1 / -1; font: 600 15px Georgia, serif; color: #e6dfcd; }
+#trenbar button { text-align: left; padding: 10px 12px; background: #111317; color: #e0dac8; border: 1px solid #3a3326; font: 15px Georgia, serif; cursor: pointer; display: grid; gap: 3px; }
+#trenbar button:hover { border-color: #c98d3a; }
+#trenbar kbd { color: #c98d3a; font-family: ui-monospace, Consolas, monospace; margin-right: 6px; }
+#trenbar small { color: #9a927e; font-size: 12.5px; }
+#trenbar i { grid-column: 1 / -1; height: 3px; background: #c98d3a; display: block; width: 100%; }
+@media (max-width: 520px) { #trenbar { grid-template-columns: 1fr; bottom: 10px; } }
+
+#apocframe .roman.blink { animation: romanblink .35s steps(2) infinite; }
+@keyframes romanblink { 50% { opacity: .05; } }

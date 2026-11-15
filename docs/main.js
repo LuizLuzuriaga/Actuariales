@@ -69,7 +69,7 @@
   const S = { time: '05:45', min: 345, alarmOn: true, dressed: false, bag: false, mirror: false, busy: true, started: false, ended: false, lastProgress: 0, did: new Set(), tasks: { alarm: false, dress: false, bag: false, out: false } };
   const fmt = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   /* Nivel de pista 0-4: base por escenario, más el tiempo perdido en casa y +1 por cada 3 de descuido (máx. +2) */
-  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2, lobby: 2, planta: 3, cafe: 3, sol: 4 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
+  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2, lobby: 2, planta: 3, cafe: 3, sol: 4, vallecas: 4, fachada: 1 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
   Q.hooks = { started: () => S.started && !S.ended, busy: () => S.busy, world: () => WORLD, clue: () => clueLevel() };
   function advance(min) { S.min += min; Sound.clue = clueLevel(); S.time = fmt(S.min); $('#clock').textContent = S.time; }
   const P = { x: -0.35, z: -0.55, yaw: 0, pitch: 0, bodyYaw: 0, vx: 0, vz: 0, walk: 0, bob: 0 };
@@ -263,7 +263,7 @@
   function setTime(t) { S.time = t; clockEl.textContent = t; }
   function enterWorld(w, name) {
     if (A.group.parent) A.group.parent.remove(A.group);
-    scene = w.scene; scene.add(A.group);
+    scene = w.scene; scene.add(A.group); try { renderer.compile(scene, camera); } catch (e) { }                  // precompila los shaders del mundo para evitar el tirón al entrar
     if (fx.on && fx.composer.passes[0]) fx.composer.passes[0].scene = scene;
     ROOM = w.bounds; OBST = w.obst; TICK = w.tick; ACTS = w.acts; ACT_ROOTS = w.actRoots; WORLD = name;
     P.x = w.spawn[0]; P.z = w.spawn[1]; P.vx = P.vz = 0; P.walk = 0;
@@ -282,16 +282,21 @@
       choiceEl.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => done(+b.dataset.i)));
     });
   }
-  async function free(ms, hint, until) {                    // ventana en la que puedes pasear y mirar antes de que siga el guion
+  async function free(ms, hint, until) {                    // ventana en la que puedes pasear y mirar antes de que siga el guion; devuelve true si se ha saltado
     inFree = true; S.busy = false; freeHintEl.hidden = !hint;
-    const t0 = performance.now();
-    while ((performance.now() - t0 < ms && !(until && until())) || S.busy) {
+    const t0 = performance.now(); let skipped = false; const sb = $('#saltar');
+    sb.onclick = () => { skipped = true; }; const onN = (e) => { if ((e.key === 'n' || e.key === 'N') && !sb.hidden && !e.repeat) skipped = true; }; window.addEventListener('keydown', onN);
+    while ((performance.now() - t0 < ms && !(until && until()) && !skipped) || S.busy) {
       if (hint) freeHintEl.textContent = hint.replace('{s}', Math.max(0, Math.ceil((ms - (performance.now() - t0)) / 1000)));
+      sb.hidden = !(until && ms > 60000 && performance.now() - t0 > 12000 && !S.busy);          // a los 12 s aparece «Avanzar» para no quedarte atascado
       await sleep(150);
     }
-    freeHintEl.hidden = true; inFree = false; S.busy = true;
+    window.removeEventListener('keydown', onN); sb.hidden = true; sb.onclick = null;
+    freeHintEl.hidden = true; inFree = false; S.busy = true; return skipped;
   }
-  const API = { chart: async () => { if (document.pointerLockElement) document.exitPointerLock(); await Q.showMortality(); lockPointer(); }, say: async (l) => { await say(l); if (inScript && !inFree) S.busy = true; }, choose, tween, wait: sleep, setTime, free, P, S };
+
+  let CINE = null;
+  const API = { cine: (cfg) => { CINE = cfg; A.group.visible = !cfg; }, chart: async () => { if (document.pointerLockElement) document.exitPointerLock(); await Q.showMortality(); lockPointer(); }, say: async (l) => { await say(l); if (inScript && !inFree) S.busy = true; }, choose, tween, wait: sleep, setTime, free, P, S };
   function endScreen(title, text) {
     $('#hud').hidden = true; if (document.pointerLockElement) document.exitPointerLock();
     const end = document.createElement('div'); end.id = 'end';
@@ -335,10 +340,21 @@
 
     document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
   }
+  let FAC = null;
+  async function startFachada() {
+    FAC = Q.buildFachada(renderer, envTex); window.__qx && (window.__qx.FAC = FAC);
+    enterWorld(FAC, 'fachada'); setTime('06:20'); setTasks([['Entrar en la estación', false]]);
+    if (window.Sound && Sound.on) Sound.ambience('street');
+    await fade(false);
+    await FAC.play(API);
+    await fade(true);
+    await Q.pantallaCarga('Bajando al andén', 'Estación de Entrevías · 06:25', ['Pasas el torno con esa dignidad de quien no ha desayunado.', 'Las escaleras mecánicas funcionan en un solo sentido: el del lunes.', 'Abajo, el andén ya huele a gente. Mucha gente.'], 2200);
+  }
   async function startPlatform() {
     S.busy = true; inScript = true; $('#hud').hidden = false;
     await fade(true);
     if (Q.caminoVallecas && !/[?&]anden/.test(location.search)) { if (window.Sound && Sound.on) Sound.ambience('street'); await Q.caminoVallecas(clueLevel()); }
+    if (!/[?&]anden/.test(location.search) && Q.buildFachada) { await startFachada(); }
     if (!PLAT) PLAT = Q.buildPlatform(renderer, envTex);
     enterWorld(PLAT, 'platform'); setTime('06:25'); setTasks([['Subir a un tren', false]]);
     if (window.Sound && Sound.on) Sound.ambience('platform');
@@ -346,7 +362,7 @@
     const r = await PLAT.play(API); inScript = false;
     if (r === 'subido') {
       setTasks([['Subir a un tren', true]]);
-      await sleep(300); await startTrain(); return;
+      await fade(true); await Q.pantallaCarga('Dentro del Cercanías', 'Línea C-2 · hacia Nuevos Ministerios', ['Las puertas se cierran con un pitido que suena a «ya no hay vuelta atrás».', 'El vagón huele a abrigo mojado, a café y a decisiones aplazadas.', 'Hay un hueco de veinte centímetros. Lo ocuparás con la mochila.'], 2200); await startTrain(); return;
     } else {
       await startSol(); return;
       finalScreen('cervezas', 'Cervezas con Chelu', 'Dejas pasar el cuarto tren. Miras el panel, miras el móvil y Chelu escribe: «¿Cañas?». La probabilidad de decir que no era del 0,3 %. Esperanza de vida laboral: cero días. Esperanza de vida social: al alza.');
@@ -418,7 +434,20 @@
     }
     inScript = false;
     await fade(true);
-    finalScreen('solrescate', 'Dani Moto al rescate', 'Un solo faro, dos ruedas y cero papeles. Danny frena en seco, os sube a Chelu y a ti, y la moto atraviesa Sol esquivando oficinistas, infectados y un oso de bronce que sigue sin inmutarse. Detrás, la plaza arde. Delante, una carretera vacía y la sospecha de que la probabilidad de sobrevivir hoy ha mejorado del 3 % al 100 % gracias a una variable que nadie tarificaba: un amigo con moto.');
+    await startVallecas();
+  }
+
+  let VAL = null;
+  async function startVallecas() {
+    S.busy = true; inScript = true;
+    VAL = Q.buildVallecas(renderer, envTex); window.__qx && (window.__qx.VAL = VAL);
+    enterWorld(VAL, 'vallecas'); setTime('22:40'); setTasks([['Volver a casa con Amor', false]]);
+    if (window.Sound && Sound.on) Sound.ambience('street');
+    await fade(false);
+    await VAL.play(API); inScript = false;
+    setTasks([['Volver a casa con Amor', true]]);
+    await fade(true);
+    finalScreen('vallecas', 'Vuelta a Vallecas', 'Subís al piso con tres latas, un paquete de pasta y una radio que solo habla en alertas. Fuera, el mundo se acaba con una puntualidad que ni el cercanías. Dentro hay una psicóloga con ojos verdes, un actuario con la mochila rota y la certeza estadística de que, esta vez, el mejor estimador fue volver a casa.');
   }
 
   let LOB = null, PLA = null;
@@ -477,7 +506,7 @@
     const pct = Math.round(simulate(S.min + 6 * (S.descuido || 0)).p * 100), sc = r.score + (S.mini >= (S.miniMax || 8) - 1 ? 1 : S.mini <= 2 ? -1 : 0);
     if (r.zombi && r.res === 'refugio') finalScreen('caferefugio', 'Refugio en la cocina', 'Entras en la cocina de un portazo y echas el cerrojo. El cocinero te mira, mira la puerta que tiembla y te ofrece, con una calma admirable, una tostada. Sobrevivís a base de tostadas, tres turnos y un chiste de actuarios por hora. La probabilidad de morir hoy bajó del 100 % al 61 %: avance estadísticamente histórico.');
     else if (r.zombi) finalScreen('zombi', 'Apocalipsis zombi', 'Todo lo que fuiste dejando para luego se ha acumulado en la calle. Cuando el cristal cede, la primera persona en entrar es Chelu. Los reservas ya no importan; la tarificación tampoco. Quedan, eso sí, unas ventanas encendidas en la torre de enfrente: alguien sigue trabajando.');
-    else if (sc <= -2) finalScreen('cervezas', 'Cervezas con Chelu', 'Una caña. Luego otra. A las once ya habéis arreglado el sector asegurador. Tu móvil vibra sobre la mesa con el nombre de Mario, que no contestas con una devoción casi profesional.');
+    else if (sc <= -2) finalScreen('cervezas', 'Cervezas con Chelu', 'Una caña. Luego otra. A las once ya habéis arreglado el sector asegurador. Tu móvil vibra sobre la mesa con el nombre de Sheldon, que no contestas con una devoción casi profesional.');
     else if (sc < 2 && pct < 85) finalScreen('despedido', 'Despedido', 'Llegas tarde con la cabeza gacha y el café en la mano. En tu mesa hay una caja de cartón y un post-it con una frase educada. El modelo de tarificación seguirá funcionando sin ti. Es lo peor y lo mejor que se puede decir de un modelo.');
     else if (sc >= 2) finalScreen('cafe1', 'Café para uno', 'Cumples: factores correctos, reserva cuadrada, café frío a tu lado. Chelu te escribe «¿cañas?» y lo dejas en visto con una paz que antes no tenías. Estás solo con el triángulo, y por una vez el triángulo está de tu lado.');
     else finishDay();
@@ -575,7 +604,7 @@
     if (on) { g.fillStyle = '#ff6b6b'; g.beginPath(); g.arc(128, 380, 44, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '22px Segoe UI'; g.fillText('Parar', 128, 388); }
     R.ref.phoneTex.needsUpdate = true;
   }
-  let holdW = 0;
+  let holdW = 0, joyT = 0;
   function frame() {
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
@@ -586,7 +615,8 @@
       fx0 += moveVec.x; fz -= moveVec.y;
       const len = Math.hypot(fx0, fz); if (len > 1) { fx0 /= len; fz /= len; }
       holdW = fz > 0 ? Math.min(4, holdW + dt) : Math.max(0, holdW - dt * 3);                    // 4 s hacia delante: hasta +30 % de velocidad
-      const sp = (keys['shift'] ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
+      const joyFwd = moveVec.y < -0.6 && Math.hypot(moveVec.x, moveVec.y) > 0.8; joyT = joyFwd ? joyT + dt : 0;                // joystick sostenido hacia delante ~1 s = correr
+      const sp = (keys['shift'] || joyT > 1.0 ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
       const tvx = (-sy * fz + cy * fx0) * sp, tvz = (-cy * fz - sy * fx0) * sp;
       P.vx = lerp(P.vx, tvx, Math.min(1, dt * 9)); P.vz = lerp(P.vz, tvz, Math.min(1, dt * 9));
       const [nx, nz] = collide(P.x + P.vx * dt, P.z + P.vz * dt); P.x = nx; P.z = nz; P.walk = Math.min(1, Math.hypot(P.vx, P.vz) / 1.5);
@@ -612,6 +642,7 @@
     camera.position.set(ex, ey, ez);
     camera.rotation.set(P.pitch - 0.14 * camK, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm * (1 - camK));
     if (WORLD === 'train' && TRN) { camera.position.y += TRN.sway.y; camera.rotation.z += TRN.sway.roll; }
+    if (CINE) { const l = CINE.look(); camera.position.set(CINE.pos[0], CINE.pos[1], CINE.pos[2]); camera.lookAt(l[0], l[1], l[2]); }                // plano fijo de cine
     if (camK > 0.05) camera.layers.enable(1); else camera.layers.disable(1);     // la cabeza (capa 1) solo se ve en el espejo y en tercera persona
 
     if (WORLD === 'bed') drawPhone(S.alarmOn, t);
@@ -680,10 +711,12 @@
   go.addEventListener('click', () => {
     $('#start').style.display = 'none'; $('#hud').hidden = false; S.started = true; S.busy = false; S.lastProgress = performance.now();
     lockPointer(); if (CFG.sound) setSound(true);
+    if (/[?&]fachada/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]camino/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]anden/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]tren/.test(location.search)) { S.alarmOn = false; startTrain(); return; }
     if (/[?&]azca/.test(location.search)) { S.alarmOn = false; startAzca(); return; }
+    if (/[?&]vallecas/.test(location.search)) { S.alarmOn = false; startVallecas(); return; }
     if (/[?&]sol/.test(location.search)) { S.alarmOn = false; startSol(); return; }
     if (/[?&]cafe/.test(location.search)) { S.alarmOn = false; S.descuido = +(location.search.match(/desc=(\d+)/) || [0, 0])[1]; startCafe(); return; }
     if (/[?&](oficina|planta|cafe)/.test(location.search) && !/[?&]cafe/.test(location.search)) { S.alarmOn = false; startOficina(); return; }

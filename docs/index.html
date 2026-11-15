@@ -92,6 +92,7 @@
       <option value="">— elegir nivel —</option>
       <option value="">1 · Dormitorio (empezar de cero)</option>
       <option value="camino">2 · Calles de Vallecas y andén</option>
+      <option value="fachada">2b · Estación de Entrevías por fuera</option>
       <option value="anden">3 · Andén de cercanías (y escaleras)</option>
       <option value="tren">4 · Tren</option>
       <option value="azca">5 · Azca, la plaza</option>
@@ -101,11 +102,13 @@
       <option value="cafe&desc=0">8 · Cafetería</option>
       <option value="cafe&desc=8">8b · Cafetería: apocalipsis</option>
       <option value="sol">9 · Puerta del Sol: cañas con Chelu</option>
-      <option value="sol&apoc">9b · Sol: apocalipsis y Dani Moto</option>
+      <option value="sol&apoc">9b · Sol: apocalipsis y Danny Moto</option>
+      <option value="vallecas">10 · Final: Vallecas con Amor</option>
     </select></label>
     <button type="button" class="btn" id="cfgGo">Ir al nivel</button>
     <button type="button" class="btn" id="cfgClose">Cerrar</button>
   </div>
+  <button type="button" id="saltar" hidden>Avanzar a la siguiente escena ▸ <kbd>N</kbd></button>
   <div id="panel" hidden role="dialog" aria-label="Contenido"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -138,6 +141,8 @@
   <script src="notif.js"></script>
   <script src="apoc.js"></script>
   <script src="sol.js"></script>
+  <script src="vallecas.js"></script>
+  <script src="fachada.js"></script>
   <script src="oficina.js"></script>
   <script src="calle.js"></script>
   <script src="main.js"></script>

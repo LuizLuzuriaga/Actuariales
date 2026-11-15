@@ -170,6 +170,7 @@
         W.mon.group.visible = true; W.chase.on = true; W.chase.t = 0; W.showArrow();
         await free(1e9, '¡CORRE! (Shift) · sigue la flecha roja hasta tu mesa, al fondo a la izquierda, y siéntate', () => W.up || W.caught);
         if (W.caught) { W.hideArrow(); if (window.Sound && Sound.on) Sound.growl(1.6); await say(['Notas algo frío y poligonal en los tobillos. Las patas se cruzan sobre ti como un alambre.', 'La moqueta te parece, por primera vez, cómoda.']); return 'atrapado'; }
+        if (!W.caught && !W.up) { W.sat = true; W.up = true; W.gente.visible = true; W.chase.on = false; W.hideArrow(); }
         } else { W.sat = true; W.up = true; W.gente.visible = true; }
         // la bacteria vuelve cuando te levantas: segunda persecución hasta el ascensor
         await say(opts.phase2 ? ['Otra vez desde tu mesa: la bacteria vuelve a despegarse de la pared. El ascensor sigue al fondo. Corre.'] : ['Mientras tus compañeros teclean como si nada, el pasillo del fondo se oscurece. Algo muy largo y negro se despega de la pared: la bacteria vuelve, y nadie levanta la vista.', { text: 'Siempre ha estado aquí. Solo espera a que te levantes para ir a buscarte.', think: true }]);

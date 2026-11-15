@@ -77,15 +77,15 @@
     /* ---------- terraza: mesas con cañas y Chelu ---------- */
     const tables = [[2.6, 2.6], [5.6, 4.2], [-3.2, 1.0]];
     tables.forEach(([x, z]) => { const g = new THREE.Group(); g.position.set(x, 0, z); root.add(g); put(new THREE.CylinderGeometry(0.42, 0.42, 0.04, 16), std(0x2a2a2e, 0.5), 0, 0.74, 0, g); put(new THREE.CylinderGeometry(0.04, 0.08, 0.74, 8), std(0x1a1a1a, 0.5), 0, 0.37, 0, g);
-      merged([bx(0.4, 0.04, 0.4, 0.7, 0.44, 0), bx(0.4, 0.04, 0.4, -0.7, 0.44, 0), bx(0.04, 0.4, 0.4, 0.9, 0.66, 0), bx(0.04, 0.4, 0.4, -0.9, 0.66, 0)], std(0x2a2018, 0.7), g);
+      merged([bx(0.4, 0.04, 0.4, 0.7, 0.44, 0), bx(0.4, 0.04, 0.4, -0.7, 0.44, 0), bx(0.04, 0.4, 0.4, 0.9, 0.66, 0), bx(0.04, 0.4, 0.4, -0.9, 0.66, 0)], std(0x2a2018, 0.7), g); if (x === 2.6) tag(g, 'cerveza'); if (x === 5.6) tag(g, 'arma');
       [[-0.12, 0.1], [0.14, -0.08]].forEach(([a, b]) => { put(new THREE.CylinderGeometry(0.05, 0.045, 0.14, 10), new THREE.MeshStandardMaterial({ color: 0xd8a640, roughness: 0.2, transparent: true, opacity: 0.9 }), a, 0.83, b, g); put(new THREE.CylinderGeometry(0.052, 0.052, 0.03, 10), std(0xf2eede, 0.9), a, 0.915, b, g); }); box(x, z, 1.1, 1.1); });
     { const C = Q.buildCrowd([[3.5, 2.6]], { seed: 12, yaw: () => Math.PI / 2 }); root.add(C.group); C.obst.forEach((o) => W.obst.push(o)); tag(C.group, 'chelu'); W.chelu = C.group; }
 
     /* ---------- gente que pasea; en el apocalipsis, la que huye ---------- */
     const walkers = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 300 + i, yaw: () => 0 }); const z = -6 + rnd() * 13, dir = i % 2 ? 1 : -1; w.group.position.set(-11 + rnd() * 22, 0, z); root.add(w.group); walkers.push({ g: w.group, dir, v: 0.7 + rnd() * 0.5, z }); }
-    const infected = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0], [0.7, 0.4]], { seed: 400 + i, yaw: () => 0, zombie: true }); w.group.visible = false; root.add(w.group); const gate = [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]][i % 5]; w.group.position.set(gate[0], 0, gate[1]); infected.push({ g: w.group, v: 1.0 + rnd() * 0.7, ph: rnd() * 6, start: gate }); }
+    const infected = []; for (let i = 0; i < 20; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 400 + i, yaw: () => 0, zombie: true }); w.group.visible = false; root.add(w.group); const gate = [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]][i % 5]; w.group.position.set(gate[0], 0, gate[1]); infected.push({ g: w.group, v: 1.0 + rnd() * 0.7, ph: rnd() * 6, start: gate }); }
     W.infected = infected;
-    /* ---------- la moto de Dani (Danny): llega al final y os rescata a Chelu y a ti ---------- */
+    /* ---------- la moto de Danny: llega al final y os rescata a Chelu y a ti ---------- */
     const moto = new THREE.Group(); moto.visible = false; root.add(moto); const wheels = [];
     { const dk = std(0x1c1c20, 0.4, { metalness: 0.6 }), rd2 = std(0xb3202a, 0.4, { metalness: 0.4 });
       [0.6, -0.6].forEach((x) => { const w = put(new THREE.TorusGeometry(0.3, 0.08, 8, 16), dk, x, 0.38, 0, moto); wheels.push(w); put(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 6), dk, x, 0.38, 0, moto).rotation.x = Math.PI / 2; });
@@ -102,7 +102,7 @@
       moto.visible = true; moto.position.set(P.x + 22, 0, P.z + 0.8); moto.rotation.y = Math.PI;
       const x0 = moto.position.x, tx = P.x + 2.4; await tween(2800, (e) => { moto.position.x = x0 + (tx - x0) * e; wheels.forEach((w) => { w.rotation.z -= 0.5 * (1 - e) + 0.1; }); });
       if (window.Sound && Sound.on) Sound.brake();
-      await say(['Un chico con el casco a medio abrochar derrapa justo delante de ti. Dani. Danny, con dos íes que huelen a gasolina. Dani Moto, para los amigos y para los acreedores.',
+      await say(['Un chico con el casco a medio abrochar derrapa justo delante de ti. Danny, con dos enes que huelen a gasolina. Danny Moto, para los amigos y para los acreedores.',
         '—¡Subid, que esto está peor que el cercanías a las ocho! —grita Danny, sin apagar el motor.']);
       const c0 = [3.5, 2.6], dxc = (tx + 0.5) - c0[0], dzc = moto.position.z - 1.2 - c0[1]; await tween(1500, (e) => { W.chelu.position.set(dxc * e, 0, dzc * e); });
       await say([{ text: 'Chelu, ya al lado de la moto: «¿Tú sabes conducir esto?»', think: false }, '—Con 125 centímetros cúbicos y cero papeles: ¡arriba! —responde Danny.', { text: 'Dos ruedas: menos masa, más varianza. La decisión menos aseguradora de tu vida. Y la única que funciona.', think: true, block: true }]);
@@ -118,10 +118,11 @@
       for (let i = 0; i < 8; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.toTex(sc), transparent: true, depthWrite: false, opacity: 0.55, fog: false })); sp.position.set(-14 + i * 4, 6 + (i % 3) * 3, -9 + (i % 4) * 4); sp.scale.setScalar(9); fxg.add(sp); W.tick.push((dt, t) => { sp.position.y = 6 + ((i * 2 + t * 0.8) % 12); }); } }
     // una pistola olvidada en la mesa de la terraza, que solo aparece cuando llega el fin
     const gun = new THREE.Group(); gun.visible = false; root.add(gun); put(new THREE.BoxGeometry(0.2, 0.1, 0.04), std(0x14161a, 0.3, { metalness: 0.7 }), 0, 0, 0, gun); put(new THREE.BoxGeometry(0.06, 0.12, 0.04), std(0x14161a, 0.3, { metalness: 0.7 }), -0.06, -0.09, 0, gun); put(new THREE.BoxGeometry(0.28, 0.035, 0.035), std(0x2a2d33, 0.25, { metalness: 0.9 }), 0.08, 0.04, 0, gun);
+    const shot = new THREE.Group(); shot.visible = false; root.add(shot); put(new THREE.BoxGeometry(0.75, 0.05, 0.05), std(0x2a2d33, 0.25, { metalness: 0.9 }), 0, 0, 0, shot); put(new THREE.BoxGeometry(0.28, 0.07, 0.06), std(0x5a3a22, 0.6), -0.28, -0.02, 0, shot); shot.position.set(-3.2, 0.8, 1.0); shot.rotation.y = 0.3; tag(shot, 'escopeta'); W.shotMesh = shot;
     gun.position.set(5.5, 0.78, 4.4); gun.rotation.y = 0.6; tag(gun, 'pistola'); W.gunMesh = gun; { const l = new THREE.PointLight(0xffe0a0, 0.5, 2.5, 2); l.position.set(0, 0.3, 0); gun.add(l); }
     // boca de metro: cartel verde para el refugio
     put(new THREE.PlaneGeometry(1.8, 0.5), emis(0x30d070, 1.6), -10.5, 2.55, 3.15);
-    W.setApoc = (on) => { W.apoc = on; sky.material.map = on ? skyB : skyA; sky.material.needsUpdate = true; scene.fog.color.set(on ? 0x4a1810 : 0x4a4058); scene.background.set(on ? 0x3a1008 : 0x3a3350); sun.color.set(on ? 0xff4a20 : 0xff9a60); hemi.color.set(on ? 0xa05040 : 0x8a82ac); infected.forEach((z) => { z.g.visible = on; }); fxg.visible = on; gun.visible = on && !Q.apoc.hasGun(); };
+    W.setApoc = (on) => { W.apoc = on; sky.material.map = on ? skyB : skyA; sky.material.needsUpdate = true; scene.fog.color.set(on ? 0x4a1810 : 0x4a4058); scene.background.set(on ? 0x3a1008 : 0x3a3350); sun.color.set(on ? 0xff4a20 : 0xff9a60); hemi.color.set(on ? 0xa05040 : 0x8a82ac); infected.forEach((z) => { z.g.visible = on; }); fxg.visible = on; gun.visible = on && !Q.apoc.hasGun(); shot.visible = on && !Q.apoc.hasGun('escopeta'); };
     W.tick.push((dt, t) => {
       walkers.forEach((w) => { if (W.apoc) { w.g.position.x += (w.g.position.x < 0 ? -1 : 1) * 3.6 * dt; w.g.rotation.y = w.g.position.x < 0 ? -Math.PI / 2 : Math.PI / 2; if (Math.abs(w.g.position.x) > 17) w.g.visible = false; }
         else { w.g.position.x += w.dir * w.v * dt; if (w.g.position.x > 11.5) w.dir = -1; if (w.g.position.x < -11.5) w.dir = 1; w.g.rotation.y = w.dir > 0 ? Math.PI / 2 : -Math.PI / 2; } });
@@ -130,6 +131,7 @@
 
     /* ---------- interacciones ---------- */
     W.acts.pistola = { label: 'Coger la pistola', stand: [4.7, 3.6], look: [5.5, 0.8, 4.4], enabled: () => W.apocOn && !Q.apoc.hasGun(), run: async (api) => { Q.apoc.giveGun(); W.gunMesh.visible = false; await api.say(['Una pistola abandonada junto a una caña a medias y una porra de agente. Doce balas, calibre desconocido y fecha de caducidad probablemente vencida.', { text: 'La única póliza que cubre esto es la de seguro de hogar. Y no cubre zombis. Clic para disparar.', think: true }]); } };
+    W.acts.escopeta = { label: 'Coger la escopeta', stand: [-2.2, 2.0], look: [-3.2, 0.8, 1.0], enabled: () => W.apocOn && !Q.apoc.hasGun('escopeta'), run: async (api) => { Q.apoc.giveGun('escopeta'); W.shotMesh.visible = false; await api.say(['Una escopeta de caza que alguien dejó en una terraza, entre dos cañas. Pocos cartuchos, mucho poder de convicción.', { text: 'Dispara en abanico: abate a varios de golpe. Clic para disparar.', think: true }]); } };
     W.acts.arma = { label: 'Coger una silla de la terraza', stand: [4.6, 3.4], look: [5.6, 0.5, 4.2], enabled: () => W.apocOn && !W.armed, run: async (api) => { W.armed = true; Q.apoc.pick(); await api.say('Una silla metálica de terraza. Pesa justo lo que debe pesar un argumento. F para empujar con ella.'); } };
     W.acts.cerveza = { label: 'Pedir unas cañas', stand: [3.0, 4.3], look: [2.6, 0.9, 2.6], enabled: () => !W.barra, run: async (api) => { W.barra = true; await api.say(['El camarero te planta dos cañas con una espuma de ingeniería y un aperitivo que cuesta más que la cerveza.', 'Brindas por el consumo privado, que es lo único que sube en esta ciudad.']); } };
     W.acts.km0 = { label: 'Mirar el Kilómetro Cero', stand: [0, -3.8], look: [0, 0, -5.6], enabled: () => true, run: async (api) => { await api.say(['Kilómetro Cero: desde aquí se miden todas las carreteras de España. Todo está a una distancia positiva de este punto, que es, técnicamente, la mejor definición de «centro».', { text: 'Cualquier medida necesita un origen. En el mercado laboral, también.', think: true }]); } };
@@ -155,9 +157,10 @@
       if (window.Sound && Sound.on) Sound.siren(5);
       if (opts.retry) await say(['Otra vez: la plaza se vacía, el cielo se pone naranja y ya vienen por las calles. Corre hacia el metro.']); else await say(['De pronto, el ruido de la plaza cambia. Primero una sirena. Luego otra, más cerca. Los paseantes aceleran, luego corren.', 'El cielo se vuelve de un naranja antinatural. Las farolas parpadean. En la boca de la calle Mayor se mueve algo que no camina como un vecino.']);
       W.setApoc(true); if (window.Sound && Sound.on) { Sound.shout(0.07); setTimeout(() => Sound.shout(0.07), 700); }
-      Q.apoc.start(W, { refuge: [-10.5, 5.3], r: 1.9, refugeLabel: 'boca del metro', enemies: infected.map((z) => ({ g: z.g, v: z.v * 1.3, ph: z.ph })),
-        quips: [['Chelu', '¡A la boca del metro! Arriba hay turistas y abajo hay cobertura. Elige.'], ['Amor', 'No te pares. Huir es una conducta adaptativa, no una derrota.'], ['Chelu', 'Si pierdes una vida, recuerda: el seguro no cubre mordiscos.'], ['Mario', 'Pregunta técnica: ¿con qué frecuencia mueren los asegurados? Es para la tarifa.'], ['Amor', 'Coge algo contundente. Un argumento, una silla, lo que tengas a mano.']], onEnd: () => { } });
-      await free(1e9, 'Corre (Shift) hasta la boca del metro, la flecha roja · F empuja a los infectados · puedes coger una silla de la terraza', () => W.apocRes);
+      Q.apoc.start(W, { refuge: [-10.5, 5.3], r: 1.9, refugeLabel: 'marquesina del metro', gates: [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]], enemies: infected.map((z) => ({ g: z.g, v: z.v * 1.3, ph: z.ph })),
+        quips: [['Chelu', '¡A la boca del metro! Arriba hay turistas y abajo hay cobertura. Elige.'], ['Amor', 'No te pares. Huir es una conducta adaptativa, no una derrota.'], ['Chelu', 'Si pierdes una vida, recuerda: el seguro no cubre mordiscos.'], ['Sheldon', 'Pregunta técnica: ¿con qué frecuencia mueren los asegurados? Es para la tarifa.'], ['Amor', 'Coge algo contundente. Un argumento, una silla, lo que tengas a mano.']], onEnd: () => { } });
+      const skipped = await free(1e9, 'Corre (Shift) hasta la boca del metro, la flecha roja · F empuja a los infectados · puedes coger una silla de la terraza', () => W.apocRes);
+      if (skipped && !W.apocRes) { Q.apoc.stop(); W.apocRes = 'refugio'; }
       if (W.apocRes === 'refugio') { await W.rescue(api); return 'rescatado'; }
       return 'muerto';
     };

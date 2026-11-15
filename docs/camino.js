@@ -43,3 +43,18 @@
     show();
   });
 })();
+
+/* Pantalla de carga genérica: título, subtítulo y líneas que se suceden (saltable con Espacio o clic). */
+(() => {
+  const Q = window.QX;
+  Q.pantallaCarga = (titulo, sub, lineas, porLinea = 2300) => new Promise((resolve) => {
+    const el = document.createElement('div'); el.id = 'camino'; el.setAttribute('role', 'dialog');
+    el.innerHTML = '<div class="cm-top"><small></small><h2></h2></div><div class="cm-bar"><i></i><span class="cm-dot"></span></div><p class="cm-txt" aria-live="polite"></p><button type="button" class="cm-skip">Saltar ▸</button>';
+    el.querySelector('small').textContent = sub; el.querySelector('h2').textContent = titulo; document.body.appendChild(el);
+    const txt = el.querySelector('.cm-txt'), bar = el.querySelector('.cm-bar i'), dot = el.querySelector('.cm-dot'); let i = 0, timer = 0, done = false;
+    const finish = () => { if (done) return; done = true; clearTimeout(timer); window.removeEventListener('keydown', onKey); el.classList.add('out'); setTimeout(() => { el.remove(); resolve(); }, 450); };
+    const show = () => { if (i >= lineas.length) { finish(); return; } txt.classList.remove('in'); void txt.offsetWidth; txt.textContent = lineas[i]; txt.classList.add('in'); const p = (i + 1) / lineas.length; bar.style.width = (p * 100) + '%'; dot.style.left = (p * 100) + '%'; i++; timer = setTimeout(show, Math.min(4000, porLinea + lineas[i - 1].length * 12)); };
+    const onKey = (e) => { if (e.code === 'Space' || e.key === 'Enter') { e.preventDefault(); clearTimeout(timer); show(); } };
+    window.addEventListener('keydown', onKey); el.addEventListener('click', () => { clearTimeout(timer); show(); }); el.querySelector('.cm-skip').addEventListener('click', (e) => { e.stopPropagation(); finish(); }); show();
+  });
+})();
