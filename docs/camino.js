@@ -28,6 +28,7 @@
     'En seguros, la franquicia es lo que pones tú. En el apocalipsis, la franquicia es todo.'];
   const stat = () => { const H = Q.hooks, d = Math.max(0, Math.min(9, (H && H.descuido ? H.descuido() : 0) | 0)); return '<span>descuido</span><i>' + '▮'.repeat(d) + '▯'.repeat(9 - d) + '</i><span>' + d + '/9</span>'; };
   const extras = (el) => { const s = document.createElement('p'); s.className = 'cm-desc'; s.innerHTML = stat(); const f = document.createElement('p'); f.className = 'cm-fact'; f.innerHTML = '<b>Dato actuarial</b>'; f.appendChild(document.createTextNode(DATOS[Math.floor(Math.random() * DATOS.length)])); el.appendChild(s); el.appendChild(f); };
+  Q.cargaExtras = extras;
   const FIN = 'Estación de Entrevías. Los tornos están abiertos. Eso no pasa nunca. Sigue siendo lunes.';
 
   Q.caminoVallecas = (level = 0) => new Promise((resolve) => {
@@ -61,7 +62,7 @@
   Q.pantallaCarga = (titulo, sub, lineas, porLinea = 2300) => new Promise((resolve) => {
     const el = document.createElement('div'); el.id = 'camino'; el.setAttribute('role', 'dialog');
     el.innerHTML = '<div class="cm-top"><small></small><h2></h2></div><div class="cm-bar"><i></i><span class="cm-dot"></span></div><p class="cm-txt" aria-live="polite"></p><button type="button" class="cm-skip">Saltar ▸</button>';
-    extras(el); el.querySelector('small').textContent = sub; el.querySelector('h2').textContent = titulo; document.body.appendChild(el);
+    Q.cargaExtras(el); el.querySelector('small').textContent = sub; el.querySelector('h2').textContent = titulo; document.body.appendChild(el);
     const txt = el.querySelector('.cm-txt'), bar = el.querySelector('.cm-bar i'), dot = el.querySelector('.cm-dot'); let i = 0, timer = 0, done = false;
     const finish = () => { if (done) return; done = true; clearTimeout(timer); window.removeEventListener('keydown', onKey); el.classList.add('out'); setTimeout(() => { el.remove(); resolve(); }, 450); };
     const show = () => { if (i >= lineas.length) { finish(); return; } txt.classList.remove('in'); void txt.offsetWidth; txt.textContent = lineas[i]; txt.classList.add('in'); const p = (i + 1) / lineas.length; bar.style.width = (p * 100) + '%'; dot.style.left = (p * 100) + '%'; i++; timer = setTimeout(show, Math.min(4000, porLinea + lineas[i - 1].length * 12)); };

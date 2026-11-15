@@ -734,5 +734,5 @@
     if (store('intro')) tip([how]);
     else { store('intro', '1'); tip(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.', { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true }, how]); }
   });
-  window.__qx = { get plat() { return PLAT; }, toggleCam, startPlatform, enterWorld, S, P, ACTS, interact, camera, scene, renderer, say, fx, R, A };
+  window.__qx = { get plat() { return PLAT; }, get ACTS() { return ACTS; }, toggleCam, startPlatform, enterWorld, S, P, interact, camera, scene, renderer, say, fx, R, A };
 })();
