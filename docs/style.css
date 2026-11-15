@@ -95,3 +95,44 @@ code { font: 12px Consolas, monospace; color: #8fae8f; }
 .btn:disabled { opacity: .6; cursor: progress; }
 @media (prefers-reduced-motion: reduce) { #tasks li.flash { animation: none; } }
 @media (max-width: 700px) { #hint { top: 118px; } #toast { top: 160px; } #end .stats { grid-template-columns: 1fr; } #cfg { top: 56px; } }
+
+/* transición, decisiones, aviso y botón de cámara */
+#fade { position: fixed; inset: 0; z-index: 25; background: #000; opacity: 0; pointer-events: none; transition: opacity .8s ease; }
+#fade.on { opacity: 1; pointer-events: auto; }
+#cam { top: 62px; }
+#freehint { position: absolute; left: 50%; bottom: 26px; transform: translateX(-50%); padding: 8px 18px; font: italic 15px var(--serif); color: var(--muted); background: #050507cc; border: 1px solid #000; box-shadow: inset 0 0 0 1px var(--line); }
+#choice { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, calc(100% - 28px)); padding: 22px 22px 18px; pointer-events: auto !important; z-index: 8; background-color: #050507f2; background-image: var(--corners); border: 1px solid #000; box-shadow: inset 0 0 0 2px #0b0a09, inset 0 0 0 3px var(--line), 0 20px 70px #000; }
+#choice[hidden] { display: none; }
+#choice h3 { margin: 0 0 14px; font: 400 22px var(--serif); letter-spacing: 1px; color: var(--bone); }
+#choice .opt { display: flex; gap: 14px; align-items: flex-start; width: 100%; margin: 8px 0 0; padding: 12px 14px; text-align: left; cursor: pointer; appearance: none; background: #0a0908; color: var(--text); border: 1px solid var(--line); border-radius: 2px; font: 16px var(--serif); transition: border-color .15s, background .15s; }
+#choice .opt:hover, #choice .opt:focus-visible { border-color: var(--ember); background: #170d0a; }
+#choice .opt b { display: block; font-weight: 400; color: var(--bone); }
+#choice .opt small { display: block; margin-top: 3px; color: var(--muted); font: italic 13.5px var(--serif); }
+
+/* pantalla de pensamiento: la curva de mortalidad */
+#sheet { position: fixed; inset: 0; z-index: 12; display: grid; place-items: center; padding: 14px; overflow: auto; background: #000000d9; }
+#sheet .card { width: min(1000px, 100%); padding: 18px 20px 14px; background-color: #050507; background-image: var(--corners); border: 1px solid #000; box-shadow: inset 0 0 0 2px #0b0a09, inset 0 0 0 3px var(--line), 0 20px 80px #000; }
+#sheet h3 { margin: 0 0 8px; font: 400 24px var(--serif); letter-spacing: .5px; color: var(--bone); }
+#sheet canvas { display: block; width: min(100%, 112vh); height: auto; margin: 0 auto; }
+#sheet p { margin: 8px 0 10px; min-height: 52px; color: var(--text); font: 17px/1.55 var(--serif); }
+#sheet .row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+#sheet small { display: block; margin-top: 10px; color: var(--muted); font-size: 12px; }
+
+/* acción contextual del nivel y ficha del currículum */
+#act2 { top: auto; bottom: 26px; right: 14px; width: auto; height: auto; padding: 10px 16px; border-radius: 2px; font: 15px var(--serif); letter-spacing: .5px; }
+#act2[hidden] { display: none; }
+#sheet .ficha { max-height: 92vh; overflow: auto; }
+.ficha .rol { min-height: 0; margin: 0 0 6px; color: var(--muted); font: italic 16px var(--serif); }
+.ficha .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 22px; }
+@media (max-width: 760px) { .ficha .cols { grid-template-columns: 1fr; } }
+.ficha h4 { margin: 14px 0 8px; font: 400 15px var(--serif); letter-spacing: 2px; text-transform: uppercase; color: var(--ember); }
+.ficha .tl, .ficha .pj { margin: 0 0 12px; padding-left: 12px; border-left: 2px solid var(--line); }
+.ficha b { display: block; font: 400 17px var(--serif); color: var(--bone); }
+.ficha .tl span { display: block; font: 13px Consolas, monospace; color: var(--muted); }
+.ficha em { display: block; margin-top: 2px; font: italic 14.5px var(--serif); color: var(--text); }
+.ficha .pj span { display: inline-block; margin: 6px 6px 0 0; padding: 2px 8px; font: 12px Consolas, monospace; color: var(--muted); border: 1px solid var(--line); }
+.ficha .sk { position: relative; margin: 0 0 7px; height: 22px; border: 1px solid var(--line); background: #0a0908; }
+.ficha .sk i { position: absolute; inset: 0 auto 0 0; background: linear-gradient(90deg, #3d2a1a, #8e3a22); }
+.ficha .sk span { position: relative; padding-left: 8px; font: 13px var(--serif); line-height: 20px; color: var(--bone); }
+.ficha .sk span { z-index: 2; text-shadow: 0 1px 2px #000; }
+#sheet, #sheet .card { scrollbar-width: thin; scrollbar-color: #3b342c #050507; }

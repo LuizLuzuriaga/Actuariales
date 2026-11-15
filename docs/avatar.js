@@ -94,12 +94,27 @@
       A.legs.push({ hip, knee, ankle }); A.shoes.push(shoe); A.slippers.push(slip);
     });
 
-    /* ================= Mochila y bolso: cajas lisas ================= */
-    const black = toonMat(0x1d1d21), brown = toonMat(0x6b4426);
-    const pack = grp(avatar); pack.visible = false; A.pack = pack;
-    { const m = new THREE.Mesh(rbox(0.34, 0.5, 0.17, 0.06, 4), black); m.position.set(0, 0.82, 0.2); m.castShadow = true; hull(m); pack.add(m); }
+    /* ================= Mochila de verdad (a la espalda, colgada del torso) y bolso ================= */
+    const black = toonMat(0x1c1c20), lidM = toonMat(0x2a2a30), pocketM = toonMat(0x23232a), strapM = toonMat(0x101012), zipM = toonMat(0x0a0a0b), buckleM = toonMat(0x8a8a90);
+    const pack = grp(A.torso); pack.visible = false; A.pack = pack;                   // hija del torso: sigue su rebote y su balanceo
+    const pk = (geo, m, x, y, z, k = 1.06) => { const o = new THREE.Mesh(geo, m); o.position.set(x, y, z); o.castShadow = true; if (k) hull(o, k); pack.add(o); return o; };
+    pk(rbox(0.46, 0.6, 0.2, 0.085, 5), black, 0, 0.5, 0.26);                                            // compartimento principal
+    pk(rbox(0.45, 0.17, 0.225, 0.075, 4), lidM, 0, 0.79, 0.262);                                        // solapa superior
+    pk(rbox(0.34, 0.27, 0.11, 0.05, 4), pocketM, 0, 0.31, 0.4);                                         // bolsillo frontal
+    [-1, 1].forEach((s) => {
+      const bot = new THREE.Mesh(ellipsoid(0.062, 0.15, 0.062, 14), pocketM); bot.position.set(0.255 * s, 0.3, 0.3); bot.castShadow = true; pack.add(bot);
+      const ink = new THREE.Mesh(bot.geometry, inkMat(0.009)); bot.add(ink);                              // bolsillo lateral para el bidón
+    });
+    { const h = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 14, Math.PI), strapM); h.position.set(0, 0.875, 0.262); pack.add(h); }   // asa
+    [[0.36, 0.745, 0.378], [0.28, 0.43, 0.457]].forEach(([w, y, z]) => { const zp = new THREE.Mesh(new THREE.BoxGeometry(w, 0.012, 0.012), zipM); zp.position.set(0, y, z); pack.add(zp); const tab = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, 0.012), buckleM); tab.position.set(w * 0.42, y - 0.018, z); pack.add(tab); });   // cremalleras con tirador
+    [-1, 1].forEach((s) => {                                                                              // tirantes: por encima del hombro, pecho abajo, bajo la axila y de vuelta a la mochila
+      const P = [[0.16, 0.78, 0.25], [0.165, 0.92, 0.2], [0.16, 1.0, 0.1], [0.17, 1.03, -0.02], [0.175, 0.99, -0.1], [0.19, 0.86, -0.1], [0.215, 0.66, -0.082], [0.235, 0.48, -0.04], [0.245, 0.4, 0.04], [0.21, 0.36, 0.2], [0.18, 0.3, 0.28]].map(([x, y, z]) => new THREE.Vector3(x * s, y, z));
+      const m = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(P), 60, 0.021, 6, false), strapM); m.castShadow = true; m.add(new THREE.Mesh(m.geometry, inkMat(0.007))); pack.add(m);
+    });
+    { const cs = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3([new THREE.Vector3(-0.19, 0.8, -0.12), new THREE.Vector3(0, 0.8, -0.168), new THREE.Vector3(0.19, 0.8, -0.12)]), 12, 0.009, 5, false), strapM); pack.add(cs);   // correa pectoral
+      const bu = new THREE.Mesh(new THREE.BoxGeometry(0.055, 0.04, 0.016), buckleM); bu.position.set(0, 0.8, -0.172); pack.add(bu); }
     const bagG = grp(avatar); bagG.visible = false; A.bagG = bagG;
-    { const m = new THREE.Mesh(rbox(0.28, 0.2, 0.1, 0.03, 4), brown); m.position.set(-0.42, 0.6, 0.0); m.castShadow = true; hull(m); bagG.add(m); }
+    /* el bolso marrón se ha quitado: flotaba suelto al costado. bagG se conserva vacío para no romper A.carry() */
 
     /* ================= Estados y animación ================= */
     A.dress = (on) => {                                                                // pijama = gris claro; vestido = gris oscuro

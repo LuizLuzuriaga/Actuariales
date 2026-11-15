@@ -47,6 +47,8 @@
   <div class="fx vig"></div>
   <div class="fx grain"></div>
 
+  <div id="fade"></div>
+
   <div id="start">
     <div class="inner">
       <h1>q<small>x</small> <span>3D</span></h1>
@@ -58,7 +60,7 @@
         <li><b>Ordenador:</b> clic para capturar el ratón · <kbd>WASD</kbd> moverte · <kbd>E</kbd> o clic en lo marcado · <kbd>Esc</kbd> soltar · <kbd>Shift</kbd> correr</li>
         <li><b>Móvil:</b> arrastra con el pulgar izquierdo para andar y con el derecho para mirar · toca un objeto para ir hasta él</li>
       </ul>
-      <p class="fine">Dura unos cinco minutos. Nada se descarga: el modelado es procedural. Los ajustes (sensibilidad, sonido, calidad) están en ⚙ dentro del juego.</p>
+      <p class="fine">Dura unos diez minutos. Nada se descarga: el modelado es procedural. Los ajustes (sensibilidad, sonido, calidad) están en ⚙ dentro del juego.</p>
     </div>
   </div>
 
@@ -74,6 +76,10 @@
     <div id="msg" hidden></div>
     <div id="stickL" class="stick" hidden><i></i></div>
     <div id="fps" hidden></div>
+    <button type="button" class="chip" id="cam" aria-label="Cambiar de cámara (V)" title="Cámara: primera / tercera persona (V)">🎥</button>
+    <div id="freehint" hidden></div>
+    <button type="button" class="chip" id="act2" hidden></button>
+    <div id="choice" hidden></div>
   </div>
 
   <div id="cfg" hidden role="dialog" aria-label="Ajustes">
@@ -102,6 +108,12 @@
   <script src="room.js"></script>
   <script src="avatar.js"></script>
   <script src="fx.js"></script>
+  <script src="ine.js"></script>
+  <script src="curva.js"></script>
+  <script src="gente.js"></script>
+  <script src="anden-detalle.js"></script>
+  <script src="anden.js"></script>
+  <script src="tren.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

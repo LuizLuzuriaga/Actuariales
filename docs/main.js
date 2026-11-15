@@ -35,7 +35,7 @@
   let mainCamera = null;
   renderer.render = (s, cam) => { if (mainCamera && cam !== mainCamera) cam.layers.enableAll(); return mainRender(s, cam); };
 
-  const scene = new THREE.Scene();
+  let scene = new THREE.Scene();
   scene.background = new THREE.Color(0x03050a);
   scene.fog = new THREE.FogExp2(0x070a14, 0.055);
   const camera = new THREE.PerspectiveCamera(72, 1, 0.04, 40);
@@ -51,6 +51,7 @@
       const pm = new THREE.PMREMGenerator(renderer); scene.environment = pm.fromEquirectangular(t).texture; pm.dispose();
     } catch (e) { console.warn('Sin mapa de entorno', e.message); }
   })();
+  const envTex = scene.environment;
 
   /* ============================== Mundo ============================== */
   const R = Q.buildRoom(scene, { pr, high: HIGH });
@@ -72,10 +73,10 @@
   function lookAngles(fx0, fy, fz, tx, ty, tz) { const dx = tx - fx0, dz = tz - fz, dy = ty - fy; return { yaw: Math.atan2(-dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)) }; }
   { const a = lookAngles(P.x, EYE, P.z, -0.5, 0.55, -1.56); P.yaw = P.bodyYaw = a.yaw; P.pitch = a.pitch; }
 
-  const ROOM = Q.ROOM, RAD = 0.24;
+  let ROOM = Q.ROOM, OBST = R.obst, TICK = R.tick, WORLD = 'bed'; const RAD = 0.24;
   function collide(x, z) {
     x = clamp(x, ROOM.minX + RAD, ROOM.maxX - RAD); z = clamp(z, ROOM.minZ + RAD, ROOM.maxZ - RAD);
-    for (const o of R.obst) {
+    for (const o of OBST) {
       const cx = clamp(x, o.minX, o.maxX), cz = clamp(z, o.minZ, o.maxZ), dx = x - cx, dz = z - cz, d2 = dx * dx + dz * dz;
       if (d2 < RAD * RAD) {
         if (d2 > 1e-8) { const d = Math.sqrt(d2), k = (RAD - d) / d; x += dx * k; z += dz * k; }
@@ -87,24 +88,26 @@
 
   /* ============================== Interactivos ============================== */
   const tasksEl = $('#tasks');
-  const TASKS = [['alarm', 'Apagar el despertador'], ['dress', 'Vestirte para el día'], ['bag', 'Cargar la mochila y el bolso'], ['out', 'Salir de casa']];
+  const TASKS = [['alarm', 'Apagar el despertador'], ['dress', 'Vestirte para el día'], ['bag', 'Cargar la mochila'], ['out', 'Salir de casa']];
   function renderTasks(flash) { tasksEl.innerHTML = TASKS.map(([k, t]) => `<li class="${S.tasks[k] ? 'done' : ''}${k === flash ? ' flash' : ''}">${t}</li>`).join(''); }
   function completeTask(k) { S.tasks[k] = true; S.lastProgress = performance.now(); renderTasks(k); Sound.ok(); }
   const allReady = () => S.tasks.alarm && S.tasks.dress && S.tasks.bag;
+  function setTasks(items) { tasksEl.innerHTML = items.map(([t, d]) => `<li class="${d ? 'done' : ''}">${t}</li>`).join(''); }
   function tag(obj, id) { obj.traverse((o) => { if (o.isMesh) o.userData.act = id; }); }
   tag(R.g.nightstand, 'movil'); tag(R.g.wardrobe, 'armario'); tag(R.g.mirror, 'espejo'); tag(R.g.mirrorFrame, 'espejo'); tag(R.g.doorG, 'puerta'); tag(R.g.chair, 'bolsos'); tag(R.g.bed, 'cama'); tag(R.g.desk, 'escritorio'); tag(R.g.shelf, 'medalla');
-  const ACT_ROOTS = [R.g.nightstand, R.g.wardrobe, R.g.mirror, R.g.mirrorFrame, R.g.doorG, R.g.chair, R.g.bed, R.g.desk, R.g.shelf];
-  const ACTS = {
+  let ACT_ROOTS = [R.g.nightstand, R.g.wardrobe, R.g.mirror, R.g.mirrorFrame, R.g.doorG, R.g.chair, R.g.bed, R.g.desk, R.g.shelf];
+  let ACTS = {
     movil: { label: 'Apagar el despertador', stand: [-0.4, -0.85], look: [-0.5, 0.55, -1.56], reach: true, enabled: () => S.alarmOn, run: actMovil },
     armario: { label: 'Abrir el armario y vestirte', stand: [-0.05, -0.2], look: [2.0, 1.45, -0.55], reach: true, enabled: () => !S.dressed, run: actArmario },
     espejo: { label: 'Mirarte al espejo', stand: [1.2, 1.2], look: [2.19, 1.5, 1.2], enabled: () => true, run: actEspejo },
-    bolsos: { label: 'Cargar la mochila y el bolso', stand: [-0.55, 1.0], look: [-1.2, 0.72, 1.15], reach: true, enabled: () => !S.bag, run: actBolsos },
+    bolsos: { label: 'Cargar la mochila', stand: [-0.55, 1.0], look: [-1.2, 0.72, 1.15], reach: true, enabled: () => !S.bag, run: actBolsos },
     puerta: { label: 'Salir de casa', stand: [0.05, 1.0], look: [0.05, 1.15, 1.8], reach: true, enabled: () => true, run: actPuerta },
     cama: { label: 'Mirar la cama', stand: [-0.4, 0.05], look: [-1.5, 0.5, -0.4], enabled: () => true, run: async () => { cost('cama', 3); await say('Tu cama, todavía caliente. Tiene un 100 % de retención y cero rentabilidad.'); } },
     escritorio: { label: 'Mirar el escritorio', stand: [-0.95, 0.3], look: [-1.9, 0.85, 0.85], enabled: () => true, run: actEscritorio },
     medalla: { label: 'Mirar la medalla', stand: [-0.9, 1.5], look: [-2.15, 1.5, 1.62], enabled: () => true, run: async () => { cost('medalla', 2); await say(['La medalla de la San Silvestre. Diez kilómetros a ritmo constante: el único estimador insesgado que tienes.']); } },
   };
 
+  const BED = { scene, bounds: Q.ROOM, obst: R.obst, tick: R.tick, acts: ACTS, actRoots: ACT_ROOTS };
   /* Cada decisión opcional cuesta minutos la primera vez: ese reloj decide la probabilidad de llegar a tiempo */
   function cost(id, min) { if (S.did.has(id)) return; S.did.add(id); advance(min); }
 
@@ -179,7 +182,7 @@
     S.busy = true; $('#prompt').hidden = true; tipId++; msg.hidden = true; S.lastProgress = performance.now(); Sound.click();
     if (!(await walkTo(a.stand, a.look))) { S.busy = false; return; }
     if (a.reach) await tween(380, (e) => { A.reach = e; });
-    await a.run();
+    await a.run(API);
     if (a.reach) await tween(380, (e) => { A.reach = 1 - e; });
     A.reach = 0; S.busy = false;
   }
@@ -215,21 +218,68 @@
   }
   async function actBolsos() {
     R.ref.chairBags.visible = false; A.carry(); S.bag = true; advance(5); completeTask('bag');
-    await say(['Mochila negra, pesadísima: portátil, apuntes, ropa de gimnasio. Bolso marrón de los de hombre, con el tupper. Llevas media vida a cuestas, de forma literal.']);
+    await say(['Mochila negra, pesadísima: portátil, apuntes, ropa de gimnasio y el tupper en el fondo, aplastado. Llevas media vida a cuestas, de forma literal.']);
   }
   async function actEspejo() {
     S.mirror = true; cost('espejo', 1);
     if (!S.dressed) await say(['Pijama arrugado, pelo de almohada y ojeras de actuario junior. El espejo no miente: solo redondea hacia abajo.']);
     else if (!S.bag) await say(['Camisa azul, pantalón gris oscuro, barba de semanas. Falta la mochila para parecer el que realmente eres.']);
-    else await say(['Camisa azul, pantalón gris, mochila negra a la espalda y bolso marrón al costado: el tupper ya viaja contigo. Te reconoces, pero con más peso del que marca la báscula.']);
+    else await say(['Camisa azul, pantalón gris y la mochila negra a la espalda: el tupper ya viaja contigo. Te reconoces, pero con más peso del que marca la báscula.']);
   }
   async function actPuerta() {
     if (!allReady()) { Sound.bad(); await say('Todavía no: te falta ' + TASKS.filter(([k]) => k !== 'out' && !S.tasks[k]).map(([, t]) => t.charAt(0).toLowerCase() + t.slice(1)).join(' y ') + '.'); return; }
     advance(2); completeTask('out'); Sound.whoosh();
     await say(['Cierras la puerta con cuidado. La escalera huele a lunes. Fuera, el andén te espera con ochocientas personas y ninguna ganas de ser tu amigo.']);
-    S.ended = true; $('#hud').hidden = true; $('#hint').hidden = true; if (document.pointerLockElement) document.exitPointerLock();
-    showEnd();
+    await startPlatform();
   }
+
+
+  /* ============================== Mundos, decisiones y finales ============================== */
+  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+  const fadeEl = $('#fade'), choiceEl = $('#choice'), freeHintEl = $('#freehint');
+  async function fade(on) { fadeEl.classList.toggle('on', on); await sleep(on ? 900 : 700); }
+  let PLAT = null, inScript = false, inFree = false;
+  function setTime(t) { S.time = t; clockEl.textContent = t; }
+  function enterWorld(w, name) {
+    if (A.group.parent) A.group.parent.remove(A.group);
+    scene = w.scene; scene.add(A.group);
+    if (fx.on && fx.composer.passes[0]) fx.composer.passes[0].scene = scene;
+    ROOM = w.bounds; OBST = w.obst; TICK = w.tick; ACTS = w.acts; ACT_ROOTS = w.actRoots; WORLD = name;
+    P.x = w.spawn[0]; P.z = w.spawn[1]; P.vx = P.vz = 0; P.walk = 0;
+    const a = lookAngles(P.x, EYE, P.z, w.look[0], w.look[1], w.look[2]); P.yaw = P.bodyYaw = a.yaw; P.pitch = a.pitch;
+    current = null; $('#prompt').hidden = true; renderer.shadowMap.needsUpdate = true;
+    const hb = $('#act2'); if (w.hudAct) { hb.textContent = w.hudAct.label; hb.hidden = false; HUDKEY = w.hudAct.key; HUDID = w.hudAct.id; hb.onclick = () => { if (!S.busy) interact(HUDID); }; } else { hb.hidden = true; HUDKEY = null; }
+  }
+  function choose(options, title) {
+    return new Promise((resolve) => {
+      S.busy = true; if (document.pointerLockElement) document.exitPointerLock();
+      choiceEl.innerHTML = `<h3>${title}</h3>` + options.map((o, i) => `<button type="button" class="opt" data-i="${i}"><kbd>${i + 1}</kbd><span><b>${o.label}</b><small>${o.hint || ''}</small></span></button>`).join('');
+      choiceEl.hidden = false;
+      const done = (i) => { window.removeEventListener('keydown', onKey); choiceEl.hidden = true; lockPointer(); resolve(options[i].id); };
+      const onKey = (e) => { const n = +e.key; if (n >= 1 && n <= options.length) done(n - 1); };
+      window.addEventListener('keydown', onKey);
+      choiceEl.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => done(+b.dataset.i)));
+    });
+  }
+  async function free(ms, hint, until) {                    // ventana en la que puedes pasear y mirar antes de que siga el guion
+    inFree = true; S.busy = false; freeHintEl.hidden = !hint;
+    const t0 = performance.now();
+    while ((performance.now() - t0 < ms && !(until && until())) || S.busy) {
+      if (hint) freeHintEl.textContent = hint.replace('{s}', Math.max(0, Math.ceil((ms - (performance.now() - t0)) / 1000)));
+      await sleep(150);
+    }
+    freeHintEl.hidden = true; inFree = false; S.busy = true;
+  }
+  const API = { chart: async () => { if (document.pointerLockElement) document.exitPointerLock(); await Q.showMortality(); lockPointer(); }, say: async (l) => { await say(l); if (inScript && !inFree) S.busy = true; }, choose, tween, wait: sleep, setTime, free, P, S };
+  function endScreen(title, text) {
+    $('#hud').hidden = true; if (document.pointerLockElement) document.exitPointerLock();
+    const end = document.createElement('div'); end.id = 'end';
+    end.innerHTML = `<div><h2>${title}</h2><p>${text}</p><button class="btn primary" id="again">↻ Volver a probar</button></div>`;
+    document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
+  }
+
+  /* Fin del recorrido: lo que antes cerraba la habitación, ahora cierra la mañana entera */
+  function finishDay() { S.ended = true; $('#hud').hidden = true; $('#hint').hidden = true; if (document.pointerLockElement) document.exitPointerLock(); showEnd(); }
 
   /* ---- Final: el día como simulación. Salida a hora X, trayecto ~ N(62, 14²) min, oficina a las 07:35 ---- */
   function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
@@ -241,7 +291,7 @@
   }
   const FINALES = [['impecable', 'Mañana impecable'], ['normal', 'Mañana normal'], ['justo', 'Vas justo']];
   function showEnd() {
-    const r = simulate(S.min), pct = Math.round(r.p * 100);
+    const delay = 6 * (S.descuido || 0), r = simulate(S.min + delay), pct = Math.round(r.p * 100);
     const clave = pct >= 92 ? 'impecable' : pct >= 85 ? 'normal' : 'justo', titulo = FINALES.find(([k]) => k === clave)[1];
     let vistos = []; try { vistos = JSON.parse(store('ends') || '[]'); } catch (e) { }
     if (!vistos.includes(clave)) { vistos.push(clave); store('ends', JSON.stringify(vistos)); }
@@ -249,13 +299,46 @@
     const end = document.createElement('div'); end.id = 'end'; end.setAttribute('role', 'dialog'); end.setAttribute('aria-label', 'Resumen de la mañana');
     end.innerHTML = `<div class="card">
       <h2>${titulo}</h2>
-      <p class="lede">Sales de casa a las ${fmt(S.min)}. Con un trayecto que dura 62 min de media (desviación 14) y la oficina a las 07:35, el modelo de 2.000 trayectorias dice:</p>
+      <p class="lede">Sales de casa a las ${fmt(S.min)}. Con un trayecto que dura 62 min de media (desviación 14) y la oficina a las 07:35, el modelo de 2.000 trayectorias dice:${delay ? ` (Los trenes que dejaste pasar en el andén suman ${delay} min.)` : ''}</p>
       <div class="stats"><div><b>${pct} %</b><span>probabilidad de llegar a tiempo</span></div><div><b>${fmt(Math.round(r.mediana))}</b><span>llegada mediana</span></div><div><b>${fmt(Math.round(r.p90))}</b><span>percentil 90</span></div></div>
       <ul class="did">${hechos.map(([k, t]) => `<li class="${S.did.has(k) ? 'y' : ''}">${t}</li>`).join('')}</ul>
       <p class="fine">Cada detalle que miras cuesta minutos y cambia la probabilidad. Finales vistos: ${vistos.length} de 3.</p>
       <p class="links"><a href="https://www.linkedin.com/in/luiz-luzuriaga-izquierdo" target="_blank" rel="noopener">LinkedIn</a> · <a href="https://github.com/LuizLuzuriaga" target="_blank" rel="noopener">GitHub</a> · <a href="https://luizluzuriaga.github.io/" target="_blank" rel="noopener">Web de Luiz</a></p>
       <button class="btn primary" id="again">↻ Otra mañana</button></div>`;
+
     document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
+  }
+  async function startPlatform() {
+    S.busy = true; inScript = true; $('#hud').hidden = false;
+    await fade(true);
+    if (!PLAT) PLAT = Q.buildPlatform(renderer, envTex);
+    enterWorld(PLAT, 'platform'); setTime('06:25'); setTasks([['Subir a un tren', false]]);
+    if (window.Sound && Sound.on) Sound.ambience('platform');
+    await fade(false);
+    const r = await PLAT.play(API); inScript = false;
+    if (r === 'subido') {
+      setTasks([['Subir a un tren', true]]);
+      await sleep(300); await startTrain(); return;
+    } else {
+      if (window.Sound && Sound.on) Sound.bad();
+      await fade(true);
+      endScreen('Cervezas con Chelu', 'Dejas pasar el cuarto tren. Miras el panel, miras el móvil y Chelu escribe: «¿Cañas?». La probabilidad de decir que no era del 0,3 %. Esperanza de vida laboral: cero días. Esperanza de vida social: al alza.');
+    }
+  }
+
+
+  let TRN = null, HUDKEY = null, HUDID = null;
+  async function startTrain() {
+    S.busy = true; inScript = true; $('#hud').hidden = false;
+    await fade(true);
+    if (!TRN) TRN = Q.buildTrain(renderer, envTex);
+    enterWorld(TRN, 'train'); setTime('07:20'); setTasks([['Llegar a Nuevos Ministerios', false]]);
+    if (window.Sound && Sound.on) Sound.ambience('train');
+    await fade(false);
+    const r = await TRN.play(API); inScript = false;
+    setTasks([['Llegar a Nuevos Ministerios', true]]);
+    await fade(true);
+    finishDay();
   }
 
   /* ---- Panel de contenido ---- */
@@ -274,7 +357,7 @@
   /* ============================== Entrada ============================== */
   function lockPointer() { if (COARSE || !canvas.requestPointerLock) return; try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => { }); } catch (e) { } }
   const keys = {};
-  window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; if (walking && ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) walkCancel = true; if (e.key === 'Escape' && !cfgEl.hidden) { closeCfg(); return; } if (!S.started || S.busy) return; if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') { if (current) interact(current); } });
+  window.addEventListener('keydown', (e) => { if ((e.key === 'v' || e.key === 'V') && !e.repeat) toggleCam(); keys[e.key.toLowerCase()] = true; if (walking && ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) walkCancel = true; if (e.key === 'Escape' && !cfgEl.hidden) { closeCfg(); return; } if (!S.started || S.busy) return; if (HUDKEY && e.key.toLowerCase() === HUDKEY) { interact(HUDID); return; } if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') { if (current) interact(current); } });
   window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
   const touches = new Map(); let mouse = null;
@@ -318,7 +401,7 @@
 
   /* ---- Selección por rayo ---- */
   const ray = new THREE.Raycaster(); ray.far = 6;
-  function pickRay(ndc) { ray.setFromCamera(ndc, camera); const hits = ray.intersectObjects(ACT_ROOTS, true).filter((h) => h.object.userData.act); return hits.length ? hits[0].object.userData.act : null; }
+  function pickRay(ndc) { ray.setFromCamera(ndc, camera); if (camK > 0.05) ray.ray.origin.set(P.x, EYE, P.z); const hits = ray.intersectObjects(ACT_ROOTS, true).filter((h) => h.object.userData.act); return hits.length ? hits[0].object.userData.act : null; }
   function picked(cx, cy) { return pickRay(new THREE.Vector2((cx / innerWidth) * 2 - 1, -(cy / innerHeight) * 2 + 1)); }
   function tapAt(cx, cy) { const id = picked(cx, cy); if (id) interact(id); }
   let current = null; const promptEl = $('#prompt'), cross = $('#cross');
@@ -337,9 +420,11 @@
   }
   window.addEventListener('resize', resize); resize();
 
-  let frameN = 0, lastCalls = 0, lastTris = 0;
+  let frameN = 0, lastCalls = 0, lastTris = 0, third = false, camK = 0;
+  function toggleCam() { third = !third; const b = $('#cam'); b.setAttribute('aria-pressed', third); b.textContent = third ? '🧍' : '🎥'; try { localStorage.setItem('qx3dCam', third ? '3' : '1'); } catch (e) { } }
+  try { if (localStorage.getItem('qx3dCam') === '3') { third = true; camK = 1; } } catch (e) { }
   const clock = new THREE.Clock(); let alarmT = 0, frames = 0, tAdapt = 0, fpsT = 0, fpsN = 0, tier = 0;
-  const fpsEl = $('#fps');
+  const fpsEl = $('#fps'), clockEl = $('#clock');
   function drawPhone(on, t) {
     const g = R.ref.phoneCanvas.getContext('2d');
     g.fillStyle = on ? (Math.sin(t * 9) > 0 ? '#0d4a5e' : '#0a2f40') : '#05121a'; g.fillRect(0, 0, 256, 512);
@@ -371,13 +456,25 @@
 
     P.bob += dt * 8.5 * P.walk;
     const calm = CFG.calm ? 0 : 1, bobY = Math.abs(Math.sin(P.bob)) * 0.028 * P.walk * calm + Math.sin(t * 1.6) * 0.004 * calm, bobX = Math.cos(P.bob) * 0.012 * P.walk * calm;
-    camera.position.set(P.x + Math.cos(P.yaw) * bobX, EYE + bobY, P.z - Math.sin(P.yaw) * bobX);
-    camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm);
+    camK = lerp(camK, third ? 1 : 0, Math.min(1, dt * 7));
+    let ex = P.x + Math.cos(P.yaw) * bobX, ey = EYE + bobY, ez = P.z - Math.sin(P.yaw) * bobX;
+    if (camK > 0.01) {                                          // tercera persona: detrás y algo por encima, sin atravesar paredes ni techo
+      const cp = Math.cos(P.pitch), fx1 = -Math.sin(P.yaw) * cp, fy1 = Math.sin(P.pitch), fz1 = -Math.cos(P.yaw) * cp;
+      const zMin = ROOM.minZ + (WORLD === 'bed' ? 0.2 : -0.4), top = WORLD === 'bed' ? 2.4 : 3.1;
+      let d = 2.6 * camK, cx = ex, cy = ey, cz = ez;
+      for (let i = 0; i < 40; i++) { cx = ex - fx1 * d; cy = ey - fy1 * d + 0.35 * camK; cz = ez - fz1 * d; if (cx > ROOM.minX + 0.2 && cx < ROOM.maxX - 0.2 && cz > zMin && cz < ROOM.maxZ - 0.2 && cy > 0.25 && cy < top) break; d *= 0.9; }
+      ex = cx; ey = cy; ez = cz;
+    }
+    camera.position.set(ex, ey, ez);
+    camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm * (1 - camK));
+    if (WORLD === 'train' && TRN) { camera.position.y += TRN.sway.y; camera.rotation.z += TRN.sway.roll; }
+    if (camK > 0.05) camera.layers.enable(1); else camera.layers.disable(1);     // la cabeza (capa 1) solo se ve en el espejo y en tercera persona
 
-    drawPhone(S.alarmOn, t);
-    if (S.alarmOn) { const k = Math.max(0, Math.sin(t * 9)); R.ref.phoneLight.intensity = 0.5 + k * 0.9; R.ref.halo.material.opacity = 0.45 + k * 0.45; R.ref.phone.position.x = -0.5 + Math.sin(t * 60) * 0.0012; }
-    alarmT += dt; if (S.alarmOn && S.started && alarmT > 3.4 && Sound.on) { alarmT = 0; Sound.alarm(3); }
-    R.tick.forEach((f) => f(dt, t));
+    if (WORLD === 'bed') drawPhone(S.alarmOn, t);
+    if (clockEl.textContent !== S.time) clockEl.textContent = S.time;
+    if (WORLD === 'bed' && S.alarmOn) { const k = Math.max(0, Math.sin(t * 9)); R.ref.phoneLight.intensity = 0.5 + k * 0.9; R.ref.halo.material.opacity = 0.45 + k * 0.45; R.ref.phone.position.x = -0.5 + Math.sin(t * 60) * 0.0012; }
+    alarmT += dt; if (WORLD === 'bed' && S.alarmOn && S.started && alarmT > 3.4 && Sound.on) { alarmT = 0; Sound.alarm(3); }
+    TICK.forEach((f) => f(dt, t));
 
     updatePrompt(); updateGlows(t); updateHint();
     renderer.shadowMap.needsUpdate = (frameN++ % 2 === 0);
@@ -430,6 +527,7 @@
 
   /* ============================== Arranque ============================== */
   renderTasks(); frame();
+  $('#cam').addEventListener('click', toggleCam); if (third) $('#cam').textContent = '🧍';
   $('#snd').addEventListener('click', () => { CFG.sound = !Sound.on; saveCfg(); setSound(CFG.sound); });
   if (CFG.quality !== 'auto') applyQuality(CFG.quality);
   const go = $('#go');
@@ -437,9 +535,11 @@
   go.addEventListener('click', () => {
     $('#start').style.display = 'none'; $('#hud').hidden = false; S.started = true; S.busy = false; S.lastProgress = performance.now();
     lockPointer(); if (CFG.sound) setSound(true);
+    if (/[?&]anden/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
+    if (/[?&]tren/.test(location.search)) { S.alarmOn = false; startTrain(); return; }
     const how = COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
     if (store('intro')) tip([how]);
     else { store('intro', '1'); tip(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.', { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true }, how]); }
   });
-  window.__qx = { S, P, ACTS, interact, camera, scene, renderer, say, fx, R, A };
+  window.__qx = { get plat() { return PLAT; }, toggleCam, startPlatform, enterWorld, S, P, ACTS, interact, camera, scene, renderer, say, fx, R, A };
 })();
