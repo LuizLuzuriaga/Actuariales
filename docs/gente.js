@@ -45,11 +45,11 @@
       if (R() < 0.5) { const k = R(), bp = ellipsoid(0.19, 0.27, 0.1, 14).translate(0, 0.78, 0.26); paint(bp, 0.08 + k * 0.1, 0.08 + k * 0.08, 0.1 + k * 0.1); bodies.push(bp.applyMatrix4(m)); const sp = ellipsoid(0.12, 0.1, 0.07, 10).translate(0, 0.5, 0.31); paint(sp, 0.07, 0.07, 0.08); bodies.push(sp.applyMatrix4(m)); }
       else if (R() < 0.4) { const bg = ellipsoid(0.15, 0.12, 0.07, 12).translate(0.3, 0.52, 0.02); paint(bg, 0.3, 0.2, 0.12); bodies.push(bg.applyMatrix4(m)); }
       if (R() < 0.3) { const cap = ellipsoid(0.295, 0.15, 0.265, 16).translate(0, 1.6, -0.01); paint(cap, 0.1, 0.11, 0.14); heads.push(cap.applyMatrix4(m)); const br = ellipsoid(0.2, 0.025, 0.14, 10).translate(0, 1.55, -0.24); paint(br, 0.09, 0.1, 0.12); heads.push(br.applyMatrix4(m)); }
-      if (AM) {                                                                                 // Amor: pelo oscuro y largo, ojos verdes
-        const add2 = (geo, c, arr) => { paint(geo, c[0], c[1], c[2]); arr.push(geo.applyMatrix4(m)); };
-        add2(ellipsoid(0.31, 0.27, 0.3, 14).translate(0, 1.55, 0.04), [0.04, 0.03, 0.04], heads); add2(ellipsoid(0.27, 0.42, 0.12, 12).translate(0, 1.2, 0.2), [0.04, 0.03, 0.04], heads);
-        [-1, 1].forEach((k) => { add2(ellipsoid(0.05, 0.04, 0.02, 8).translate(0.1 * k, 1.46, -0.255), [0.95, 0.95, 0.95], heads); add2(ellipsoid(0.028, 0.028, 0.02, 8).translate(0.1 * k, 1.46, -0.268), [0.1, 0.65, 0.4], heads); });
-        add2(ellipsoid(0.07, 0.018, 0.02, 8).translate(0, 1.36, -0.255), [0.65, 0.2, 0.25], heads);
+      if (AM) {                                                                                 // Amor: la misma cabeza con la cruz del rostro, y pelo largo de mujer (láminas oscuras detrás y a los lados)
+        const add2 = (geo, c, arr) => { paint(geo, c[0], c[1], c[2]); arr.push(geo.applyMatrix4(m)); }, hair = [0.05, 0.035, 0.05];
+        add2(ellipsoid(0.3, 0.17, 0.28, 14).translate(0, 1.6, 0.05), hair, heads);                 // coronilla
+        add2(ellipsoid(0.3, 0.62, 0.07, 14).translate(0, 1.0, 0.27), hair, heads);                 // melena larga por la espalda, hasta la cintura
+        [-1, 1].forEach((k) => { add2(ellipsoid(0.055, 0.42, 0.13, 10).translate(0.29 * k, 1.2, 0.06), hair, heads); add2(ellipsoid(0.06, 0.3, 0.09, 10).translate(0.25 * k, 0.8, 0.1), hair, heads); });   // mechones a los lados, sobre los hombros
       }
       if (Z) {                                                                                  // infectado: cabeza verde, boca abierta con dientes y sangre, abrigo manchado, puños verdes
         const add = (geo, c, arr) => { paint(geo, c[0], c[1], c[2]); arr.push(geo.applyMatrix4(m)); };
@@ -62,7 +62,7 @@
       [-1, 1].forEach((k) => { const f = ellipsoid(0.1, 0.055, 0.13, 8).translate(0.1 * k, 0.05, -0.02); paint(f, 0.05, 0.05, 0.06); feet.push(f.applyMatrix4(m)); });
       const hp = [], vp = []; for (let a = -0.5; a <= 0.5; a += 0.125) hp.push(new THREE.Vector3(0.285 * Math.sin(a), 1.42, -0.255 * Math.cos(a) - 0.004));
       for (let a = -0.5; a <= 0.55; a += 0.13) vp.push(new THREE.Vector3(0, 1.45 + 0.315 * Math.sin(a), -0.255 * Math.cos(a) - 0.004));
-      if (!AM) { crosses.push(arcTube(hp).applyMatrix4(m)); if (!Z) crosses.push(arcTube(vp).applyMatrix4(m)); }
+      crosses.push(arcTube(hp).applyMatrix4(m)); if (!Z) crosses.push(arcTube(vp).applyMatrix4(m));
       obst.push({ minX: x - 0.25 * s, maxX: x + 0.25 * s, minZ: z - 0.25 * s, maxZ: z + 0.25 * s });
     });
     const strip = (arr) => arr.map((g) => { const n = new THREE.BufferGeometry(); n.setAttribute('position', g.attributes.position); n.setAttribute('normal', g.attributes.normal); if (g.attributes.color) n.setAttribute('color', g.attributes.color); n.setIndex(g.index); return n; });
