@@ -4,7 +4,7 @@
   const Q = window.QX;
   const MG = THREE.BufferGeometryUtils;
 
-  Q.buildCafe = (renderer, envTex, apoc) => {
+  Q.buildCafe = (renderer, envTex, apoc, opts = {}) => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(apoc ? 0x2a0c0a : 0x20222a); scene.fog = new THREE.FogExp2(apoc ? 0x2a1210 : 0x1c1a18, 0.045);
     if (envTex) scene.environment = envTex;
@@ -67,6 +67,15 @@
     // puerta de la cocina: el refugio
     put(new THREE.BoxGeometry(0.1, 2.1, 0.9), std(0x2f3a30, 0.6), bounds.maxX - 0.06, 1.05, -2.8); put(new THREE.PlaneGeometry(0.7, 0.22), emis(0x36d070, 1.8), bounds.maxX - 0.13, 2.3, -2.8).rotation.y = -Math.PI / 2;
     /* ---------- interacciones ---------- */
+
+    if (apoc) W.startApoc = async (api, quick) => {
+        const say = api.say;
+        if (!quick) await say(['—Qué pinta tienes —dice Chelu sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpea el marco. Luego, otra cosa. Luego, todas.']);
+        W.doBreach(); if (window.Sound && Sound.on) { Sound.glass(); setTimeout(() => Sound.shout(0.08), 500); Sound.growl(0.9); } await api.wait(1800);
+        await say(quick ? ['El cristal vuelve a caer y la calle entra otra vez. Corre.'] : ['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'Chelu se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Corre.']);
+        Q.apoc.start(W, { refuge: [bounds.maxX - 0.7, -2.8], r: 1.5, refugeLabel: 'puerta de la cocina', enemies: W.zs.map((z, i) => ({ g: z.g, v: 2.2 + 0.04 * i, stun: i * 0.2, ph: z.ph })),
+          quips: [['Amor', 'Si estás en la cafetería: la cocina siempre tiene salida de emergencia. Es una norma, no una opinión.'], ['Mario', 'No es por meter prisa, pero este evento no está tarificado.'], ['Chelu', 'Soy yo. Sigo siendo yo. Más o menos. Quiero una caña.']], onEnd: () => { W.exit = true; } });
+    };
     W.acts.barra = { label: 'Pedir un café', stand: [0, -1.9], look: [0, 1.2, bounds.minZ + 0.7], enabled: () => !W.barra, run: async (api) => {
       W.barra = true; await api.say(['Un café solo, dos euros y unas monedas que no devuelven ninguna rentabilidad.', 'La máquina gruñe, escupe y te lo entrega con la dignidad de quien lleva doce años en el mismo turno.']); } };
     W.acts.arma = { label: 'Coger una silla', stand: [-1.2, -1.0], look: [-2.2, 0.6, -1.8], enabled: () => W.apocOn && !W.armed, run: async (api) => { W.armed = true; Q.apoc.pick(); await api.say('Una silla de madera maciza. Perfecta para estudiar las propiedades del hueso temporal. F para empujar con ella.'); } };
@@ -75,12 +84,7 @@
       else await api.say(['La calle despierta: un camión de reparto, tres oficinistas con vasos de cartón, una paloma que se lo piensa.', { text: 'Todo el mundo va a algún sitio. Tú, también. Casi.', think: true }]); } };
     W.acts.chelu = { label: 'Hablar con Chelu', stand: [2.2, 1.6], look: [3.7, 1.5, 0.4], enabled: () => W.barra && !W.exit, run: async (api) => {
       const { say, choose, S } = api, n = W.ronda++;
-      if (apoc) { W.zombi = true; await say(['—Qué pinta tienes —dice Chelu sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpea el marco. Luego, otra cosa. Luego, todas.']);
-        W.doBreach(); if (window.Sound && Sound.on) { Sound.glass(); setTimeout(() => Sound.shout(0.08), 500); Sound.growl(0.9); } await api.wait(1800);
-        await say(['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'Chelu se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Corre.']);
-        Q.apoc.start(W, { refuge: [bounds.maxX - 0.7, -2.8], r: 1.5, refugeLabel: 'puerta de la cocina', enemies: W.zs.map((z, i) => ({ g: z.g, v: 2.2 + 0.04 * i, stun: i * 0.2, ph: z.ph })),
-          quips: [['Amor', 'Si estás en la cafetería: la cocina siempre tiene salida de emergencia. Es una norma, no una opinión.'], ['Mario', 'No es por meter prisa, pero este evento no está tarificado.'], ['Chelu', 'Soy yo. Sigo siendo yo. Más o menos. Quiero una caña.']], onEnd: () => { W.exit = true; } });
-        return; }
+      if (apoc) { W.zombi = true; await W.startApoc(api, false); return; }
       if (n === 0) {
         await say(['—Pensaba que no llegabas —dice Chelu, con una caña vacía ya delante de las nueve de la mañana—. ¿Cómo va la cosa?']);
         const r = await choose([{ id: 'a', label: '«Bien, con el modelo de tarificación casi listo»', hint: 'Hablas de trabajo' }, { id: 'b', label: '«Tirando. ¿Y tú?»', hint: 'Conversación sin compromiso' }, { id: 'c', label: '«Fatal. Lo dejaría todo»', hint: 'Sinceridad' }], 'Primera ronda');
@@ -99,6 +103,7 @@
       } } };
     W.play = async (api) => {
       W.api = api; const { say, free } = api;
+      if (opts.retry && apoc) { W.barra = true; W.zombi = true; await say(['Otra vez la cafetería. El cristal tiembla.']); await W.startApoc(api, true); await free(1e9, '¡CORRE! hasta la puerta de la cocina · F empuja', () => W.exit); return { score: W.score, zombi: true, res: W.apocRes }; }
       await say(apoc ? ['La cafetería de la planta baja. El cristal de la ventana tiembla de una forma que el cristal no debería.', 'Chelu ya está en su mesa.']
         : ['La cafetería de la planta baja. Olor a tostada y a lunes aunque sea otro día. Hay café de verdad y mesas pequeñas con gente pequeña.', 'Chelu ya está en su mesa, con un vaso que ya no tiene nada dentro.']);
       await free(1e9, 'Pide algo en la barra · habla con Chelu (tres rondas) · mira por la ventana', () => W.exit);

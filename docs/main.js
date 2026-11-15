@@ -299,7 +299,7 @@
     document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
   }
 
-  const FINALES_TOTAL = 11;
+  const FINALES_TOTAL = 8;
   function finalScreen(clave, title, text) {
     let vistos = []; try { vistos = JSON.parse(store('ends') || '[]'); } catch (e) { }
     if (!vistos.includes(clave)) { vistos.push(clave); store('ends', JSON.stringify(vistos)); }
@@ -382,26 +382,43 @@
     await startOficina();
   }
 
+  function deathCard(title, text) {
+    return new Promise((res) => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      const el = document.createElement('div'); el.id = 'end'; el.innerHTML = `<div><h2>${title}</h2><p>${text}</p><button class="btn primary" id="retry">↻ Volver a intentarlo</button></div>`;
+      document.body.appendChild(el); el.querySelector('#retry').addEventListener('click', () => { el.remove(); res(); });
+    });
+  }
   let SOL = null;
   async function startSol() {
     S.busy = true; inScript = true;
     if (window.Sound && Sound.on) Sound.doorBeep();
+    const dbgApoc = /[?&]apoc/.test(location.search);
+    if (!dbgApoc) {
     await say(['El segundo tren se va sin ti. Dos minutos de silencio civilizado y el móvil vibra.']);
     if (Q.notify) Q.notify('Chelu', '¿Cañas? Estoy en Sol. Ya he pedido dos (invitas tú).');
     await sleep(900);
     await say([{ text: 'Chelu: «¿Cañas? Estoy en Sol. Ya he pedido dos (invitas tú).»', think: false }]);
     const r = await choose([{ id: 'si', label: 'Aceptar: «Voy para allá»', hint: 'La probabilidad de decir que no era del 0,3 %' }, { id: 'no', label: '«Es que tengo que subir a un tren»… que ya se ha ido', hint: 'Mentir con convicción' }], 'Chelu te escribe');
     if (r === 'no') await say('Contestas «tengo trabajo». Respuesta inmediata: «Mentiroso. Estás en el andén mirando la nada». Aceptas por puro cansancio.');
+    }
     await fade(true);
-    SOL = Q.buildSol(renderer, envTex); window.__qx && (window.__qx.SOL = SOL);
-    enterWorld(SOL, 'sol'); setTime('19:10'); setTasks([['Tomar unas cañas con Chelu', false]]);
-    if (window.Sound && Sound.on) Sound.ambience('street');
-    await fade(false);
-    const sr = await SOL.play(API); inScript = false;
-    if (window.Quick) { }
+    let sr, retrySol = dbgApoc;
+    for (;;) {
+      SOL = Q.buildSol(renderer, envTex, { retry: retrySol }); window.__qx && (window.__qx.SOL = SOL);
+      enterWorld(SOL, 'sol'); setTime('19:10'); setTasks([['Tomar unas cañas con Chelu', false]]);
+      if (window.Sound && Sound.on) Sound.ambience('street');
+      await fade(false);
+      sr = await SOL.play(API);
+      if (sr === 'rescatado') break;
+      if (window.Sound && Sound.on) Sound.bad();
+      await fade(true);
+      await deathCard('Te alcanzan en la plaza', 'Los infectados te rodean frente a la boca del metro. Chelu levanta la caña por última vez: «Por los que suben». Pero tú no subes. Probemos otra vez desde el apocalipsis.');
+      retrySol = true;
+    }
+    inScript = false;
     await fade(true);
-    if (sr === 'refugio') { finalScreen('solrefugio', 'Último metro a Nuevos Ministerios', 'Bajas las escaleras del metro de Sol con Chelu a rastras y una silla de terraza en la mano. Abajo, un vigilante con cara de funcionario te pide el billete. Se lo enseñas. Los infectados, no. Hay cosas que ni el fin del mundo se salta: la validación del título de transporte.'); return; }
-    finalScreen('sol', 'Cañas al fin del mundo', 'El tren se fue, la caña llegó y el apocalipsis, también. Te pilla en una terraza de Sol con una cerveza a medias, un oso de bronce que no pestañea y Chelu diciendo que, bien mirado, esto sale más barato que la hipoteca. La probabilidad de que acabara así era del 0,3 %. La de que acabara en algún sitio, del cien.');
+    finalScreen('solrescate', 'Dani Moto al rescate', 'Un solo faro, dos ruedas y cero papeles. Danny frena en seco, os sube a Chelu y a ti, y la moto atraviesa Sol esquivando oficinistas, infectados y un oso de bronce que sigue sin inmutarse. Detrás, la plaza arde. Delante, una carretera vacía y la sospecha de que la probabilidad de sobrevivir hoy ha mejorado del 3 % al 100 % gracias a una variable que nadie tarificaba: un amigo con moto.');
   }
 
   let LOB = null, PLA = null;
@@ -416,16 +433,19 @@
       await LOB.play(API);
       await fade(true);
     }
-    if (!PLA) PLA = Q.buildOficina(renderer, envTex, 'planta');
-    window.__qx && (window.__qx.PLA = PLA); PLA.hecho = PLA.cafe = false; enterWorld(PLA, 'planta'); setTime('08:12'); setTasks([['Abrir el modelo en tu mesa', false], ['Tomar un café', false]]);
-    await fade(false);
-    const pr = await PLA.play(API); inScript = false;
-    if (pr === 'atrapado') {
+    let pr, retryPla = false;
+    for (;;) {
+      PLA = Q.buildOficina(renderer, envTex, 'planta', { retry: retryPla });
+      window.__qx && (window.__qx.PLA = PLA); PLA.hecho = PLA.cafe = false; enterWorld(PLA, 'planta'); setTime('08:12'); setTasks([['Abrir el modelo en tu mesa', false], ['Tomar un café', false]]);
+      await fade(false);
+      pr = await PLA.play(API);
+      if (pr !== 'atrapado') break;
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
-      finalScreen('atrapado', 'Parte de la planta 4', 'La bacteria negra te alcanza entre dos cubículos. No duele: simplemente dejas de ser una persona y pasas a ser un patrón en la moqueta. Mañana, alguien se sentará en tu mesa y notará un frío raro en las piernas. Los reservas del trimestre no se ven afectadas.');
-      return;
+      await deathCard('Parte de la planta 4', 'La bacteria negra te alcanza entre dos cubículos. No duele: simplemente dejas de ser una persona y pasas a ser un patrón en la moqueta. Vuelve a empezar la carrera desde el ascensor.');
+      retryPla = true;
     }
+    inScript = false;
     setTasks([['Abrir el modelo en tu mesa', true], ['Tomar un café', true]]);
     await fade(true);
     await startCafe();
@@ -435,11 +455,20 @@
   async function startCafe() {
     S.busy = true; inScript = true; $('#hud').hidden = false;
     const apoc = (S.descuido || 0) >= 7;
-    CAF = Q.buildCafe(renderer, envTex, apoc);
-    enterWorld(CAF, 'cafe'); setTime('09:10'); setTasks([['Pedir un café', false], ['Hablar con Chelu', false]]);
-    if (window.Sound && Sound.on) Sound.ambience('cafe');
-    await fade(false);
-    const r = await CAF.play(API); inScript = false;
+    let r, retryCaf = false;
+    for (;;) {
+      CAF = Q.buildCafe(renderer, envTex, apoc, { retry: retryCaf });
+      enterWorld(CAF, 'cafe'); setTime('09:10'); setTasks([['Pedir un café', false], ['Hablar con Chelu', false]]);
+      if (window.Sound && Sound.on) Sound.ambience('cafe');
+      await fade(false);
+      r = await CAF.play(API);
+      if (!(r.zombi && r.res === 'muerto')) break;
+      if (window.Sound && Sound.on) Sound.bad();
+      await fade(true);
+      await deathCard('Te alcanzan en la cafetería', 'Entre el cristal roto y las sillas volcadas, los infectados te rodean antes de llegar a la cocina. Otra vez desde el cristal que revienta.');
+      retryCaf = true;
+    }
+    inScript = false;
     await fade(true);
     const pct = Math.round(simulate(S.min + 6 * (S.descuido || 0)).p * 100), sc = r.score + (S.mini >= (S.miniMax || 8) - 1 ? 1 : S.mini <= 2 ? -1 : 0);
     if (r.zombi && r.res === 'refugio') finalScreen('caferefugio', 'Refugio en la cocina', 'Entras en la cocina de un portazo y echas el cerrojo. El cocinero te mira, mira la puerta que tiembla y te ofrece, con una calma admirable, una tostada. Sobrevivís a base de tostadas, tres turnos y un chiste de actuarios por hora. La probabilidad de morir hoy bajó del 100 % al 61 %: avance estadísticamente histórico.');

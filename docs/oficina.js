@@ -5,7 +5,7 @@
   const MG = THREE.BufferGeometryUtils;
   const RED = 0x7c1219;
 
-  Q.buildOficina = (renderer, envTex, kind) => {
+  Q.buildOficina = (renderer, envTex, kind, opts = {}) => {
     const planta = kind === 'planta', MX = -11.7, MZ = -9.0;   // tu mesa: la del fondo a la izquierda
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(planta ? 0x14150f : 0x1c1d20); scene.fog = new THREE.FogExp2(planta ? 0x1a1b14 : 0x202226, planta ? 0.05 : 0.04);
@@ -109,10 +109,11 @@
       W.tick.push((dt) => { if (!W.gente.visible) return; W.walkers.forEach((w) => { w.g.position.z += w.dir * w.v * dt; if (w.g.position.z > 3.2) w.dir = -1; if (w.g.position.z < -9.6) w.dir = 1; w.g.rotation.y = w.dir > 0 ? 0 : Math.PI; }); });
       // la bacteria
       { const mon = Q.buildBacteria(); mon.group.visible = false; mon.group.position.set(6, 0, 10.4); root.add(mon.group); W.mon = mon;
-        const st = W.chase = { on: false, t: 0, ng: 0, ns: 0 }, touch = 'ontouchstart' in window;
-        W.tick.push((dt, t) => { if (!mon.group.visible) return; mon.update(t, st.on ? 1.5 : 0.6); if (!st.on || !W.api || W.api.S.busy) return;
+        const st = W.chase = { on: false, t: 0, ng: 0, ns: 0, surge: 0, nextSurge: 4 }, touch = 'ontouchstart' in window;
+        W.tick.push((dt, t) => { if (!mon.group.visible) return; mon.update(t, st.on ? (st.surge > 0 ? 2.1 : 1.5) : 0.6); if (!st.on || !W.api || W.api.S.busy) return;
           const P = W.api.P; st.t += dt; if (st.t < 2.5) return;
-          const dx = P.x - mon.group.position.x, dz = P.z - mon.group.position.z, d = Math.hypot(dx, dz) || 1, v = (touch ? 1.45 : 2.45) + Math.min(0.45, (st.t - 2.5) * 0.03);
+          st.nextSurge -= dt; if (st.nextSurge <= 0) { st.surge = 0.9; st.nextSurge = 5 + Math.random() * 3; if (window.Sound && Sound.on) Sound.growl(1); } st.surge -= dt;                                  // embestidas: cada pocos segundos se lanza hacia ti
+          const dx = P.x - mon.group.position.x, dz = P.z - mon.group.position.z, d = Math.hypot(dx, dz) || 1, v = ((touch ? 1.45 : 2.45) + Math.min(0.45, (st.t - 2.5) * 0.03)) * (st.surge > 0 ? 1.4 : 1);
           mon.group.position.x += dx / d * v * dt; mon.group.position.z += dz / d * v * dt; mon.group.rotation.y = Math.atan2(dx, dz);
           st.ng -= dt; st.ns -= dt; if (window.Sound && Sound.on) { if (st.ng <= 0) { Sound.growl(1 - Math.min(0.8, d / 16)); st.ng = 1.6 + d * 0.14; } if (st.ns <= 0) { Sound.scuttle(1 - Math.min(0.8, d / 16)); st.ns = 0.45; } }
           if (d < 0.95) { st.on = false; W.caught = true; } }); }
@@ -156,7 +157,7 @@
       W.acts.emergencia = { label: 'Mirar la puerta de emergencia', stand: [10.4, -9.0], look: [11.0, 1.1, bounds.minZ], enabled: () => true, run: async (api) => { W.pistas++; await api.say(['Salida de emergencia. La barra antipánico tiene polvo. Nadie ha entrado ni salido por aquí en meses.', { text: 'Al otro lado de las cristaleras, el pasillo oscuro sigue otra veintena de metros más. Y luego otra.', think: true }]); } };
       W.play = async (api) => {
         W.api = api; const { say, free } = api;
-        await say(['Planta 4. Las puertas del ascensor se abren a una moqueta gris que huele a cable caliente.', 'Filas de cubículos, fluorescentes que zumban y, al fondo, una oscuridad más larga de lo que debería.', 'Tu mesa está al fondo, a la izquierda. Y detrás de ti, algo grande y negro acaba de salir del pasillo.']);
+        if (opts.retry) await say(['Otra vez. Las puertas se abren, el ruido ya viene detrás y tu mesa sigue al fondo a la izquierda. Corre.']); else await say(['Planta 4. Las puertas del ascensor se abren a una moqueta gris que huele a cable caliente.', 'Filas de cubículos, fluorescentes que zumban y, al fondo, una oscuridad más larga de lo que debería.', 'Tu mesa está al fondo, a la izquierda. Y detrás de ti, algo grande y negro acaba de salir del pasillo.']);
         W.mon.group.visible = true; W.chase.on = true; W.chase.t = 0; W.showArrow();
         await free(1e9, '¡CORRE! (Shift) · sigue la flecha roja hasta tu mesa, al fondo a la izquierda, y siéntate', () => W.up || W.caught);
         if (W.caught) { W.hideArrow(); if (window.Sound && Sound.on) Sound.growl(1.6); await say(['Notas algo frío y poligonal en los tobillos. Las patas se cruzan sobre ti como un alambre.', 'La moqueta te parece, por primera vez, cómoda.']); return 'atrapado'; }

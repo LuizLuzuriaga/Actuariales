@@ -5,7 +5,7 @@
   const Q = window.QX;
   const MG = THREE.BufferGeometryUtils;
 
-  Q.buildSol = (renderer, envTex) => {
+  Q.buildSol = (renderer, envTex, opts = {}) => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x3a3350); scene.fog = new THREE.FogExp2(0x4a4058, 0.018);
     if (envTex) scene.environment = envTex;
@@ -79,12 +79,36 @@
     tables.forEach(([x, z]) => { const g = new THREE.Group(); g.position.set(x, 0, z); root.add(g); put(new THREE.CylinderGeometry(0.42, 0.42, 0.04, 16), std(0x2a2a2e, 0.5), 0, 0.74, 0, g); put(new THREE.CylinderGeometry(0.04, 0.08, 0.74, 8), std(0x1a1a1a, 0.5), 0, 0.37, 0, g);
       merged([bx(0.4, 0.04, 0.4, 0.7, 0.44, 0), bx(0.4, 0.04, 0.4, -0.7, 0.44, 0), bx(0.04, 0.4, 0.4, 0.9, 0.66, 0), bx(0.04, 0.4, 0.4, -0.9, 0.66, 0)], std(0x2a2018, 0.7), g);
       [[-0.12, 0.1], [0.14, -0.08]].forEach(([a, b]) => { put(new THREE.CylinderGeometry(0.05, 0.045, 0.14, 10), new THREE.MeshStandardMaterial({ color: 0xd8a640, roughness: 0.2, transparent: true, opacity: 0.9 }), a, 0.83, b, g); put(new THREE.CylinderGeometry(0.052, 0.052, 0.03, 10), std(0xf2eede, 0.9), a, 0.915, b, g); }); box(x, z, 1.1, 1.1); });
-    { const C = Q.buildCrowd([[3.5, 2.6]], { seed: 12, yaw: () => Math.PI / 2 }); root.add(C.group); C.obst.forEach((o) => W.obst.push(o)); tag(C.group, 'chelu'); }
+    { const C = Q.buildCrowd([[3.5, 2.6]], { seed: 12, yaw: () => Math.PI / 2 }); root.add(C.group); C.obst.forEach((o) => W.obst.push(o)); tag(C.group, 'chelu'); W.chelu = C.group; }
 
     /* ---------- gente que pasea; en el apocalipsis, la que huye ---------- */
     const walkers = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 300 + i, yaw: () => 0 }); const z = -6 + rnd() * 13, dir = i % 2 ? 1 : -1; w.group.position.set(-11 + rnd() * 22, 0, z); root.add(w.group); walkers.push({ g: w.group, dir, v: 0.7 + rnd() * 0.5, z }); }
     const infected = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0], [0.7, 0.4]], { seed: 400 + i, yaw: () => 0 }); w.group.visible = false; root.add(w.group); const gate = [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]][i % 5]; w.group.position.set(gate[0], 0, gate[1]); infected.push({ g: w.group, v: 1.0 + rnd() * 0.7, ph: rnd() * 6, start: gate }); }
     W.infected = infected;
+    /* ---------- la moto de Dani (Danny): llega al final y os rescata a Chelu y a ti ---------- */
+    const moto = new THREE.Group(); moto.visible = false; root.add(moto); const wheels = [];
+    { const dk = std(0x1c1c20, 0.4, { metalness: 0.6 }), rd2 = std(0xb3202a, 0.4, { metalness: 0.4 });
+      [0.6, -0.6].forEach((x) => { const w = put(new THREE.TorusGeometry(0.3, 0.08, 8, 16), dk, x, 0.38, 0, moto); wheels.push(w); put(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 6), dk, x, 0.38, 0, moto).rotation.x = Math.PI / 2; });
+      put(new THREE.BoxGeometry(1.1, 0.26, 0.3), rd2, 0.05, 0.72, 0, moto); put(new THREE.BoxGeometry(0.5, 0.22, 0.34), rd2, 0.35, 0.95, 0, moto); put(new THREE.BoxGeometry(0.6, 0.12, 0.3), dk, -0.3, 0.9, 0, moto);
+      put(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 6), dk, 0.65, 0.75, 0, moto).rotation.z = 0.35; put(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6), dk, 0.74, 1.12, 0, moto).rotation.x = Math.PI / 2;
+      put(new THREE.SphereGeometry(0.1, 10, 8), emis(0xfff4d0, 3), 0.82, 0.95, 0, moto); const hl = new THREE.PointLight(0xfff0d0, 1.6, 10, 2); hl.position.set(1.0, 0.95, 0); moto.add(hl);
+      const D = Q.buildCrowd([[0, 0]], { seed: 77, yaw: () => 0 }); D.group.position.set(-0.3, 0.45, 0); D.group.scale.setScalar(0.9); moto.add(D.group); W.dani = D.group;
+      const [c, g] = cv(128, 32); g.fillStyle = '#c4202c'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#fff'; g.font = '700 22px Georgia'; g.textAlign = 'center'; g.fillText('DANNY', 64, 24); const tg = put(new THREE.PlaneGeometry(0.6, 0.15), new THREE.MeshBasicMaterial({ map: Q.toTex(c), toneMapped: false, side: THREE.DoubleSide }), -0.7, 0.72, 0.18, moto); }
+    W.rescue = async (api) => {
+      const { say, tween, P } = api;
+      if (window.Sound && Sound.on) Sound.moto(1);
+      await say(['Por la calle Mayor, sobre el ruido de la plaza, un rugido de motor. Un solo faro que barra el humo como un haz de interrogantes.']);
+      { const y0 = P.yaw, dy = ((-Math.PI / 2 - y0 + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI, p0 = P.pitch; await tween(900, (e) => { P.yaw = y0 + dy * e; P.pitch = p0 * (1 - e) - 0.04 * e; }); }
+      moto.visible = true; moto.position.set(P.x + 22, 0, P.z + 0.8); moto.rotation.y = Math.PI;
+      const x0 = moto.position.x, tx = P.x + 2.4; await tween(2800, (e) => { moto.position.x = x0 + (tx - x0) * e; wheels.forEach((w) => { w.rotation.z -= 0.5 * (1 - e) + 0.1; }); });
+      if (window.Sound && Sound.on) Sound.brake();
+      await say(['Un chico con el casco a medio abrochar derrapa justo delante de ti. Dani. Danny, con dos íes que huelen a gasolina. Dani Moto, para los amigos y para los acreedores.',
+        '—¡Subid, que esto está peor que el cercanías a las ocho! —grita Danny, sin apagar el motor.']);
+      const c0 = [3.5, 2.6], dxc = (tx + 0.5) - c0[0], dzc = moto.position.z - 1.2 - c0[1]; await tween(1500, (e) => { W.chelu.position.set(dxc * e, 0, dzc * e); });
+      await say([{ text: 'Chelu, ya al lado de la moto: «¿Tú sabes conducir esto?»', think: false }, '—Con 125 centímetros cúbicos y cero papeles: ¡arriba! —responde Danny.', { text: 'Dos ruedas: menos masa, más varianza. La decisión menos aseguradora de tu vida. Y la única que funciona.', think: true, block: true }]);
+      W.chelu.visible = false; if (window.Sound && Sound.on) Sound.moto(1.3);
+      const x1 = moto.position.x; moto.rotation.y = Math.PI; await tween(2800, (e) => { moto.position.x = x1 - 36 * e * e; wheels.forEach((w) => { w.rotation.z -= 0.5; }); });
+    };
     /* ---------- fuego, humo y coche volcado: solo cuando llega el fin ---------- */
     const fxg = new THREE.Group(); fxg.visible = false; root.add(fxg);
     { const car = put(new THREE.BoxGeometry(2.2, 0.8, 1.1), std(0x4a1a1a, 0.4, { metalness: 0.5 }), 6.0, 0.55, -6.0, fxg); car.rotation.set(0.3, 0.5, 1.2); put(new THREE.BoxGeometry(1.2, 0.5, 1.0), std(0x2a0e0e, 0.5), 5.6, 0.9, -6.0, fxg).rotation.set(0.3, 0.5, 1.2);
@@ -122,15 +146,16 @@
       } } };
     W.play = async (api) => {
       W.api = api; const { say, free, wait, S } = api;
-      await say(['Puerta del Sol. 19:10. Te dejas llevar: el tren se fue y el móvil ya había decidido por ti.', 'Madrid entero parece haberse puesto de acuerdo en pasar por aquí: turistas, oficinistas, un oso de bronce con su madroño y un Chelu en una terraza.']);
-      await free(1e9, 'Pide las cañas · habla con Chelu (dos rondas) · mira alrededor', () => W.fin);
+      if (!opts.retry) await say(['Puerta del Sol. 19:10. Te dejas llevar: el tren se fue y el móvil ya había decidido por ti.', 'Madrid entero parece haberse puesto de acuerdo en pasar por aquí: turistas, oficinistas, un oso de bronce con su madroño y un Chelu en una terraza.']);
+      if (!opts.retry) await free(1e9, 'Pide las cañas · habla con Chelu (dos rondas) · mira alrededor', () => W.fin); else { W.barra = true; W.ronda = 2; W.fin = true; }
       if (window.Sound && Sound.on) Sound.siren(5);
-      await say(['De pronto, el ruido de la plaza cambia. Primero una sirena. Luego otra, más cerca. Los paseantes aceleran, luego corren.', 'El cielo se vuelve de un naranja antinatural. Las farolas parpadean. En la boca de la calle Mayor se mueve algo que no camina como un vecino.']);
+      if (opts.retry) await say(['Otra vez: la plaza se vacía, el cielo se pone naranja y ya vienen por las calles. Corre hacia el metro.']); else await say(['De pronto, el ruido de la plaza cambia. Primero una sirena. Luego otra, más cerca. Los paseantes aceleran, luego corren.', 'El cielo se vuelve de un naranja antinatural. Las farolas parpadean. En la boca de la calle Mayor se mueve algo que no camina como un vecino.']);
       W.setApoc(true); if (window.Sound && Sound.on) { Sound.shout(0.07); setTimeout(() => Sound.shout(0.07), 700); }
       Q.apoc.start(W, { refuge: [-10.5, 5.3], r: 1.9, refugeLabel: 'boca del metro', enemies: infected.map((z) => ({ g: z.g, v: z.v * 1.9, ph: z.ph })),
         quips: [['Chelu', '¡A la boca del metro! Arriba hay turistas y abajo hay cobertura. Elige.'], ['Amor', 'No te pares. Huir es una conducta adaptativa, no una derrota.'], ['Chelu', 'Si pierdes una vida, recuerda: el seguro no cubre mordiscos.'], ['Mario', 'Pregunta técnica: ¿con qué frecuencia mueren los asegurados? Es para la tarifa.'], ['Amor', 'Coge algo contundente. Un argumento, una silla, lo que tengas a mano.']], onEnd: () => { } });
       await free(1e9, 'Corre (Shift) hasta la boca del metro, la flecha roja · F empuja a los infectados · puedes coger una silla de la terraza', () => W.apocRes);
-      return W.apocRes || 'muerto';
+      if (W.apocRes === 'refugio') { await W.rescue(api); return 'rescatado'; }
+      return 'muerto';
     };
     return W;
   };
