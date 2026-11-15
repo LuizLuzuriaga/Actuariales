@@ -3,64 +3,55 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-  <title>Luiz Luzuriaga — Portfolio Actuarial</title>
-  <meta name="description" content="Portfolio interactivo de Luiz Alberto Luzuriaga Izquierdo, estudiante de Máster en Ciencias Actuariales y Financieras. Recorre su dormitorio en 3D, en primera persona, y descubre su perfil actuarial." />
-  <meta name="author" content="Luiz Alberto Luzuriaga Izquierdo" />
-  <meta name="theme-color" content="#0a0818" />
+  <title>qx · Un día de actuario y el fin del mundo</title>
+  <meta name="description" content="qx es un juego en primera persona sobre un actuario que va a trabajar un lunes cualquiera mientras el mundo se acaba: curvas de mortalidad, una bacteria negra, zombis, reservas por cuadrar y ocho finales." />
+  <meta name="author" content="Luiz Luzuriaga" />
+  <meta name="theme-color" content="#0a0507" />
   <link rel="canonical" href="https://luizluzuriaga.github.io/Actuariales/" />
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><text y='28' font-size='28'>🎲</text></svg>" />
 
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="es_ES" />
-  <meta property="og:site_name" content="Luiz Luzuriaga" />
-  <meta property="og:title" content="Luiz Luzuriaga — Portfolio Actuarial" />
-  <meta property="og:description" content="Recorre mi dormitorio en 3D, en primera persona, y descubre mi perfil actuarial. Al final, una simulación Monte Carlo decide si llegas a tiempo." />
+  <meta property="og:site_name" content="qx" />
+  <meta property="og:title" content="qx · Un día de actuario y el fin del mundo" />
+  <meta property="og:description" content="Juego 3D en primera persona: un actuario, un lunes y un apocalipsis zombi entre medias. Ocho finales." />
   <meta property="og:url" content="https://luizluzuriaga.github.io/Actuariales/" />
   <meta property="og:image" content="https://luizluzuriaga.github.io/Actuariales/img/og-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Dormitorio en 3D con el título «Luiz Luzuriaga — Portfolio Actuarial»" />
+  <meta property="og:image:alt" content="qx: un día de actuario y el fin del mundo" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Luiz Luzuriaga — Portfolio Actuarial" />
-  <meta name="twitter:description" content="Recorre mi dormitorio en 3D y descubre mi perfil actuarial." />
+  <meta name="twitter:title" content="qx · Un día de actuario y el fin del mundo" />
+  <meta name="twitter:description" content="Un actuario, un lunes y un apocalipsis zombi. Ocho finales." />
   <meta name="twitter:image" content="https://luizluzuriaga.github.io/Actuariales/img/og-card.png" />
 
   <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    "name": "Luiz Alberto Luzuriaga Izquierdo",
-    "jobTitle": "Estudiante de Máster en Ciencias Actuariales y Financieras",
-    "url": "https://luizluzuriaga.github.io/Actuariales/",
-    "alumniOf": { "@type": "CollegeOrUniversity", "name": "Universidad de Alcalá" },
-    "address": { "@type": "PostalAddress", "addressLocality": "Madrid", "addressCountry": "ES" },
-    "sameAs": [
-      "https://www.linkedin.com/in/luiz-luzuriaga-izquierdo",
-      "https://github.com/LuizLuzuriaga"
-    ]
-  }
+  { "@context": "https://schema.org", "@type": "VideoGame", "name": "qx", "description": "Juego 3D en primera persona sobre un actuario, un lunes cualquiera y un apocalipsis zombi.", "inLanguage": "es", "genre": ["aventura", "humor negro"], "url": "https://luizluzuriaga.github.io/Actuariales/", "author": { "@type": "Person", "name": "Luiz Luzuriaga" } }
   </script>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <canvas id="gl" aria-label="Dormitorio en 3D en primera persona"></canvas>
+  <canvas id="gl" aria-label="Escena 3D en primera persona"></canvas>
   <div class="fx vig"></div>
   <div class="fx grain"></div>
 
   <div id="fade"></div>
 
   <div id="start">
+    <canvas id="curvabg" aria-hidden="true"></canvas>
     <div class="inner">
-      <h1>q<small>x</small> <span>3D</span></h1>
-      <p class="sub">Una mañana en mi dormitorio, en primera persona</p>
-      <p class="blurb">Apaga el despertador, vístete, carga la mochila y sal de casa. Cada objeto cuenta algo del perfil de Luiz Luzuriaga, y lo que decidas mirar te cuesta minutos de la mañana.</p>
+      <p class="epi">q<sub>x</sub> = la probabilidad de morir a la edad <i>x</i></p>
+      <h1>q<small>x</small></h1>
+      <p class="sub">Un lunes cualquiera. Un actuario. El fin del mundo, entre medias.</p>
+      <p class="blurb">Una mañana de trabajo en primera persona: te despiertas, coges el cercanías, llegas a la oficina y cuadras reservas mientras Madrid se va a pique. Hay curvas de mortalidad, una bacteria negra, zombis y ocho finales. Cada cosa que haces suma o resta descuido, y el descuido decide cómo acaba el día.</p>
       <button type="button" class="btn primary" id="go" disabled>Cargando…</button>
-      <noscript><p class="fine">Hace falta JavaScript para ver la escena 3D.</p></noscript>
+      <noscript><p class="fine">Hace falta JavaScript para ver el juego en 3D.</p></noscript>
+      <dl class="ficha" aria-label="Ficha del juego"><div><dt>duración</dt><dd>~20 min</dd></div><div><dt>mapas</dt><dd>11</dd></div><div><dt>finales</dt><dd>8</dd></div><div><dt>descargas</dt><dd>0</dd></div></dl>
       <ul class="how">
-        <li><b>Ordenador:</b> clic para capturar el ratón · <kbd>WASD</kbd> moverte · <kbd>E</kbd> o clic en lo marcado · <kbd>Esc</kbd> soltar · <kbd>Shift</kbd> correr</li>
-        <li><b>Móvil:</b> arrastra con el pulgar izquierdo para andar y con el derecho para mirar · toca un objeto para ir hasta él</li>
+        <li><b>Ordenador:</b> clic para capturar el ratón · <kbd>WASD</kbd> moverte · <kbd>Shift</kbd> correr · <kbd>E</kbd> interactuar · <kbd>F</kbd> empujar · clic para disparar · <kbd>Esc</kbd> soltar</li>
+        <li><b>Móvil:</b> joystick a la izquierda (mantenlo hacia delante para correr) y arrastra a la derecha para mirar</li>
       </ul>
-      <p class="fine">Dura unos diez minutos. Nada se descarga: el modelado es procedural. Los ajustes (sensibilidad, sonido, calidad) están en ⚙ dentro del juego.</p>
+      <p class="fine">Hecho por Luiz Luzuriaga, actuario en formación. Ajustes y selección de niveles en ⚙ dentro del juego.</p>
     </div>
   </div>
 
@@ -101,8 +92,8 @@
       <option value="planta&fase2">7b · Planta 4: huida final al ascensor</option>
       <option value="cafe&desc=0">8 · Cafetería</option>
       <option value="cafe&desc=8">8b · Cafetería: apocalipsis</option>
-      <option value="sol">9 · Puerta del Sol: cañas con Chelu</option>
-      <option value="sol&apoc">9b · Sol: apocalipsis y Danny Moto</option>
+      <option value="sol">9 · Puerta del Sol: cañas con el Grandullón</option>
+      <option value="sol&apoc">9b · Sol: apocalipsis y el Pasota</option>
       <option value="vallecas">10 · Final: Vallecas con Amor</option>
     </select></label>
     <button type="button" class="btn" id="cfgGo">Ir al nivel</button>
@@ -139,6 +130,7 @@
   <script src="cafe.js"></script>
   <script src="camino.js"></script>
   <script src="notif.js"></script>
+  <script src="portada.js"></script>
   <script src="apoc.js"></script>
   <script src="sol.js"></script>
   <script src="vallecas.js"></script>

@@ -188,7 +188,7 @@
         await trainTo(TX, 3400, true); api.cine(null); S.busy = false;                                       // y de vuelta a ti, con libertad para moverte
         if (window.Sound && Sound.on) { Sound.brake(); setTimeout(() => Sound.doorBeep(), 900); }
         say([{ think: true, text: [
-          'Llega el primero. Va hasta arriba: la gente se pega a los cristales como pegatinas.',
+          'Llegal primero. Va hasta arriba: la gente se pega a los cristales como pegatinas.',
           'Segundo tren. Se ve algo de hueco entre un abrigo y una axila. Es tu momento… o tu excusa.'][k - 1] }]);
         const base = [0.04, 0.22][k - 1], p = k < 2 ? Math.max(0.01, base - 0.012 * (S.snooze || 0)) : 1;
         const accion = await new Promise((res) => {                                                     // barra de decisión: no bloquea, tienes 16 s y puedes moverte

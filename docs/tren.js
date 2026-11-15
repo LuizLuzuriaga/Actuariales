@@ -193,7 +193,7 @@
       const st = Q.wantedStage(((window.Sound && Sound.clue) || 1)); W.pistas++;
       await api.say([['Pegado con celo en el cristal: «SE BUSCA». Un gato negro llamado Prima. Se asusta con facilidad. Tiene toda tu simpatía.'],
         ['Otro cartel de «SE BUSCA». Esta vez, una silueta sin cara y un interrogante. «Sin identificar. Puede ser cualquiera.»', { text: 'No dice qué ha hecho. Eso es lo inquietante.', think: true }],
-        ['«SE BUSCA». La cara te suena: perilla, bigote, un aire de caña a deshoras. Es el de siempre.', { text: 'Chelu. Es Chelu en versión cartel de pared. ¿Qué ha hecho Chelu?', think: true }],
+        ['«SE BUSCA». La cara te suena: perilla, bigote, un aire de caña a deshoras. Es el de siempre.', { text: 'El Grandullón. Es el Grandullón en versión cartel de pared. ¿Qué ha hecho el Grandullón?', think: true }],
         ['«SE BUSCA». Cabeza de cruz, mochila, prisa. Te reconoces antes de leerlo.', { text: 'Visto por última vez: hoy. Quien lo haya pegado sabe tu ruta.', think: true, block: true }]][st]); } };
     W.acts.vecino = { label: 'Notar a tu vecino', stand: [-0.95, 0.35], look: [-0.45, 1.45, 0.0], enabled: () => true, run: async (api) => {
       W.pistas++; await api.say(['El pelo de tu vecino está a dos centímetros de tu cara. No sabes su nombre, pero conoces su champú. Ya hay más intimidad en este vagón que en tu último comité.', { text: 'Está pálido, suda y respira raro. Será el madrugón. Seguro que es el madrugón.', think: true }]); } };

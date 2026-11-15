@@ -1,5 +1,5 @@
-/* sol.js — nivel alternativo: la Puerta del Sol al atardecer. Si dejas pasar el tren, Chelu te escribe: «¿cañas?». Edificio con reloj al fondo, Kilómetro Cero,
-   el oso y el madroño, la fuente, farolas, una terraza con Chelu y gente paseando. Tras dos rondas llega el apocalipsis: cielo rojo, la gente huye,
+/* sol.js — nivel alternativo: la Puerta del Sol al atardecer. Si dejas pasar el tren, el Grandullón te escribe: «¿cañas?». Edificio con reloj al fondo, Kilómetro Cero,
+   el oso y el madroño, la fuente, farolas, una terraza con el Grandullón y gente paseando. Tras dos rondas llegal apocalipsis: cielo rojo, la gente huye,
    los infectados entran por las calles. Sin marcas: los rótulos son genéricos. Devuelve un «mundo» como el resto. */
 (() => {
   const Q = window.QX;
@@ -74,7 +74,7 @@
       if (i < 3) { const l = new THREE.PointLight(0xffb070, 0.8, 11, 2); l.position.set(0, 4.3, 0); g.add(l); lamps.push(l); } box(x, z, 0.3, 0.3); });
     { const g = new THREE.Group(); g.position.set(-10.5, 0, 3); root.add(g); merged([bx(2.4, 2.4, 0.08, 0, 1.2, 0), bx(0.08, 2.4, 1.6, -1.2, 1.2, 0.8), bx(0.08, 2.4, 1.6, 1.2, 1.2, 0.8), bx(2.4, 0.08, 1.6, 0, 2.4, 0.8)], new THREE.MeshStandardMaterial({ color: 0x9fb4b8, transparent: true, opacity: 0.35, roughness: 0.1 }), g); put(new THREE.PlaneGeometry(1.6, 0.4), emis(0xc4202c, 1.4), 0, 2.8, 0.1, g); box(-10.5, 3.8, 2.6, 1.8); }
 
-    /* ---------- terraza: mesas con cañas y Chelu ---------- */
+    /* ---------- terraza: mesas con cañas y el Grandullón ---------- */
     const tables = [[2.6, 2.6], [5.6, 4.2], [-3.2, 1.0]];
     tables.forEach(([x, z]) => { const g = new THREE.Group(); g.position.set(x, 0, z); root.add(g); put(new THREE.CylinderGeometry(0.42, 0.42, 0.04, 16), std(0x2a2a2e, 0.5), 0, 0.74, 0, g); put(new THREE.CylinderGeometry(0.04, 0.08, 0.74, 8), std(0x1a1a1a, 0.5), 0, 0.37, 0, g);
       merged([bx(0.4, 0.04, 0.4, 0.7, 0.44, 0), bx(0.4, 0.04, 0.4, -0.7, 0.44, 0), bx(0.04, 0.4, 0.4, 0.9, 0.66, 0), bx(0.04, 0.4, 0.4, -0.9, 0.66, 0)], std(0x2a2018, 0.7), g); if (x === 2.6) tag(g, 'cerveza'); if (x === 5.6) tag(g, 'arma');
@@ -85,7 +85,7 @@
     const walkers = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 300 + i, yaw: () => 0 }); const z = -6 + rnd() * 13, dir = i % 2 ? 1 : -1; w.group.position.set(-11 + rnd() * 22, 0, z); root.add(w.group); walkers.push({ g: w.group, dir, v: 0.7 + rnd() * 0.5, z }); }
     const infected = []; for (let i = 0; i < 20; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 400 + i, yaw: () => 0, zombie: true }); w.group.visible = false; root.add(w.group); const gate = [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]][i % 5]; w.group.position.set(gate[0], 0, gate[1]); infected.push({ g: w.group, v: 1.0 + rnd() * 0.7, ph: rnd() * 6, start: gate }); }
     W.infected = infected;
-    /* ---------- la moto de Danny: llega al final y os rescata a Chelu y a ti ---------- */
+    /* ---------- la moto del Pasota: llega al final y os rescata al Grandullón y a ti ---------- */
     const moto = new THREE.Group(); moto.visible = false; root.add(moto); const wheels = [];
     { const dk = std(0x1c1c20, 0.4, { metalness: 0.6 }), rd2 = std(0xb3202a, 0.4, { metalness: 0.4 });
       [0.6, -0.6].forEach((x) => { const w = put(new THREE.TorusGeometry(0.3, 0.08, 8, 16), dk, x, 0.38, 0, moto); wheels.push(w); put(new THREE.CylinderGeometry(0.04, 0.04, 0.5, 6), dk, x, 0.38, 0, moto).rotation.x = Math.PI / 2; });
@@ -93,34 +93,34 @@
       put(new THREE.CylinderGeometry(0.03, 0.03, 0.8, 6), dk, 0.65, 0.75, 0, moto).rotation.z = 0.35; put(new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6), dk, 0.74, 1.12, 0, moto).rotation.x = Math.PI / 2;
       put(new THREE.SphereGeometry(0.1, 10, 8), emis(0xfff4d0, 3), 0.82, 0.95, 0, moto); const hl = new THREE.PointLight(0xfff0d0, 1.6, 10, 2); hl.position.set(1.0, 0.95, 0); moto.add(hl);
       const D = Q.buildCrowd([[0, 0]], { seed: 77, yaw: () => 0 }); D.group.position.set(-0.3, 0.45, 0); D.group.scale.setScalar(0.9); moto.add(D.group); W.dani = D.group;
-      const [c, g] = cv(128, 32); g.fillStyle = '#c4202c'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#fff'; g.font = '700 22px Georgia'; g.textAlign = 'center'; g.fillText('DANNY', 64, 24); const tg = put(new THREE.PlaneGeometry(0.6, 0.15), new THREE.MeshBasicMaterial({ map: Q.toTex(c), toneMapped: false, side: THREE.DoubleSide }), -0.7, 0.72, 0.18, moto); }
+      const [c, g] = cv(128, 32); g.fillStyle = '#c4202c'; g.fillRect(0, 0, 128, 32); g.fillStyle = '#fff'; g.font = '700 22px Georgia'; g.textAlign = 'center'; g.fillText('PASOTA', 64, 24); const tg = put(new THREE.PlaneGeometry(0.6, 0.15), new THREE.MeshBasicMaterial({ map: Q.toTex(c), toneMapped: false, side: THREE.DoubleSide }), -0.7, 0.72, 0.18, moto); }
     W.rescue = async (api) => {
       const { say, tween, P } = api;
       if (window.Sound && Sound.on) Sound.moto(1);
-      await say(['Por la calle Mayor, sobre el ruido de la plaza, un rugido de motor. Un solo faro que barra el humo como un haz de interrogantes.']);
+      await say(['Por la calle Mayor, sobre el ruido de la plaza, un rugido de motor. Un solo faro que barral humo como un haz de interrogantes.']);
       { const y0 = P.yaw, dy = ((-Math.PI / 2 - y0 + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI, p0 = P.pitch; await tween(900, (e) => { P.yaw = y0 + dy * e; P.pitch = p0 * (1 - e) - 0.04 * e; }); }
       moto.visible = true; moto.position.set(P.x + 22, 0, P.z + 0.8); moto.rotation.y = Math.PI;
       const x0 = moto.position.x, tx = P.x + 2.4; await tween(2800, (e) => { moto.position.x = x0 + (tx - x0) * e; wheels.forEach((w) => { w.rotation.z -= 0.5 * (1 - e) + 0.1; }); });
       if (window.Sound && Sound.on) Sound.brake();
-      await say(['Un chico con el casco a medio abrochar derrapa justo delante de ti. Danny, con dos enes que huelen a gasolina. Danny Moto, para los amigos y para los acreedores.',
-        '—¡Subid, que esto está peor que el cercanías a las ocho! —grita Danny, sin apagar el motor.']);
+      await say(['Un chico con el casco a medio abrochar derrapa justo delante de ti. El Pasota, que llega siempre tarde a todo menos a esto. Para los amigos, el Pasota; para los acreedores, ilocalizable.',
+        '—¡Subid, que esto está peor que el cercanías a las ocho! —grital Pasota, sin apagar el motor.']);
       const c0 = [3.5, 2.6], dxc = (tx + 0.5) - c0[0], dzc = moto.position.z - 1.2 - c0[1]; await tween(1500, (e) => { W.chelu.position.set(dxc * e, 0, dzc * e); });
-      await say([{ text: 'Chelu, ya al lado de la moto: «¿Tú sabes conducir esto?»', think: false }, '—Con 125 centímetros cúbicos y cero papeles: ¡arriba! —responde Danny.', { text: 'Dos ruedas: menos masa, más varianza. La decisión menos aseguradora de tu vida. Y la única que funciona.', think: true, block: true }]);
+      await say([{ text: 'El Grandullón, ya al lado de la moto: «¿Tú sabes conducir esto?»', think: false }, '—Con 125 centímetros cúbicos y cero papeles: ¡arriba! —respondel Pasota.', { text: 'Dos ruedas: menos masa, más varianza. La decisión menos aseguradora de tu vida. Y la única que funciona.', think: true, block: true }]);
       W.chelu.visible = false; if (window.Sound && Sound.on) Sound.moto(1.3);
       const x1 = moto.position.x; moto.rotation.y = Math.PI; await tween(2800, (e) => { moto.position.x = x1 - 36 * e * e; wheels.forEach((w) => { w.rotation.z -= 0.5; }); });
     };
-    /* ---------- fuego, humo y coche volcado: solo cuando llega el fin ---------- */
+    /* ---------- fuego, humo y coche volcado: solo cuando llegal fin ---------- */
     const fxg = new THREE.Group(); fxg.visible = false; root.add(fxg);
     { const car = put(new THREE.BoxGeometry(2.2, 0.8, 1.1), std(0x4a1a1a, 0.4, { metalness: 0.5 }), 6.0, 0.55, -6.0, fxg); car.rotation.set(0.3, 0.5, 1.2); put(new THREE.BoxGeometry(1.2, 0.5, 1.0), std(0x2a0e0e, 0.5), 5.6, 0.9, -6.0, fxg).rotation.set(0.3, 0.5, 1.2);
       [[-12, 1.2, -2], [9, 1.2, -8], [-1, 1.2, 9], [12, 1.0, 5]].forEach(([x, y, z]) => { const l = new THREE.PointLight(0xff6a20, 1.4, 12, 2); l.position.set(x, y, z); fxg.add(l); lamps.push(l); const [c, g] = cv(64, 64); const gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,180,70,.95)'); gr.addColorStop(1, 'rgba(255,60,10,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
         const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.toTex(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false })); sp.position.set(x, 1.4, z); sp.scale.setScalar(3.2); fxg.add(sp); W.tick.push((dt, t) => { sp.scale.setScalar(2.8 + Math.sin(t * 9 + x) * 0.5); }); });
       const [sc, sg] = cv(128, 128); const sr = sg.createRadialGradient(64, 64, 0, 64, 64, 64); sr.addColorStop(0, 'rgba(40,34,32,.7)'); sr.addColorStop(1, 'rgba(40,34,32,0)'); sg.fillStyle = sr; sg.fillRect(0, 0, 128, 128);
       for (let i = 0; i < 8; i++) { const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.toTex(sc), transparent: true, depthWrite: false, opacity: 0.55, fog: false })); sp.position.set(-14 + i * 4, 6 + (i % 3) * 3, -9 + (i % 4) * 4); sp.scale.setScalar(9); fxg.add(sp); W.tick.push((dt, t) => { sp.position.y = 6 + ((i * 2 + t * 0.8) % 12); }); } }
-    // una pistola olvidada en la mesa de la terraza, que solo aparece cuando llega el fin
+    // una pistola olvidada en la mesa de la terraza, que solo aparece cuando llegal fin
     const gun = new THREE.Group(); gun.visible = false; root.add(gun); put(new THREE.BoxGeometry(0.2, 0.1, 0.04), std(0x14161a, 0.3, { metalness: 0.7 }), 0, 0, 0, gun); put(new THREE.BoxGeometry(0.06, 0.12, 0.04), std(0x14161a, 0.3, { metalness: 0.7 }), -0.06, -0.09, 0, gun); put(new THREE.BoxGeometry(0.28, 0.035, 0.035), std(0x2a2d33, 0.25, { metalness: 0.9 }), 0.08, 0.04, 0, gun);
     const shot = new THREE.Group(); shot.visible = false; root.add(shot); put(new THREE.BoxGeometry(0.75, 0.05, 0.05), std(0x2a2d33, 0.25, { metalness: 0.9 }), 0, 0, 0, shot); put(new THREE.BoxGeometry(0.28, 0.07, 0.06), std(0x5a3a22, 0.6), -0.28, -0.02, 0, shot); shot.position.set(-3.2, 0.8, 1.0); shot.rotation.y = 0.3; tag(shot, 'escopeta'); W.shotMesh = shot;
     gun.position.set(5.5, 0.78, 4.4); gun.rotation.y = 0.6; tag(gun, 'pistola'); W.gunMesh = gun; { const l = new THREE.PointLight(0xffe0a0, 0.5, 2.5, 2); l.position.set(0, 0.3, 0); gun.add(l); }
-    // boca de metro: cartel verde para el refugio
+    // boca de metro: cartel verde paral refugio
     put(new THREE.PlaneGeometry(1.8, 0.5), emis(0x30d070, 1.6), -10.5, 2.55, 3.15);
     W.setApoc = (on) => { W.apoc = on; sky.material.map = on ? skyB : skyA; sky.material.needsUpdate = true; scene.fog.color.set(on ? 0x4a1810 : 0x4a4058); scene.background.set(on ? 0x3a1008 : 0x3a3350); sun.color.set(on ? 0xff4a20 : 0xff9a60); hemi.color.set(on ? 0xa05040 : 0x8a82ac); infected.forEach((z) => { z.g.visible = on; }); fxg.visible = on; gun.visible = on && !Q.apoc.hasGun(); shot.visible = on && !Q.apoc.hasGun('escopeta'); };
     W.tick.push((dt, t) => {
@@ -138,24 +138,24 @@
     W.acts.oso = { label: 'Mirar el oso y el madroño', stand: [5.4, -0.6], look: [7, 1.4, -2.5], enabled: () => true, run: async (api) => { await api.say(['El oso y el madroño: el símbolo de Madrid. El oso se come las frutas del árbol que, a su vez, depende de que el oso se las coma. Un ciclo cerrado. Los actuarios lo llaman «reaseguro»; los demás, «amistad».']); } };
     W.acts.fuente = { label: 'Mirar la fuente', stand: [-5.0, -1.0], look: [-7, 1.2, -3.5], enabled: () => true, run: async (api) => { await api.say('La Mariblanca, o su fuente. Cientos de monedas en el fondo. El rendimiento medio de un deseo es del 0 %, pero con una desviación enorme.'); } };
     W.acts.reloj = { label: 'Mirar el reloj de la Casa de Correos', stand: [0, -2.6], look: [0, 12.95, -8.85], enabled: () => true, run: async (api) => { W.pistas++; await api.say(['El reloj de la Real Casa de Correos. El que marca las campanadas de Nochevieja. Hoy marca las siete y diez de la tarde, y alguien ha tosido con rabia en la torre.', { text: 'Lleva unos minutos parado. Y eso que es el reloj de referencia nacional.', think: true }]); } };
-    W.acts.chelu = { label: 'Hablar con Chelu', stand: [2.2, 3.9], look: [3.5, 1.5, 2.6], enabled: () => W.barra && W.ronda < 2, run: async (api) => {
+    W.acts.chelu = { label: 'Hablar con el Grandullón', stand: [2.2, 3.9], look: [3.5, 1.5, 2.6], enabled: () => W.barra && W.ronda < 2, run: async (api) => {
       const { say, choose } = api, n = W.ronda++;
       if (n === 0) {
-        await say(['—Sol. Mira cómo está de gente: unos para comprar, otros para vender, nadie para pagar. —Chelu levanta la caña—. Por los que suben.']);
+        await say(['—Sol. Mira cómo está de gente: unos para comprar, otros para vender, nadie para pagar. —El Grandullón levanta la caña—. Por los que suben.']);
         const r = await choose([{ id: 'a', label: '«Por los que suben… menos el IPC»', hint: 'Brindar con humor' }, { id: 'b', label: '«Hoy me ha pasado algo muy raro en el andén»', hint: 'Contar lo de la gente de 40-50 años' }, { id: 'c', label: '«Otra, y no me hagas pensar»', hint: 'Dejarse llevar' }], 'Primera ronda');
         await say(r === 'a' ? '—Eso es: el IPC como la ex, que siempre vuelve más caro.' : r === 'b' ? '—Eso es sesgo de supervivencia, chaval: ves a los vivos porque los muertos no cogen el cercanías.' : '—Esa es mi filosofía. Cero estructura, cien por cien liquidez.');
       } else {
-        await say(['—¿Y tu novia? ¿Sigue convencida de que todo lo arreglas con una hoja de cálculo? —pregunta Chelu.', 'Tu novia, la psicóloga, diría que evitar sentir también es una forma de sentir, pero con peor cobertura.']);
-        const r = await choose([{ id: 'a', label: '«Dice que huyo hacia delante con espuma»', hint: 'Honestidad con cerveza' }, { id: 'b', label: '«Dice que soy un modelo bien especificado»', hint: 'Orgullo actuarial' }, { id: 'c', label: '«Cambia de tema, Chelu»', hint: 'Evitar la sesión' }], 'Segunda ronda');
+        await say(['—¿Y tu novia? ¿Sigue convencida de que todo lo arreglas con una hoja de cálculo? —preguntal Grandullón.', 'Tu novia, la psicóloga, diría que evitar sentir también es una forma de sentir, pero con peor cobertura.']);
+        const r = await choose([{ id: 'a', label: '«Dice que huyo hacia delante con espuma»', hint: 'Honestidad con cerveza' }, { id: 'b', label: '«Dice que soy un modelo bien especificado»', hint: 'Orgullo actuarial' }, { id: 'c', label: '«Cambia de tema, el Grandullón»', hint: 'Evitar la sesión' }], 'Segunda ronda');
         await say(r === 'a' ? '—Pues tiene razón. Que Freud la ampare.' : r === 'b' ? '—Eso no es un cumplido, es un diagnóstico.' : '—Ya hablo de otra cosa… oye, ¿has oído eso?');
         W.fin = true;
       } } };
     W.play = async (api) => {
       W.api = api; const { say, free, wait, S } = api;
-      if (!opts.retry) await say(['Puerta del Sol. 19:10. Te dejas llevar: el tren se fue y el móvil ya había decidido por ti.', 'Madrid entero parece haberse puesto de acuerdo en pasar por aquí: turistas, oficinistas, un oso de bronce con su madroño y un Chelu en una terraza.']);
-      if (!opts.retry) await free(1e9, 'Pide las cañas · habla con Chelu (dos rondas) · mira alrededor', () => W.fin); else { W.barra = true; W.ronda = 2; W.fin = true; }
+      if (!opts.retry) await say(['Puerta del Sol. 19:10. Te dejas llevar: el tren se fue y el móvil ya había decidido por ti.', 'Madrid entero parece haberse puesto de acuerdo en pasar por aquí: turistas, oficinistas, un oso de bronce con su madroño y un el Grandullón en una terraza.']);
+      if (!opts.retry) await free(1e9, 'Pide las cañas · habla con el Grandullón (dos rondas) · mira alrededor', () => W.fin); else { W.barra = true; W.ronda = 2; W.fin = true; }
       if (window.Sound && Sound.on) Sound.siren(5);
-      if (opts.retry) await say(['Otra vez: la plaza se vacía, el cielo se pone naranja y ya vienen por las calles. Corre hacia el metro.']); else await say(['De pronto, el ruido de la plaza cambia. Primero una sirena. Luego otra, más cerca. Los paseantes aceleran, luego corren.', 'El cielo se vuelve de un naranja antinatural. Las farolas parpadean. En la boca de la calle Mayor se mueve algo que no camina como un vecino.']);
+      if (opts.retry) await say(['Otra vez: la plaza se vacía, el cielo se pone naranja y ya vienen por las calles. Corre hacial metro.']); else await say(['De pronto, el ruido de la plaza cambia. Primero una sirena. Luego otra, más cerca. Los paseantes aceleran, luego corren.', 'El cielo se vuelve de un naranja antinatural. Las farolas parpadean. En la boca de la calle Mayor se mueve algo que no camina como un vecino.']);
       W.setApoc(true); if (window.Sound && Sound.on) { Sound.shout(0.07); setTimeout(() => Sound.shout(0.07), 700); }
       Q.apoc.start(W, { refuge: [-10.5, 5.3], r: 1.9, refugeLabel: 'marquesina del metro', gates: [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]], enemies: infected.map((z) => ({ g: z.g, v: z.v * 1.3, ph: z.ph })),
         quips: [['Chelu', '¡A la boca del metro! Arriba hay turistas y abajo hay cobertura. Elige.'], ['Amor', 'No te pares. Huir es una conducta adaptativa, no una derrota.'], ['Chelu', 'Si pierdes una vida, recuerda: el seguro no cubre mordiscos.'], ['Sheldon', 'Pregunta técnica: ¿con qué frecuencia mueren los asegurados? Es para la tarifa.'], ['Amor', 'Coge algo contundente. Un argumento, una silla, lo que tengas a mano.']], onEnd: () => { } });

@@ -215,3 +215,41 @@ code { font: 12px Consolas, monospace; color: #8fae8f; }
 
 #apocframe .roman.blink { animation: romanblink .35s steps(2) infinite; }
 @keyframes romanblink { 50% { opacity: .05; } }
+
+#hearts { position: fixed; inset: 0; z-index: 70; pointer-events: none; overflow: hidden; }
+#hearts i { position: absolute; bottom: -40px; font-style: normal; opacity: 0; animation: heartup linear forwards; text-shadow: 0 0 12px rgba(255,90,120,.6); }
+@keyframes heartup { 0% { transform: translate(0, 0) scale(.6); opacity: 0; } 10% { opacity: .95; } 50% { transform: translate(var(--dx), -55vh) scale(1); } 100% { transform: translate(calc(var(--dx) * -1), -115vh) scale(1.15); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { #hearts i { animation-duration: 12s !important; } }
+
+/* portada con tema de mortalidad y apocalipsis */
+#start { background: radial-gradient(90% 70% at 50% 0%, #1c1214 0%, #0a0709 55%, #010101 100%); }
+#curvabg { position: absolute; inset: 0; width: 100%; height: 100%; }
+#start .epi { margin: 0 0 4px; font: italic 14px var(--serif); color: #8a8470; letter-spacing: .04em; }
+#start .epi sub { font-size: .75em; }
+#start h1 { text-shadow: 0 0 46px #b3202a66, 0 2px 0 #000; animation: titulo 7s infinite; }
+#start h1 small { color: #b3202a; text-shadow: 0 0 22px #b3202a88; }
+@keyframes titulo { 0%, 92%, 100% { opacity: 1; } 93% { opacity: .55; } 94% { opacity: 1; } 96% { opacity: .7; } 97% { opacity: 1; } }
+#start .sub { color: #c98d3a; max-width: 30em; margin-inline: auto; text-wrap: balance; }
+#start .inner { background-color: #060507ea; border-top: 3px solid #b3202a; }
+#start .blurb { max-width: 54ch; margin-inline: auto; }
+#go { letter-spacing: .12em; text-transform: uppercase; box-shadow: 0 0 0 1px #b3202a66, 0 0 26px #b3202a55; transition: box-shadow .2s, transform .15s; }
+#go:not(:disabled):hover { box-shadow: 0 0 0 1px #e0303c, 0 0 38px #b3202a99; transform: translateY(-1px); }
+.ficha { display: flex; justify-content: center; flex-wrap: wrap; gap: 6px 22px; margin: 22px 0 6px; padding: 10px 0; border-block: 1px solid #2f2b22; }
+.ficha div { display: grid; gap: 2px; text-align: center; }
+.ficha dt { font: 10px ui-monospace, Consolas, monospace; letter-spacing: .14em; text-transform: uppercase; color: #6f6a5a; }
+.ficha dd { margin: 0; font: 600 18px var(--serif); color: #d8d2c0; }
+/* pantallas de carga */
+#camino { background: radial-gradient(ellipse at 50% 60%, #1a1214 0%, #060507 70%); }
+#camino::before { content: ""; position: absolute; inset: 0; opacity: .55; pointer-events: none; background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 300' preserveAspectRatio='none'%3E%3Cpath d='M0 300 C120 296 200 280 300 230 S470 70 540 70 640 180 700 260 760 296 800 300' fill='none' stroke='%23c98d3a' stroke-opacity='.2' stroke-width='3'/%3E%3Cpath d='M0 300 C200 298 380 290 520 220 S700 40 740 40 780 200 800 300' fill='none' stroke='%23b3202a' stroke-opacity='.26' stroke-width='3'/%3E%3C/svg%3E") center bottom / 100% 55% no-repeat; }
+#camino::after { content: ""; position: absolute; left: 0; right: 0; top: 14%; height: 2px; pointer-events: none; background: linear-gradient(90deg, transparent, #b3202a 40%, #e0303c 50%, transparent 52%); opacity: .35; animation: ecg 3.2s linear infinite; }
+@keyframes ecg { from { transform: translateX(-60%); } to { transform: translateX(60%); } }
+#camino .cm-top small { color: #b3202a; }
+#camino .cm-desc { font: 11px ui-monospace, Consolas, monospace; letter-spacing: .1em; color: #8a8470; display: flex; gap: 8px; align-items: center; justify-content: center; }
+#camino .cm-desc i { font-style: normal; color: #b3202a; letter-spacing: 2px; }
+#camino .cm-fact { max-width: 620px; margin: 0; font: italic 14px/1.5 var(--serif); color: #8a8470; border-top: 1px solid #2f2b22; padding-top: 12px; }
+#camino .cm-fact b { font: 600 11px ui-monospace, Consolas, monospace; font-style: normal; letter-spacing: .12em; text-transform: uppercase; color: #b3202a; margin-right: 8px; }
+/* pantalla final: casillas de finales vistos */
+#end .pips { display: flex; justify-content: center; gap: 6px; margin: 14px 0 2px; }
+#end .pips i { width: 14px; height: 14px; border: 1px solid #5a4a30; display: block; }
+#end .pips i.on { background: #b3202a; border-color: #e0303c; box-shadow: 0 0 8px #b3202a99; }
+#end h2 { text-shadow: 0 0 26px #b3202a55; }

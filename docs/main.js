@@ -30,7 +30,7 @@
   renderer.shadowMap.autoUpdate = false;                  // el mapa de sombras se redibuja un fotograma sí y otro no (casi todo es estático)
   renderer.info.autoReset = false;                        // contamos todas las pasadas del fotograma: sombras, espejo y posproceso
 
-  /* La cabeza solo existe para el espejo: la cámara principal (capa 0) no la ve; las cámaras virtuales del espejo sí. */
+  /* La cabeza solo existe paral espejo: la cámara principal (capa 0) no la ve; las cámaras virtuales del espejo sí. */
   const mainRender = renderer.render.bind(renderer);
   let mainCamera = null;
   renderer.render = (s, cam) => { if (mainCamera && cam !== mainCamera) cam.layers.enableAll(); return mainRender(s, cam); };
@@ -70,7 +70,7 @@
   const fmt = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   /* Nivel de pista 0-4: base por escenario, más el tiempo perdido en casa y +1 por cada 3 de descuido (máx. +2) */
   function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2, lobby: 2, planta: 3, cafe: 3, sol: 4, vallecas: 4, fachada: 1 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
-  Q.hooks = { started: () => S.started && !S.ended, busy: () => S.busy, world: () => WORLD, clue: () => clueLevel() };
+  Q.hooks = { started: () => S.started && !S.ended, busy: () => S.busy, world: () => WORLD, clue: () => clueLevel(), descuido: () => S.descuido || 0 };
   function advance(min) { S.min += min; Sound.clue = clueLevel(); S.time = fmt(S.min); $('#clock').textContent = S.time; }
   const P = { x: -0.35, z: -0.55, yaw: 0, pitch: 0, bodyYaw: 0, vx: 0, vz: 0, walk: 0, bob: 0 };
   const EYE = Q.EYE;
@@ -92,7 +92,7 @@
 
   /* ============================== Interactivos ============================== */
   const tasksEl = $('#tasks');
-  const TASKS = [['alarm', 'Apagar el despertador'], ['dress', 'Vestirte para el día'], ['bag', 'Cargar la mochila'], ['out', 'Salir de casa']];
+  const TASKS = [['alarm', 'Apagar el despertador'], ['dress', 'Vestirte paral día'], ['bag', 'Cargar la mochila'], ['out', 'Salir de casa']];
   function renderTasks(flash) { tasksEl.innerHTML = TASKS.map(([k, t]) => `<li class="${S.tasks[k] ? 'done' : ''}${k === flash ? ' flash' : ''}">${t}</li>`).join(''); }
   function completeTask(k) { S.tasks[k] = true; S.lastProgress = performance.now(); renderTasks(k); Sound.ok(); }
   const allReady = () => S.tasks.alarm && S.tasks.dress && S.tasks.bag;
@@ -112,9 +112,9 @@
       if (window.Sound && Sound.on) { if (cl >= 1) Sound.siren(3.6); else Sound.dog(); if (cl >= 3) setTimeout(() => Sound.shout(0.06), 900); }
       await say([['Te asomas y miras hacia abajo. La calle, a esta hora: una farola naranja, dos borrachos junto al banco del parque y poco más. Lo normal.'],
         ['Abajo, luces azules intermitentes al fondo del parque. Alguien cruza corriendo y no mira atrás.', { text: 'Una pelea, un atropello. Seguro que es eso.', think: true }],
-        ['Un coche parado en mitad de la calle con las luces de emergencia y la puerta abierta. Nadie dentro. Más gente corriendo, y ninguna hacia el metro.'],
+        ['Un coche parado en mitad de la calle con las luces de emergencia y la puerta abierta. Nadie dentro. Más gente corriendo, y ninguna hacial metro.'],
         ['Humo gris sobre los edificios del fondo. Uno de los borrachos está en el suelo y no se mueve. Dos figuras se le acercan, cojeando, sin prisa.', { text: 'Esto no es una resaca.', think: true, block: true }],
-        ['La calle está llena de gente que camina torcida. Un coche ha chocado contra el quiosco. Sobre el horizonte, columnas de humo.', { text: 'Tendrías que haber salido hace una hora.', think: true, block: true }]][Math.min(cl, 4)]); } },
+        ['La calle está llena de gente que camina torcida. Un coche ha chocado contral quiosco. Sobre el horizonte, columnas de humo.', { text: 'Tendrías que haber salido hace una hora.', think: true, block: true }]][Math.min(cl, 4)]); } },
     cama: { label: 'Mirar la cama', stand: [-0.4, 0.05], look: [-1.5, 0.5, -0.4], enabled: () => true, run: async () => { cost('cama', 3); await say('Tu cama, todavía caliente. Tiene un 100 % de retención y cero rentabilidad.'); } },
     escritorio: { label: 'Mirar el escritorio', stand: [-0.95, 0.3], look: [-1.9, 0.85, 0.85], enabled: () => true, run: actEscritorio },
     medalla: { label: 'Mirar la medalla', stand: [-0.9, 1.5], look: [-2.15, 1.5, 1.62], enabled: () => true, run: async () => { cost('medalla', 2); await say(['La medalla de la San Silvestre. Diez kilómetros a ritmo constante: el único estimador insesgado que tienes.']); } },
@@ -162,7 +162,7 @@
     if (id === tipId) { msg.hidden = true; tipWake = null; }
   }
   /* Textos: lo clave bloquea hasta pulsar (interactuar, decisiones, pensamientos con block:true); los pensamientos y comentarios de fondo
-     (think:true) salen como aviso que no para el juego y se va solo. */
+     (think:true) salen como aviso que no paral juego y se va solo. */
   function say(lines) {
     if (!Array.isArray(lines)) lines = [lines];
     const soft = lines.filter((l) => l && typeof l === 'object' && l.think && !l.block), hard = lines.filter((l) => !soft.includes(l));
@@ -282,7 +282,7 @@
       choiceEl.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => done(+b.dataset.i)));
     });
   }
-  async function free(ms, hint, until) {                    // ventana en la que puedes pasear y mirar antes de que siga el guion; devuelve true si se ha saltado
+  async function free(ms, hint, until) {                    // ventana en la que puedes pasear y mirar antes de que sigal guion; devuelve true si se ha saltado
     inFree = true; S.busy = false; freeHintEl.hidden = !hint;
     const t0 = performance.now(); let skipped = false; const sb = $('#saltar');
     sb.onclick = () => { skipped = true; }; const onN = (e) => { if ((e.key === 'n' || e.key === 'N') && !sb.hidden && !e.repeat) skipped = true; }; window.addEventListener('keydown', onN);
@@ -304,11 +304,21 @@
     document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
   }
 
+  /* Lluvia de corazones sobre la pantalla final: se activa solo en el mejor final (volver a casa con Amor) */
+  function corazones() {
+    const host = document.createElement('div'); host.id = 'hearts'; host.setAttribute('aria-hidden', 'true'); document.body.appendChild(host);
+    const cols = ['#e0304a', '#ff6a86', '#c0202c', '#ff9ab0', '#f2506e']; let n = 0;
+    const iv = setInterval(() => { if (n++ > 220) { clearInterval(iv); return; } const h = document.createElement('i'); h.textContent = Math.random() < 0.8 ? '♥' : '💚'; h.style.left = (Math.random() * 100) + 'vw'; h.style.fontSize = (14 + Math.random() * 34) + 'px'; h.style.color = cols[(Math.random() * cols.length) | 0]; h.style.animationDuration = (5 + Math.random() * 6) + 's'; h.style.setProperty('--dx', ((Math.random() - 0.5) * 120) + 'px'); host.appendChild(h); setTimeout(() => h.remove(), 12000); }, 160);
+    if (window.Sound && Sound.on) { Sound.ok(); setTimeout(() => Sound.chime && Sound.chime(), 900); }
+  }
   const FINALES_TOTAL = 8;
   function finalScreen(clave, title, text) {
     let vistos = []; try { vistos = JSON.parse(store('ends') || '[]'); } catch (e) { }
     if (!vistos.includes(clave)) { vistos.push(clave); store('ends', JSON.stringify(vistos)); }
-    endScreen(title, text + ' <small style="display:block;margin-top:14px;opacity:.7">Finales vistos: ' + vistos.length + ' de ' + FINALES_TOTAL + '.</small>');
+    if (clave === 'vallecas') { title = '♥ ' + title + ' ♥'; text = 'El mejor final de todos. ' + text; }
+    const KEYS = ['impecable', 'normal', 'justo', 'cervezas', 'despedido', 'cafe1', 'caferefugio', 'vallecas'], seen = KEYS.filter((k) => vistos.includes(k));
+    endScreen(title, text + ' <span class="pips" role="img" aria-label="Finales vistos: ' + seen.length + ' de ' + KEYS.length + '">' + KEYS.map((k) => '<i class="' + (seen.includes(k) ? 'on' : '') + '" title="' + k + '"></i>').join('') + '</span><small style="display:block;margin-top:6px;opacity:.7">Finales vistos: ' + seen.length + ' de ' + KEYS.length + '.</small>');
+    if (clave === 'vallecas') corazones();
   }
   /* Fin del recorrido: lo que antes cerraba la habitación, ahora cierra la mañana entera */
   function finishDay() { S.ended = true; $('#hud').hidden = true; $('#hint').hidden = true; if (document.pointerLockElement) document.exitPointerLock(); showEnd(); }
@@ -365,7 +375,7 @@
       await fade(true); await Q.pantallaCarga('Dentro del Cercanías', 'Línea C-2 · hacia Nuevos Ministerios', ['Las puertas se cierran con un pitido que suena a «ya no hay vuelta atrás».', 'El vagón huele a abrigo mojado, a café y a decisiones aplazadas.', 'Hay un hueco de veinte centímetros. Lo ocuparás con la mochila.'], 2200); await startTrain(); return;
     } else {
       await startSol(); return;
-      finalScreen('cervezas', 'Cervezas con Chelu', 'Dejas pasar el cuarto tren. Miras el panel, miras el móvil y Chelu escribe: «¿Cañas?». La probabilidad de decir que no era del 0,3 %. Esperanza de vida laboral: cero días. Esperanza de vida social: al alza.');
+      finalScreen('cervezas', 'Cervezas con el Grandullón', 'Dejas pasar el cuarto tren. Miras el panel, miras el móvil y el Grandullón escribe: «¿Cañas?». La probabilidad de decir que no era del 0,3 %. Esperanza de vida laboral: cero días. Esperanza de vida social: al alza.');
     }
   }
 
@@ -414,22 +424,22 @@
     await say(['El segundo tren se va sin ti. Dos minutos de silencio civilizado y el móvil vibra.']);
     if (Q.notify) Q.notify('Chelu', '¿Cañas? Estoy en Sol. Ya he pedido dos (invitas tú).');
     await sleep(900);
-    await say([{ text: 'Chelu: «¿Cañas? Estoy en Sol. Ya he pedido dos (invitas tú).»', think: false }]);
-    const r = await choose([{ id: 'si', label: 'Aceptar: «Voy para allá»', hint: 'La probabilidad de decir que no era del 0,3 %' }, { id: 'no', label: '«Es que tengo que subir a un tren»… que ya se ha ido', hint: 'Mentir con convicción' }], 'Chelu te escribe');
+    await say([{ text: 'El Grandullón: «¿Cañas? Estoy en Sol. Ya he pedido dos (invitas tú).»', think: false }]);
+    const r = await choose([{ id: 'si', label: 'Aceptar: «Voy para allá»', hint: 'La probabilidad de decir que no era del 0,3 %' }, { id: 'no', label: '«Es que tengo que subir a un tren»… que ya se ha ido', hint: 'Mentir con convicción' }], 'El Grandullón te escribe');
     if (r === 'no') await say('Contestas «tengo trabajo». Respuesta inmediata: «Mentiroso. Estás en el andén mirando la nada». Aceptas por puro cansancio.');
     }
     await fade(true);
     let sr, retrySol = dbgApoc;
     for (;;) {
       SOL = Q.buildSol(renderer, envTex, { retry: retrySol }); window.__qx && (window.__qx.SOL = SOL);
-      enterWorld(SOL, 'sol'); setTime('19:10'); setTasks([['Tomar unas cañas con Chelu', false]]);
+      enterWorld(SOL, 'sol'); setTime('19:10'); setTasks([['Tomar unas cañas con el Grandullón', false]]);
       if (window.Sound && Sound.on) Sound.ambience('street');
       await fade(false);
       sr = await SOL.play(API);
       if (sr === 'rescatado') break;
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
-      await deathCard('Te alcanzan en la plaza', 'Los infectados te rodean frente a la boca del metro. Chelu levanta la caña por última vez: «Por los que suben». Pero tú no subes. Probemos otra vez desde el apocalipsis.');
+      await deathCard('Te alcanzan en la plaza', 'Los infectados te rodean frente a la boca del metro. El Grandullón levanta la caña por última vez: «Por los que suben». Pero tú no subes. Probemos otra vez desdel apocalipsis.');
       retrySol = true;
     }
     inScript = false;
@@ -472,7 +482,7 @@
       if (pr === 'atrapado2') p2 = true;
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
-      await deathCard('Parte de la planta 4', 'La bacteria negra te alcanza entre dos cubículos. No duele: simplemente dejas de ser una persona y pasas a ser un patrón en la moqueta. Vuelve a empezar la carrera desde el ascensor.');
+      await deathCard('Parte de la planta 4', 'La bacteria negra te alcanza entre dos cubículos. No duele: simplemente dejas de ser una persona y pasas a ser un patrón en la moqueta. Vuelve a empezar la carrera desdel ascensor.');
       retryPla = true;
     }
     inScript = false;
@@ -491,24 +501,24 @@
     let r, retryCaf = false;
     for (;;) {
       CAF = Q.buildCafe(renderer, envTex, apoc, { retry: retryCaf });
-      enterWorld(CAF, 'cafe'); setTime('09:10'); setTasks([['Pedir un café', false], ['Hablar con Chelu', false]]);
+      enterWorld(CAF, 'cafe'); setTime('09:10'); setTasks([['Pedir un café', false], ['Hablar con el Grandullón', false]]);
       if (window.Sound && Sound.on) Sound.ambience('cafe');
       await fade(false);
       r = await CAF.play(API);
       if (!(r.zombi && r.res === 'muerto')) break;
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
-      await deathCard('Te alcanzan en la cafetería', 'Entre el cristal roto y las sillas volcadas, los infectados te rodean antes de llegar a la cocina. Otra vez desde el cristal que revienta.');
+      await deathCard('Te alcanzan en la cafetería', 'Entre el cristal roto y las sillas volcadas, los infectados te rodean antes de llegar a la cocina. Otra vez desdel cristal que revienta.');
       retryCaf = true;
     }
     inScript = false;
     await fade(true);
     const pct = Math.round(simulate(S.min + 6 * (S.descuido || 0)).p * 100), sc = r.score + (S.mini >= (S.miniMax || 8) - 1 ? 1 : S.mini <= 2 ? -1 : 0);
     if (r.zombi && r.res === 'refugio') finalScreen('caferefugio', 'Refugio en la cocina', 'Entras en la cocina de un portazo y echas el cerrojo. El cocinero te mira, mira la puerta que tiembla y te ofrece, con una calma admirable, una tostada. Sobrevivís a base de tostadas, tres turnos y un chiste de actuarios por hora. La probabilidad de morir hoy bajó del 100 % al 61 %: avance estadísticamente histórico.');
-    else if (r.zombi) finalScreen('zombi', 'Apocalipsis zombi', 'Todo lo que fuiste dejando para luego se ha acumulado en la calle. Cuando el cristal cede, la primera persona en entrar es Chelu. Los reservas ya no importan; la tarificación tampoco. Quedan, eso sí, unas ventanas encendidas en la torre de enfrente: alguien sigue trabajando.');
-    else if (sc <= -2) finalScreen('cervezas', 'Cervezas con Chelu', 'Una caña. Luego otra. A las once ya habéis arreglado el sector asegurador. Tu móvil vibra sobre la mesa con el nombre de Sheldon, que no contestas con una devoción casi profesional.');
+    else if (r.zombi) finalScreen('zombi', 'Apocalipsis zombi', 'Todo lo que fuiste dejando para luego se ha acumulado en la calle. Cuando el cristal cede, la primera persona en entrar es el Grandullón. Los reservas ya no importan; la tarificación tampoco. Quedan, eso sí, unas ventanas encendidas en la torre de enfrente: alguien sigue trabajando.');
+    else if (sc <= -2) finalScreen('cervezas', 'Cervezas con el Grandullón', 'Una caña. Luego otra. A las once ya habéis arreglado el sector asegurador. Tu móvil vibra sobre la mesa con el nombre del Sheldon, que no contestas con una devoción casi profesional.');
     else if (sc < 2 && pct < 85) finalScreen('despedido', 'Despedido', 'Llegas tarde con la cabeza gacha y el café en la mano. En tu mesa hay una caja de cartón y un post-it con una frase educada. El modelo de tarificación seguirá funcionando sin ti. Es lo peor y lo mejor que se puede decir de un modelo.');
-    else if (sc >= 2) finalScreen('cafe1', 'Café para uno', 'Cumples: factores correctos, reserva cuadrada, café frío a tu lado. Chelu te escribe «¿cañas?» y lo dejas en visto con una paz que antes no tenías. Estás solo con el triángulo, y por una vez el triángulo está de tu lado.');
+    else if (sc >= 2) finalScreen('cafe1', 'Café para uno', 'Cumples: factores correctos, reserva cuadrada, café frío a tu lado. El Grandullón te escribe «¿cañas?» y lo dejas en visto con una paz que antes no tenías. Estás solo con el triángulo, y por una vez el triángulo está de tu lado.');
     else finishDay();
   }
 
@@ -720,7 +730,7 @@
     if (/[?&]sol/.test(location.search)) { S.alarmOn = false; startSol(); return; }
     if (/[?&]cafe/.test(location.search)) { S.alarmOn = false; S.descuido = +(location.search.match(/desc=(\d+)/) || [0, 0])[1]; startCafe(); return; }
     if (/[?&](oficina|planta|cafe)/.test(location.search) && !/[?&]cafe/.test(location.search)) { S.alarmOn = false; startOficina(); return; }
-    const how = COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
+    const how = COARSE ? 'Arrastral pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
     if (store('intro')) tip([how]);
     else { store('intro', '1'); tip(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.', { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true }, how]); }
   });

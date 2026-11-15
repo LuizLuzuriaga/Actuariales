@@ -1,4 +1,4 @@
-/* vallecas.js — el final: Vallecas de nuevo. Danny os deja en la esquina de la calle de la Albufera y, en el portal de casa, te espera Amor (pelo oscuro, ojos verdes).
+/* vallecas.js — el final: Vallecas de nuevo. El Pasota os deja en la esquina de la calle de la Albufera y, en el portal de casa, te espera Amor (pelo oscuro, ojos verdes).
    Una calle al amanecer con humo, un coche abandonado, tu cartel de «se busca» y una conversación corta con humor de psicología y estadística. */
 (() => {
   const Q = window.QX;
@@ -58,14 +58,14 @@
       await say(['—Llegas tarde —dice Amor, sin sonreír del todo—. Tres horas y media tarde. Sin apocalipsis, sería un récord personal.', '—Tengo un diagnóstico —añade, cruzándose de brazos—: apego evitativo con sesgo de optimismo actuarial. Pero el pronóstico es bueno.']);
       const r = await choose([{ id: 'a', label: '«Te quiero. Con un intervalo de confianza del 99 %»', hint: 'Declararte con rigor' }, { id: 'b', label: '«Hemos sobrevivido. Mi probabilidad de acabar aquí era del 0,3 %»', hint: 'Estadística, como siempre' }, { id: 'c', label: 'Abrazarla sin decir nada', hint: 'Lo que tu terapeuta recomendaría' }], 'Amor te mira');
       await say(r === 'a' ? ['—Rechazo la hipótesis nula de que no —responde Amor, y por fin sonríe.'] : r === 'b' ? ['—El 0,3 % eres tú explicándome las cosas. Anda, sube —dice, y te despeina con la mano.'] : ['Ella no dice nada. Te abraza fuerte, con la cara contra tu mochila rota. Su respiración huele a café y a lluvia que no ha caído.']);
-      await say(['Fuera, la ciudad arde a lo lejos y una radio repite alertas. Dentro del portal, la luz funciona y alguien ha puesto música de piano.', { text: 'Casi todo el día pensando en curvas de mortalidad. Y lo que importaba, al final, era el denominador: ella.', think: true, block: true }]);
+      await say(['Fuera, la ciudad arde a lo lejos y una radio repite alertas. Dentro del portal, la luz funciona y alguien ha puesto música de piano.', { text: 'Casi todo el día pensando en curvas de mortalidad. Y lo que importaba, al final, eral denominador: ella.', think: true, block: true }]);
       W.fin = true; } };
     W.acts.portal = { label: 'Mirar el portal de casa', stand: [3.4, -3.0], look: [6.3, 1.5, -3.0], enabled: () => true, run: async (api) => { await api.say('El portal de siempre, con su luz amarilla y el felpudo torcido. Al fondo, el ascensor que nunca ha funcionado a la primera. Esta vez, tampoco hará falta.'); } };
     W.acts.coche = { label: 'Mirar el coche abandonado', stand: [-0.2, -3.8], look: [-1.2, 1.0, -5.5], enabled: () => true, run: async (api) => { W.pistas++; await api.say('Un coche con las llaves puestas, la puerta abierta y una caña de cartón en el salpicadero. En Vallecas, aun en el apocalipsis, hay quien aparca en doble fila.'); } };
     W.acts.cartel = { label: 'Leer el cartel de «se busca»', stand: [-4.4, -3.4], look: [-6.3, 1.6, -3.4], enabled: () => true, run: async (api) => { await api.say(['«SE BUSCA». Cabeza de cruz, mochila, prisa. Eres tú.', { text: 'Visto por última vez, hoy. Visto de nuevo, ahora, en la misma calle donde empezó todo. Cerrando el intervalo.', think: true }]); } };
     W.play = async (api) => {
       const { say, free } = api;
-      await say(['Danny frena en la esquina, a la entrada de Vallecas. «Aquí os dejo, que tengo que buscar a mi madre», dice, y la moto se pierde calle abajo con Chelu agarrado al sillín.',
+      await say(['El Pasota frena en la esquina, a la entrada de Vallecas. «Aquí os dejo, que tengo que buscar a mi madre», dice, y la moto se pierde calle abajo con el Grandullón agarrado al sillín.',
         'Vallecas, otra vez. Amanece entre humo y farolas que parpadean. El portal de casa está igual que siempre. Y en el escalón, con el pelo oscuro revuelto y los ojos verdes, está Amor.']);
       await free(1e9, 'Acércate a Amor y habla con ella · mira la calle si quieres', () => W.fin); return 'fin';
     };

@@ -92,7 +92,7 @@
       if (x < 1) viewQx(t, 1 - x); if (x > 0) viewDx(t, x);
       if (t < 5.6) { title.textContent = 'La curva de mortalidad real'; cap.textContent = 'Riesgo de morir en un año, por edad, en España. Arriba un pequeño repunte al nacer, una caída enorme, una joroba en los 20 y luego una subida lenta y exponencial.'; }
       else if (t < 9.5) { title.textContent = 'Y si la hora punta fuera una tabla de mortalidad…'; cap.textContent = 'El andén está lleno de gente de 40 a 50 años. Imagina que la curva se disparara justo ahí.'; }
-      else { title.textContent = '…la curva se desplazaría hasta el andén'; cap.textContent = 'Las muertes por edad viajan desde su pico natural, hacia los ' + peak + ' años, hasta los 45. Por suerte (y por Solvencia II) sigue siendo solo un tren lleno.'; }
+      else { title.textContent = '…la curva se desplazaría hastal andén'; cap.textContent = 'Las muertes por edad viajan desde su pico natural, hacia los ' + peak + ' años, hasta los 45. Por suerte (y por Solvencia II) sigue siendo solo un tren lleno.'; }
       raf = requestAnimationFrame(frame);
     }
     raf = requestAnimationFrame(frame);

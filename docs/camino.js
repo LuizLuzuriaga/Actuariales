@@ -3,7 +3,7 @@
 (() => {
   const Q = window.QX;
   const BASE = [
-    'Calle de la Albufera, 06:05. A esta hora la demanda de café es perfectamente inelástica: nadie pregunta el precio, solo el tamaño.',
+    'Calle de la Albufera, 06:05. A esta hora la demanda de café es perfectamente inelástica: nadie preguntal precio, solo el tamaño.',
     'Un hombre pasea a su perro; el perro pasea al hombre. Equilibrio de Nash: nadie cede la acera.',
     'Tu novia diría que caminas deprisa para no oír tus pensamientos. Tú dirías que es cardio. Los dos tenéis sesgo de confirmación.',
     'Nueve viandantes. Muestra diminuta, perfecta para sacar conclusiones, como en toda red social que se precie.',
@@ -17,6 +17,17 @@
     ['Un coche con las llaves puestas y la puerta abierta, en Vallecas. O es un milagro o es una señal; las dos son mal diagnóstico.', 'Una señora arrastra los pies, sin prisa. Primera persona sin prisa a las seis de la mañana: valor atípico, mírala con cariño.'],
     ['Pintada en un muro: «NO SALGAS». Debajo, más pequeña: «ya». Heterocedasticidad textual.', 'Lejos, junto a un contenedor, alguien muerde a alguien. Tu cerebro lo archiva como «conducta social madrileña».'],
     ['Las calles están llenas de gente que camina torcida. No hay un solo repartidor con prisa. Eso es lo más grave que has visto en Madrid.', 'Humo sobre Vallecas. En el aire, un olor dulce y raro: como a ansiedad bien cocinada.']];
+  const DATOS = [
+    'La mortalidad humana crece casi exponencialmente con la edad: según la ley de Gompertz, el riesgo se duplica más o menos cada ocho años. El de llegar tarde, con cada cercanías.',
+    'Con 23 personas en una sala, la probabilidad de que dos cumplan años el mismo día supera el 50 %. Con ochocientas en un andén, seguro que dos piensan lo mismo: que el tren llega lleno.',
+    'Una reserva técnica es dinero guardado para pagar lo que aún no ha pasado. Cuadrar lo que sí ha pasado ya es más difícil.',
+    'El método chain-ladder proyecta el futuro de los siniestros usando el pasado. Funciona hasta el día en que el pasado no avisa de un apocalipsis.',
+    'Un modelo lineal generalizado no es lineal ni general. Pero tiene un enlace logarítmico y una paciencia infinita.',
+    'La esperanza de vida es una media: nadie vive el promedio, igual que nadie viaja en el vagón medio de la línea C-2.',
+    'Las tablas de mortalidad se publican cada año con rigor. De los zombis, de momento, no hay tablas.',
+    'En seguros, la franquicia es lo que pones tú. En el apocalipsis, la franquicia es todo.'];
+  const stat = () => { const H = Q.hooks, d = Math.max(0, Math.min(9, (H && H.descuido ? H.descuido() : 0) | 0)); return '<span>descuido</span><i>' + '▮'.repeat(d) + '▯'.repeat(9 - d) + '</i><span>' + d + '/9</span>'; };
+  const extras = (el) => { const s = document.createElement('p'); s.className = 'cm-desc'; s.innerHTML = stat(); const f = document.createElement('p'); f.className = 'cm-fact'; f.innerHTML = '<b>Dato actuarial</b>'; f.appendChild(document.createTextNode(DATOS[Math.floor(Math.random() * DATOS.length)])); el.appendChild(s); el.appendChild(f); };
   const FIN = 'Estación de Entrevías. Los tornos están abiertos. Eso no pasa nunca. Sigue siendo lunes.';
 
   Q.caminoVallecas = (level = 0) => new Promise((resolve) => {
@@ -27,7 +38,7 @@
     lines.push(BASE[5 - (level > 2 ? 0 : 0)]); lines.push(FIN);
     const el = document.createElement('div'); el.id = 'camino'; el.setAttribute('role', 'dialog');
     el.innerHTML = '<div class="cm-top"><small>Hacia la estación · a pie</small><h2>Calles de Vallecas</h2></div><div class="cm-bar"><i></i><span class="cm-dot"></span></div><p class="cm-txt" aria-live="polite"></p><button type="button" class="cm-skip">Saltar ▸</button>';
-    document.body.appendChild(el);
+    extras(el); document.body.appendChild(el);
     const txt = el.querySelector('.cm-txt'), bar = el.querySelector('.cm-bar i'), dot = el.querySelector('.cm-dot');
     let i = 0, timer = 0, done = false;
     const finish = () => { if (done) return; done = true; clearTimeout(timer); window.removeEventListener('keydown', onKey); el.classList.add('out'); setTimeout(() => { el.remove(); resolve(); }, 450); };
@@ -50,7 +61,7 @@
   Q.pantallaCarga = (titulo, sub, lineas, porLinea = 2300) => new Promise((resolve) => {
     const el = document.createElement('div'); el.id = 'camino'; el.setAttribute('role', 'dialog');
     el.innerHTML = '<div class="cm-top"><small></small><h2></h2></div><div class="cm-bar"><i></i><span class="cm-dot"></span></div><p class="cm-txt" aria-live="polite"></p><button type="button" class="cm-skip">Saltar ▸</button>';
-    el.querySelector('small').textContent = sub; el.querySelector('h2').textContent = titulo; document.body.appendChild(el);
+    extras(el); el.querySelector('small').textContent = sub; el.querySelector('h2').textContent = titulo; document.body.appendChild(el);
     const txt = el.querySelector('.cm-txt'), bar = el.querySelector('.cm-bar i'), dot = el.querySelector('.cm-dot'); let i = 0, timer = 0, done = false;
     const finish = () => { if (done) return; done = true; clearTimeout(timer); window.removeEventListener('keydown', onKey); el.classList.add('out'); setTimeout(() => { el.remove(); resolve(); }, 450); };
     const show = () => { if (i >= lineas.length) { finish(); return; } txt.classList.remove('in'); void txt.offsetWidth; txt.textContent = lineas[i]; txt.classList.add('in'); const p = (i + 1) / lineas.length; bar.style.width = (p * 100) + '%'; dot.style.left = (p * 100) + '%'; i++; timer = setTimeout(show, Math.min(4000, porLinea + lineas[i - 1].length * 12)); };

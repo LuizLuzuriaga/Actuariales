@@ -110,7 +110,7 @@
 
     /* ---------- pared del fondo: zócalo, carteles, mapa de líneas, extintor, armario eléctrico, tablón, grafiti, manchas ---------- */
     const wallZ = 3.585;
-    { const wall = grp(0, 0, wallZ); wall.rotation.y = Math.PI;                       // eje local +z = hacia el andén (-z real); x invertida
+    { const wall = grp(0, 0, wallZ); wall.rotation.y = Math.PI;                       // eje local +z = hacial andén (-z real); x invertida
       const L = (x) => -x;                                                         // convierte x del andén a x local
       put(new THREE.BoxGeometry(18.4, 0.14, 0.04), std(0x151716, 0.7), 0, 0.07, 0.02, wall);                                       // zócalo
       const sign = (x, y, w, h, l1, l2, col) => { const [k, g] = cv(512, 128); g.fillStyle = col; g.fillRect(0, 0, 512, 128); g.strokeStyle = '#d6d0c2'; g.lineWidth = 4; g.strokeRect(6, 6, 500, 116); g.fillStyle = '#d6d0c2'; g.textAlign = 'center'; g.font = '700 38px Arial'; g.fillText(l1, 256, 56); g.font = '26px Arial'; g.fillStyle = '#b8b2a4'; g.fillText(l2, 256, 98);

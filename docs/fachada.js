@@ -1,5 +1,5 @@
 /* fachada.js — la estación vista desde fuera, antes de bajar al andén: un edificio bajo y largo con el cartel rojo arriba, puertas de cristal, escalones, una máquina,
-   farolas y gente que entra. Amanece entre sirenas lejanas. Pulsa E en las puertas para entrar; después, pantalla de carga hacia el andén. */
+   farolas y gente que entra. Amanece entre sirenas lejanas. Pulsa E en las puertas para entrar; después, pantalla de carga hacial andén. */
 (() => {
   const Q = window.QX;
   const MG = THREE.BufferGeometryUtils;

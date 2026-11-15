@@ -1,5 +1,5 @@
-/* cafe.js — nivel 6: la cafetería de la planta baja. Chelu te espera en una mesa. Tres rondas de conversación deciden el final; si has ido dejando
-   que todo se descuide (descuido ≥ 7), por la ventana se ve cómo acaba el mundo. Devuelve { score, zombi } al terminar. */
+/* cafe.js — nivel 6: la cafetería de la planta baja. El Grandullón te espera en una mesa. Tres rondas de conversación deciden el final; si has ido dejando
+   que todo se descuide (descuido ≥ 7), por la ventana se ve cómo acabal mundo. Devuelve { score, zombi } al terminar. */
 (() => {
   const Q = window.QX;
   const MG = THREE.BufferGeometryUtils;
@@ -73,9 +73,9 @@
 
     if (apoc) W.startApoc = async (api, quick) => {
         const say = api.say;
-        if (!quick) await say(['—Qué pinta tienes —dice Chelu sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpea el marco. Luego, otra cosa. Luego, todas.']);
+        if (!quick) await say(['—Qué pinta tienes —dice el Grandullón sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpeal marco. Luego, otra cosa. Luego, todas.']);
         W.doBreach(); if (window.Sound && Sound.on) { Sound.glass(); setTimeout(() => Sound.shout(0.08), 500); Sound.growl(0.9); } await api.wait(1800);
-        await say(quick ? ['El cristal vuelve a caer y la calle entra otra vez. Corre.'] : ['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'Chelu se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Corre.']);
+        await say(quick ? ['El cristal vuelve a caer y la calle entra otra vez. Corre.'] : ['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'El Grandullón se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Corre.']);
         Q.apoc.start(W, { refuge: [bounds.maxX - 0.7, -2.8], r: 1.5, refugeLabel: 'puerta de la cocina', gates: [[-6.5, -3], [-6.5, 0], [-6.5, 3], [-8, -1.5], [-8, 1.5]], enemies: W.zs.map((z, i) => ({ g: z.g, v: 2.2 + 0.04 * i, stun: i * 0.2, ph: z.ph })),
           quips: [['Amor', 'Si estás en la cafetería: la cocina siempre tiene salida de emergencia. Es una norma, no una opinión.'], ['Sheldon', 'No es por meter prisa, pero este evento no está tarificado.'], ['Chelu', 'Soy yo. Sigo siendo yo. Más o menos. Quiero una caña.']], onEnd: () => { W.exit = true; } });
     };
@@ -87,31 +87,31 @@
     W.acts.ventana = { label: 'Mirar por la ventana', stand: [-3.7, 0], look: [-5, 1.6, 0], enabled: () => true, run: async (api) => {
       if (apoc) { W.pistas = 9; await api.say(['Fuera hay gente pegada al cristal. Muchos. Quietos, con la cabeza ladeada, mirando dentro.', { text: 'Nadie los ha llamado. Nadie los ha parado. Es lo que pasa cuando todo se va dejando para luego.', think: true }]); }
       else await api.say(['La calle despierta: un camión de reparto, tres oficinistas con vasos de cartón, una paloma que se lo piensa.', { text: 'Todo el mundo va a algún sitio. Tú, también. Casi.', think: true }]); } };
-    W.acts.chelu = { label: 'Hablar con Chelu', stand: [2.2, 1.6], look: [3.7, 1.5, 0.4], enabled: () => W.barra && !W.exit, run: async (api) => {
+    W.acts.chelu = { label: 'Hablar con el Grandullón', stand: [2.2, 1.6], look: [3.7, 1.5, 0.4], enabled: () => W.barra && !W.exit, run: async (api) => {
       const { say, choose, S } = api, n = W.ronda++;
       if (apoc) { W.zombi = true; await W.startApoc(api, false); return; }
       if (n === 0) {
-        await say(['—Pensaba que no llegabas —dice Chelu, con una caña vacía ya delante de las nueve de la mañana—. ¿Cómo va la cosa?']);
+        await say(['—Pensaba que no llegabas —dice el Grandullón, con una caña vacía ya delante de las nueve de la mañana—. ¿Cómo va la cosa?']);
         const r = await choose([{ id: 'a', label: '«Bien, con el modelo de tarificación casi listo»', hint: 'Hablas de trabajo' }, { id: 'b', label: '«Tirando. ¿Y tú?»', hint: 'Conversación sin compromiso' }, { id: 'c', label: '«Fatal. Lo dejaría todo»', hint: 'Sinceridad' }], 'Primera ronda');
         W.score += r === 'a' ? 1 : r === 'b' ? 0 : -1;
         await say(r === 'a' ? '—Qué serio. Así te va.' : r === 'b' ? '—Pues yo tengo un plan que no es un plan.' : '—Eso se arregla con una caña. Siempre se arregla con una caña.');
       } else if (n === 1) {
-        await say(['El móvil vibra. Sheldon: «Reunión a las 9:30. Trae el triángulo corregido. Y cierra la ventana, hay corriente en mi cabeza».', 'Chelu lo lee por encima de tu hombro, sin vergüenza: —Ese tío no ha salido de una hoja de cálculo desde 2019.']);
-        const r = await choose([{ id: 'a', label: 'Contestar a Sheldon ahora', hint: '«Ahí estaré»' }, { id: 'b', label: 'Dejarlo en visto', hint: 'Ya habrá tiempo' }, { id: 'c', label: 'Decirle a Chelu que se lo conteste él', hint: 'Delegar con encanto' }], 'Segunda ronda');
+        await say(['El móvil vibra. Sheldon: «Reunión a las 9:30. Trae el triángulo corregido. Y cierra la ventana, hay corriente en mi cabeza».', 'El Grandullón lo lee por encima de tu hombro, sin vergüenza: —Ese tío no ha salido de una hoja de cálculo desde 2019.']);
+        const r = await choose([{ id: 'a', label: 'Contestar al Sheldon ahora', hint: '«Ahí estaré»' }, { id: 'b', label: 'Dejarlo en visto', hint: 'Ya habrá tiempo' }, { id: 'c', label: 'Decirle al Grandullón que se lo conteste él', hint: 'Delegar con encanto' }], 'Segunda ronda');
         W.score += r === 'a' ? 1 : r === 'b' ? -1 : 0;
-        await say(r === 'a' ? 'Escribes «ahí estaré». Respuesta en tres segundos: «Con el triángulo». Naturalmente.' : r === 'b' ? 'Dejas el móvil boca abajo. Vibra una vez. Dos. Lo ignoras con la solidez de un mal estimador.' : '—Yo no sé hablar con Sheldon. Me responde con LaTeX.');
+        await say(r === 'a' ? 'Escribes «ahí estaré». Respuesta en tres segundos: «Con el triángulo». Naturalmente.' : r === 'b' ? 'Dejas el móvil boca abajo. Vibra una vez. Dos. Lo ignoras con la solidez de un mal estimador.' : '—Yo no sé hablar con el Sheldon. Me responde con LaTeX.');
       } else {
-        await say(['Entra un mensaje de Amor: «¿Cenamos hoy?». Debajo, la caña de Chelu, ya recién tirada. Alguien en la barra ha puesto música de ascensor.', '—Una rápida —dice Chelu—, y no te pregunto nada más en todo el día.']);
-        const r = await choose([{ id: 'a', label: 'Una caña', hint: 'Son las nueve de la mañana' }, { id: 'b', label: 'Otro café, y luego subo', hint: 'Termino lo que empecé' }, { id: 'c', label: 'Me voy ya', hint: 'Sheldon y el triángulo esperan' }], 'Tercera ronda');
+        await say(['Entra un mensaje de Amor: «¿Cenamos hoy?». Debajo, la caña del Grandullón, ya recién tirada. Alguien en la barra ha puesto música de ascensor.', '—Una rápida —dice el Grandullón—, y no te pregunto nada más en todo el día.']);
+        const r = await choose([{ id: 'a', label: 'Una caña', hint: 'Son las nueve de la mañana' }, { id: 'b', label: 'Otro café, y luego subo', hint: 'Termino lo que empecé' }, { id: 'c', label: 'Me voy ya', hint: 'El Sheldon y el triángulo esperan' }], 'Tercera ronda');
         W.score += r === 'a' ? -2 : r === 'b' ? 0 : 1; W.exit = true;
-        await say(r === 'a' ? 'La caña llega fría y perfecta. Las nueve de la mañana nunca habían sido tan razonables.' : r === 'b' ? 'El segundo café sabe igual que el primero, pero con más culpa.' : 'Te levantas. Chelu levanta el vaso: —Por los que suben. Luego te cuento el cotilleo.');
+        await say(r === 'a' ? 'La caña llega fría y perfecta. Las nueve de la mañana nunca habían sido tan razonables.' : r === 'b' ? 'El segundo café sabe igual que el primero, pero con más culpa.' : 'Te levantas. El Grandullón levantal vaso: —Por los que suben. Luego te cuento el cotilleo.');
       } } };
     W.play = async (api) => {
       W.api = api; const { say, free } = api;
       if (opts.retry && apoc) { W.barra = true; W.zombi = true; await say(['Otra vez la cafetería. El cristal tiembla.']); await W.startApoc(api, true); { const sk = await free(1e9, '¡CORRE! hasta la puerta de la cocina · F empuja', () => W.exit); if (sk && !W.apocRes) { Q.apoc.stop(); W.apocRes = 'refugio'; } } return { score: W.score, zombi: true, res: W.apocRes }; }
-      await say(apoc ? ['La cafetería de la planta baja. El cristal de la ventana tiembla de una forma que el cristal no debería.', 'Chelu ya está en su mesa.']
-        : ['La cafetería de la planta baja. Olor a tostada y a lunes aunque sea otro día. Hay café de verdad y mesas pequeñas con gente pequeña.', 'Chelu ya está en su mesa, con un vaso que ya no tiene nada dentro.']);
-      { const sk = await free(1e9, 'Pide algo en la barra · habla con Chelu (tres rondas) · mira por la ventana', () => W.exit); if (sk && W.zombi && !W.apocRes) { Q.apoc.stop(); W.apocRes = 'refugio'; } }
+      await say(apoc ? ['La cafetería de la planta baja. El cristal de la ventana tiembla de una forma que el cristal no debería.', 'El Grandullón ya está en su mesa.']
+        : ['La cafetería de la planta baja. Olor a tostada y a lunes aunque sea otro día. Hay café de verdad y mesas pequeñas con gente pequeña.', 'El Grandullón ya está en su mesa, con un vaso que ya no tiene nada dentro.']);
+      { const sk = await free(1e9, 'Pide algo en la barra · habla con el Grandullón (tres rondas) · mira por la ventana', () => W.exit); if (sk && W.zombi && !W.apocRes) { Q.apoc.stop(); W.apocRes = 'refugio'; } }
       return { score: W.score, zombi: W.zombi, res: W.apocRes };
     };
     return W;

@@ -65,7 +65,7 @@
 
     /* ================= Cuerpo: una losa, sin cuello ni cintura ================= */
     A.torso = put(avatar, slab(1.02, 0.235, 0.255, 0.62), top, 0, 0.14, 0, 0.026);
-    A.pelvis = grp(avatar, 0, 0.9, 0);                                                 // solo existe para el balanceo
+    A.pelvis = grp(avatar, 0, 0.9, 0);                                                 // solo existe paral balanceo
     const collar = grp(avatar); collar.visible = false; A.collar = collar;
     A.buttons = grp(avatar); A.buttons.visible = false;
 
@@ -103,7 +103,7 @@
     pk(rbox(0.34, 0.27, 0.11, 0.05, 4), pocketM, 0, 0.31, 0.4);                                         // bolsillo frontal
     [-1, 1].forEach((s) => {
       const bot = new THREE.Mesh(ellipsoid(0.062, 0.15, 0.062, 14), pocketM); bot.position.set(0.255 * s, 0.3, 0.3); bot.castShadow = true; pack.add(bot);
-      const ink = new THREE.Mesh(bot.geometry, inkMat(0.009)); bot.add(ink);                              // bolsillo lateral para el bidón
+      const ink = new THREE.Mesh(bot.geometry, inkMat(0.009)); bot.add(ink);                              // bolsillo lateral paral bidón
     });
     { const h = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.012, 6, 14, Math.PI), strapM); h.position.set(0, 0.875, 0.262); pack.add(h); }   // asa
     [[0.36, 0.745, 0.378], [0.28, 0.43, 0.457]].forEach(([w, y, z]) => { const zp = new THREE.Mesh(new THREE.BoxGeometry(w, 0.012, 0.012), zipM); zp.position.set(0, y, z); pack.add(zp); const tab = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.04, 0.012), buckleM); tab.position.set(w * 0.42, y - 0.018, z); pack.add(tab); });   // cremalleras con tirador
