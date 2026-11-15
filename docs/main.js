@@ -69,7 +69,8 @@
   const S = { time: '05:45', min: 345, alarmOn: true, dressed: false, bag: false, mirror: false, busy: true, started: false, ended: false, lastProgress: 0, did: new Set(), tasks: { alarm: false, dress: false, bag: false, out: false } };
   const fmt = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
   /* Nivel de pista 0-4: base por escenario, más el tiempo perdido en casa y +1 por cada 3 de descuido (máx. +2) */
-  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2, lobby: 2, planta: 3, cafe: 3 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
+  function clueLevel() { const base = { bed: 0, platform: 1, train: 1, azca: 2, lobby: 2, planta: 3, cafe: 3, sol: 4 }[WORLD] || 0, slow = WORLD === 'bed' ? clamp(((S.min || 345) - 345) / 30, 0, 1) : 0, extra = Math.min(2, Math.floor((S.descuido || 0) / 3)); return Math.min(4, Math.floor(base + slow + extra + 0.0001)); }
+  Q.hooks = { started: () => S.started && !S.ended, busy: () => S.busy, world: () => WORLD, clue: () => clueLevel() };
   function advance(min) { S.min += min; Sound.clue = clueLevel(); S.time = fmt(S.min); $('#clock').textContent = S.time; }
   const P = { x: -0.35, z: -0.55, yaw: 0, pitch: 0, bodyYaw: 0, vx: 0, vz: 0, walk: 0, bob: 0 };
   const EYE = Q.EYE;
@@ -98,13 +99,22 @@
   function setTasks(items) { tasksEl.innerHTML = items.map(([t, d]) => `<li class="${d ? 'done' : ''}">${t}</li>`).join(''); }
   function tag(obj, id) { obj.traverse((o) => { if (o.isMesh) o.userData.act = id; }); }
   tag(R.g.nightstand, 'movil'); tag(R.g.wardrobe, 'armario'); tag(R.g.mirror, 'espejo'); tag(R.g.mirrorFrame, 'espejo'); tag(R.g.doorG, 'puerta'); tag(R.g.chair, 'bolsos'); tag(R.g.bed, 'cama'); tag(R.g.desk, 'escritorio'); tag(R.g.shelf, 'medalla');
-  let ACT_ROOTS = [R.g.nightstand, R.g.wardrobe, R.g.mirror, R.g.mirrorFrame, R.g.doorG, R.g.chair, R.g.bed, R.g.desk, R.g.shelf];
+  { const wd = new THREE.Mesh(new THREE.PlaneGeometry(1.4, 1.1), new THREE.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false })); wd.position.set(0.9, 1.55, -Q.ROOM.D / 2 + 0.07); scene.add(wd); tag(wd, 'ventana'); R.g.ventana = wd; }
+  let ACT_ROOTS = [R.g.ventana, R.g.nightstand, R.g.wardrobe, R.g.mirror, R.g.mirrorFrame, R.g.doorG, R.g.chair, R.g.bed, R.g.desk, R.g.shelf];
   let ACTS = {
     movil: { label: 'Apagar el despertador', stand: [-0.4, -0.85], look: [-0.5, 0.55, -1.56], reach: true, enabled: () => S.alarmOn, run: actMovil },
     armario: { label: 'Abrir el armario y vestirte', stand: [-0.05, -0.2], look: [2.0, 1.45, -0.55], reach: true, enabled: () => !S.dressed, run: actArmario },
     espejo: { label: 'Mirarte al espejo', stand: [1.2, 1.2], look: [2.19, 1.5, 1.2], enabled: () => true, run: actEspejo },
     bolsos: { label: 'Cargar la mochila', stand: [-0.55, 1.0], look: [-1.2, 0.72, 1.15], reach: true, enabled: () => !S.bag, run: actBolsos },
     puerta: { label: 'Salir de casa', stand: [0.05, 1.0], look: [0.05, 1.15, 1.8], reach: true, enabled: () => true, run: actPuerta },
+    ventana: { label: 'Asomarte a la ventana', stand: [0.9, -Q.ROOM.D / 2 + 0.8], look: [0.9, 1.0, -Q.ROOM.D / 2 - 1.2], enabled: () => true, run: async () => {
+      cost('ventana', 2); const cl = clueLevel();
+      if (window.Sound && Sound.on) { if (cl >= 1) Sound.siren(3.6); else Sound.dog(); if (cl >= 3) setTimeout(() => Sound.shout(0.06), 900); }
+      await say([['Te asomas y miras hacia abajo. La calle, a esta hora: una farola naranja, dos borrachos junto al banco del parque y poco más. Lo normal.'],
+        ['Abajo, luces azules intermitentes al fondo del parque. Alguien cruza corriendo y no mira atrás.', { text: 'Una pelea, un atropello. Seguro que es eso.', think: true }],
+        ['Un coche parado en mitad de la calle con las luces de emergencia y la puerta abierta. Nadie dentro. Más gente corriendo, y ninguna hacia el metro.'],
+        ['Humo gris sobre los edificios del fondo. Uno de los borrachos está en el suelo y no se mueve. Dos figuras se le acercan, cojeando, sin prisa.', { text: 'Esto no es una resaca.', think: true, block: true }],
+        ['La calle está llena de gente que camina torcida. Un coche ha chocado contra el quiosco. Sobre el horizonte, columnas de humo.', { text: 'Tendrías que haber salido hace una hora.', think: true, block: true }]][Math.min(cl, 4)]); } },
     cama: { label: 'Mirar la cama', stand: [-0.4, 0.05], look: [-1.5, 0.5, -0.4], enabled: () => true, run: async () => { cost('cama', 3); await say('Tu cama, todavía caliente. Tiene un 100 % de retención y cero rentabilidad.'); } },
     escritorio: { label: 'Mirar el escritorio', stand: [-0.95, 0.3], look: [-1.9, 0.85, 0.85], enabled: () => true, run: actEscritorio },
     medalla: { label: 'Mirar la medalla', stand: [-0.9, 1.5], look: [-2.15, 1.5, 1.62], enabled: () => true, run: async () => { cost('medalla', 2); await say(['La medalla de la San Silvestre. Diez kilómetros a ritmo constante: el único estimador insesgado que tienes.']); } },
@@ -240,7 +250,7 @@
   async function actPuerta() {
     if (!allReady()) { Sound.bad(); await say('Todavía no: te falta ' + TASKS.filter(([k]) => k !== 'out' && !S.tasks[k]).map(([, t]) => t.charAt(0).toLowerCase() + t.slice(1)).join(' y ') + '.'); return; }
     advance(2); completeTask('out'); Sound.whoosh();
-    await say(['Cierras la puerta con cuidado. La escalera huele a lunes. Fuera, el andén te espera con ochocientas personas y ninguna ganas de ser tu amigo.']);
+    await say(['Cierras la puerta con cuidado. La escalera huele a lunes.']);
     await startPlatform();
   }
 
@@ -289,7 +299,7 @@
     document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
   }
 
-  const FINALES_TOTAL = 8;
+  const FINALES_TOTAL = 9;
   function finalScreen(clave, title, text) {
     let vistos = []; try { vistos = JSON.parse(store('ends') || '[]'); } catch (e) { }
     if (!vistos.includes(clave)) { vistos.push(clave); store('ends', JSON.stringify(vistos)); }
@@ -328,6 +338,7 @@
   async function startPlatform() {
     S.busy = true; inScript = true; $('#hud').hidden = false;
     await fade(true);
+    if (Q.caminoVallecas && !/[?&]anden/.test(location.search)) { if (window.Sound && Sound.on) Sound.ambience('street'); await Q.caminoVallecas(clueLevel()); }
     if (!PLAT) PLAT = Q.buildPlatform(renderer, envTex);
     enterWorld(PLAT, 'platform'); setTime('06:25'); setTasks([['Subir a un tren', false]]);
     if (window.Sound && Sound.on) Sound.ambience('platform');
@@ -337,8 +348,7 @@
       setTasks([['Subir a un tren', true]]);
       await sleep(300); await startTrain(); return;
     } else {
-      if (window.Sound && Sound.on) Sound.bad();
-      await fade(true);
+      await startSol(); return;
       finalScreen('cervezas', 'Cervezas con Chelu', 'Dejas pasar el cuarto tren. Miras el panel, miras el móvil y Chelu escribe: «¿Cañas?». La probabilidad de decir que no era del 0,3 %. Esperanza de vida laboral: cero días. Esperanza de vida social: al alza.');
     }
   }
@@ -348,7 +358,7 @@
   async function startTrain() {
     S.busy = true; inScript = true; $('#hud').hidden = false;
     await fade(true);
-    if (!TRN) TRN = Q.buildTrain(renderer, envTex);
+    if (!TRN) TRN = Q.buildTrain(renderer, envTex, () => clueLevel());
     enterWorld(TRN, 'train'); setTime('07:20'); setTasks([['Llegar a Nuevos Ministerios', false]]);
     if (window.Sound && Sound.on) Sound.ambience('train');
     await fade(false);
@@ -370,6 +380,26 @@
     setTasks([['Entrar en la aseguradora', true]]);
     await fade(true);
     await startOficina();
+  }
+
+  let SOL = null;
+  async function startSol() {
+    S.busy = true; inScript = true;
+    if (window.Sound && Sound.on) Sound.doorBeep();
+    await say(['El segundo tren se va sin ti. Dos minutos de silencio civilizado y el móvil vibra.']);
+    if (Q.notify) Q.notify('Chelu', '¿Cañas? Estoy en Sol. Ya he pedido dos (invitas tú).');
+    await sleep(900);
+    await say([{ text: 'Chelu: «¿Cañas? Estoy en Sol. Ya he pedido dos (invitas tú).»', think: false }]);
+    const r = await choose([{ id: 'si', label: 'Aceptar: «Voy para allá»', hint: 'La probabilidad de decir que no era del 0,3 %' }, { id: 'no', label: '«Es que tengo que subir a un tren»… que ya se ha ido', hint: 'Mentir con convicción' }], 'Chelu te escribe');
+    if (r === 'no') await say('Contestas «tengo trabajo». Respuesta inmediata: «Mentiroso. Estás en el andén mirando la nada». Aceptas por puro cansancio.');
+    await fade(true);
+    SOL = Q.buildSol(renderer, envTex); window.__qx && (window.__qx.SOL = SOL);
+    enterWorld(SOL, 'sol'); setTime('19:10'); setTasks([['Tomar unas cañas con Chelu', false]]);
+    if (window.Sound && Sound.on) Sound.ambience('street');
+    await fade(false);
+    await SOL.play(API); inScript = false;
+    await fade(true);
+    finalScreen('sol', 'Cañas al fin del mundo', 'El tren se fue, la caña llegó y el apocalipsis, también. Te pilla en una terraza de Sol con una cerveza a medias, un oso de bronce que no pestañea y Chelu diciendo que, bien mirado, esto sale más barato que la hipoteca. La probabilidad de que acabara así era del 0,3 %. La de que acabara en algún sitio, del cien.');
   }
 
   let LOB = null, PLA = null;
@@ -535,16 +565,16 @@
     P.bob += dt * 8.5 * P.walk;
     const calm = CFG.calm ? 0 : 1, bobY = Math.abs(Math.sin(P.bob)) * 0.028 * P.walk * calm + Math.sin(t * 1.6) * 0.004 * calm, bobX = Math.cos(P.bob) * 0.012 * P.walk * calm;
     camK = lerp(camK, third ? 1 : 0, Math.min(1, dt * 7));
-    let ex = P.x + Math.cos(P.yaw) * bobX, ey = EYE + bobY, ez = P.z - Math.sin(P.yaw) * bobX;
+    let ex = P.x + Math.cos(P.yaw) * bobX, ey = EYE + bobY + (P.dy || 0), ez = P.z - Math.sin(P.yaw) * bobX;
     if (camK > 0.01) {                                          // tercera persona: detrás y algo por encima, sin atravesar paredes ni techo
       const cp = Math.cos(P.pitch), fx1 = -Math.sin(P.yaw) * cp, fy1 = Math.sin(P.pitch), fz1 = -Math.cos(P.yaw) * cp;
-      const zMin = ROOM.minZ + (WORLD === 'bed' ? 0.2 : -0.4), top = WORLD === 'bed' ? 2.4 : WORLD === 'azca' ? 30 : 3.1;
-      let d = 2.6 * camK, cx = ex, cy = ey, cz = ez;
-      for (let i = 0; i < 40; i++) { cx = ex - fx1 * d; cy = ey - fy1 * d + 0.35 * camK; cz = ez - fz1 * d; if (cx > ROOM.minX + 0.2 && cx < ROOM.maxX - 0.2 && cz > zMin && cz < ROOM.maxZ - 0.2 && cy > 0.25 && cy < top) break; d *= 0.9; }
+      const zMin = ROOM.minZ + (WORLD === 'bed' ? 0.2 : -0.4), top = WORLD === 'bed' ? 2.45 : WORLD === 'azca' ? 30 : 3.1;
+      let d = 2.3 * camK, cx = ex, cy = ey, cz = ez;
+      for (let i = 0; i < 40; i++) { cx = ex - fx1 * d; cy = ey - fy1 * d + 0.7 * camK; cz = ez - fz1 * d; if (cx > ROOM.minX + 0.2 && cx < ROOM.maxX - 0.2 && cz > zMin && cz < ROOM.maxZ - 0.2 && cy > 0.25 && cy < top) break; d *= 0.9; }
       ex = cx; ey = cy; ez = cz;
     }
     camera.position.set(ex, ey, ez);
-    camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm * (1 - camK));
+    camera.rotation.set(P.pitch - 0.14 * camK, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm * (1 - camK));
     if (WORLD === 'train' && TRN) { camera.position.y += TRN.sway.y; camera.rotation.z += TRN.sway.roll; }
     if (camK > 0.05) camera.layers.enable(1); else camera.layers.disable(1);     // la cabeza (capa 1) solo se ve en el espejo y en tercera persona
 
@@ -616,6 +646,7 @@
     if (/[?&]anden/.test(location.search)) { S.alarmOn = false; startPlatform(); return; }
     if (/[?&]tren/.test(location.search)) { S.alarmOn = false; startTrain(); return; }
     if (/[?&]azca/.test(location.search)) { S.alarmOn = false; startAzca(); return; }
+    if (/[?&]sol/.test(location.search)) { S.alarmOn = false; startSol(); return; }
     if (/[?&]cafe/.test(location.search)) { S.alarmOn = false; S.descuido = +(location.search.match(/desc=(\d+)/) || [0, 0])[1]; startCafe(); return; }
     if (/[?&](oficina|planta|cafe)/.test(location.search) && !/[?&]cafe/.test(location.search)) { S.alarmOn = false; startOficina(); return; }
     const how = COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';

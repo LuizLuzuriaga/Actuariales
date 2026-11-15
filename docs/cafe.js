@@ -36,7 +36,7 @@
     { const [c, g] = cv(8, 128); const gr = g.createLinearGradient(0, 0, 0, 128); if (apoc) { gr.addColorStop(0, '#2a0c0a'); gr.addColorStop(0.6, '#a03a22'); gr.addColorStop(1, '#e8802e'); } else { gr.addColorStop(0, '#2a3450'); gr.addColorStop(0.6, '#8a6a70'); gr.addColorStop(1, '#e0a070'); } g.fillStyle = gr; g.fillRect(0, 0, 8, 128);
       put(new THREE.PlaneGeometry(14, 3.4), new THREE.MeshBasicMaterial({ map: Q.toTex(c), fog: false }), bounds.minX - 6, 1.6, 0).rotation.y = Math.PI / 2;
       const sil = []; for (let i = 0; i < 9; i++) { const w = 0.8 + (i * 37 % 7) * 0.25, h = 1.2 + (i * 53 % 9) * 0.35; sil.push(bx(0.4, h, w, bounds.minX - 8 - (i % 2), h / 2, -6 + i * 1.5)); } merged(sil, new THREE.MeshBasicMaterial({ color: apoc ? 0x150605 : 0x1a1a22, fog: false })); }
-    put(new THREE.PlaneGeometry(2.6, 1.4), new THREE.MeshStandardMaterial({ color: 0xaab8c4, transparent: true, opacity: 0.12, roughness: 0.05 }), bounds.minX, 1.6, 0).rotation.y = Math.PI / 2;
+    const glass = put(new THREE.PlaneGeometry(2.6, 1.4), new THREE.MeshStandardMaterial({ color: 0xaab8c4, transparent: true, opacity: 0.12, roughness: 0.05 }), bounds.minX, 1.6, 0); glass.rotation.y = Math.PI / 2;
     /* barra, cafetera y carta */
     { const g = new THREE.Group(); g.position.set(0, 0, bounds.minZ + 0.7); root.add(g); merged([bx(5.6, 1.0, 0.7, 0, 0.5, 0), bx(5.8, 0.06, 0.9, 0, 1.03, 0)], std(0x4a3626, 0.55), g);
       merged([bx(0.7, 0.5, 0.5, -1.6, 1.3, 0), bx(0.6, 0.12, 0.45, -1.6, 1.06, 0.08)], std(0x303030, 0.35, { metalness: 0.6 }), g); put(new THREE.BoxGeometry(0.06, 0.06, 0.02), emis(0xff5a30, 2), -1.45, 1.45, 0.26, g);
@@ -53,9 +53,15 @@
     { const C = Q.buildCrowd([[3.7, 0.4]], { seed: 12, yaw: () => Math.PI / 2 }); root.add(C.group); C.obst.forEach((o) => W.obst.push(o)); tag(C.group, 'chelu'); }
     /* si todo se ha ido al garete: gente fuera, pegada al cristal, y destellos rojos */
     if (apoc) {
-      const hs = []; for (let i = 0; i < 9; i++) hs.push([bounds.minX - 1.1 - (i % 3) * 0.8, -3.6 + i * 0.9]);
-      const Z = Q.buildCrowd(hs, { seed: 5, yaw: () => -Math.PI / 2 }); root.add(Z.group);
-      const rl = new THREE.PointLight(0xff2a18, 0, 12, 2); rl.position.set(-4.4, 1.5, 0); scene.add(rl); W.tick.push((dt, t) => { rl.intensity = 1.4 * Math.max(0, Math.sin(t * 5)); Z.group.position.x = Math.sin(t * 1.3) * 0.06; });
+      const zs = []; for (let k = 0; k < 10; k++) { const w = Q.buildCrowd([[0, 0]], { seed: 500 + k, yaw: () => -Math.PI / 2 }); w.group.position.set(bounds.minX - 1.0 - (k % 3) * 0.7, 0, -3.6 + k * 0.8); root.add(w.group); zs.push({ g: w.group, ph: k * 1.7, x0: w.group.position.x, z0: w.group.position.z }); }
+      const rl = new THREE.PointLight(0xff2a18, 0, 12, 2); rl.position.set(-4.4, 1.5, 0); scene.add(rl);
+      const shards = []; for (let k = 0; k < 26; k++) { const s = new THREE.Mesh(new THREE.BoxGeometry(0.1 + Math.random() * 0.2, 0.02, 0.1 + Math.random() * 0.2), new THREE.MeshStandardMaterial({ color: 0xaab8c4, roughness: 0.1, transparent: true, opacity: 0.7 })); s.visible = false; s.userData.v = new THREE.Vector3(1 + Math.random() * 2.5, 1 + Math.random() * 2, (Math.random() - 0.5) * 3); scene.add(s); shards.push(s); }
+      W.breach = false; let bt = 0;
+      W.doBreach = () => { W.breach = true; glass.visible = false; shards.forEach((s) => { s.visible = true; s.position.set(bounds.minX + 0.1, 0.7 + Math.random() * 1.8, -1.2 + Math.random() * 2.4); }); };
+      W.tick.push((dt, t) => { rl.intensity = 1.6 * Math.max(0, Math.sin(t * 5)) * (W.breach ? 1.5 : 1);
+        if (!W.breach) zs.forEach((z) => { z.g.position.x = z.x0 + 0.08 * Math.abs(Math.sin(t * 6 + z.ph)); z.g.rotation.z = Math.sin(t * 2.4 + z.ph) * 0.1; if (glass.material.opacity < 0.5) glass.material.opacity += 0; });
+        else { bt += dt; const P = W.api && W.api.P; zs.forEach((z, i) => { if (!P) return; const dx = P.x - z.g.position.x, dz = P.z - z.g.position.z, d = Math.hypot(dx, dz) || 1; if (bt > i * 0.12 && d > 1.4) { z.g.position.x += dx / d * 2.9 * dt; z.g.position.z += dz / d * 2.9 * dt; } z.g.rotation.y = Math.atan2(dx, dz); });
+          shards.forEach((s) => { if (s.position.y > 0.02) { s.userData.v.y -= 9 * dt; s.position.addScaledVector(s.userData.v, dt); s.rotation.x += dt * 4; } else s.position.y = 0.02; }); } });
     }
 
     /* ---------- interacciones ---------- */
@@ -66,7 +72,9 @@
       else await api.say(['La calle despierta: un camión de reparto, tres oficinistas con vasos de cartón, una paloma que se lo piensa.', { text: 'Todo el mundo va a algún sitio. Tú, también. Casi.', think: true }]); } };
     W.acts.chelu = { label: 'Hablar con Chelu', stand: [2.2, 1.6], look: [3.7, 1.5, 0.4], enabled: () => W.barra && !W.exit, run: async (api) => {
       const { say, choose, S } = api, n = W.ronda++;
-      if (apoc) { W.zombi = true; await say(['—Qué pinta tienes —dice Chelu sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpea el marco. Luego, otra cosa. Luego, todas.', 'Chelu se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Y es lo último que llegas a oír.']); W.exit = true; return; }
+      if (apoc) { W.zombi = true; await say(['—Qué pinta tienes —dice Chelu sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpea el marco. Luego, otra cosa. Luego, todas.']);
+        W.doBreach(); if (window.Sound && Sound.on) { Sound.glass(); setTimeout(() => Sound.shout(0.08), 500); Sound.growl(0.9); } await api.wait(2600);
+        await say(['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'Chelu se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Y es lo último que llegas a oír.']); W.exit = true; return; }
       if (n === 0) {
         await say(['—Pensaba que no llegabas —dice Chelu, con una caña vacía ya delante de las nueve de la mañana—. ¿Cómo va la cosa?']);
         const r = await choose([{ id: 'a', label: '«Bien, con el modelo de tarificación casi listo»', hint: 'Hablas de trabajo' }, { id: 'b', label: '«Tirando. ¿Y tú?»', hint: 'Conversación sin compromiso' }, { id: 'c', label: '«Fatal. Lo dejaría todo»', hint: 'Sinceridad' }], 'Primera ronda');
@@ -84,7 +92,7 @@
         await say(r === 'a' ? 'La caña llega fría y perfecta. Las nueve de la mañana nunca habían sido tan razonables.' : r === 'b' ? 'El segundo café sabe igual que el primero, pero con más culpa.' : 'Te levantas. Chelu levanta el vaso: —Por los que suben. Luego te cuento el cotilleo.');
       } } };
     W.play = async (api) => {
-      const { say, free } = api;
+      W.api = api; const { say, free } = api;
       await say(apoc ? ['La cafetería de la planta baja. El cristal de la ventana tiembla de una forma que el cristal no debería.', 'Chelu ya está en su mesa.']
         : ['La cafetería de la planta baja. Olor a tostada y a lunes aunque sea otro día. Hay café de verdad y mesas pequeñas con gente pequeña.', 'Chelu ya está en su mesa, con un vaso que ya no tiene nada dentro.']);
       await free(1e9, 'Pide algo en la barra · habla con Chelu (tres rondas) · mira por la ventana', () => W.exit);

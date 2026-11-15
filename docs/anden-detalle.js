@@ -207,6 +207,9 @@
       const posts = []; for (let i = 0; i <= 12; i += 3) posts.push(cy(0.02, 0.02, 1.0, 5.55 + i * 0.3, 0.17 * i + 0.5, 2.43, 'y', 8)); merged(posts, galv);
       const glass = new THREE.Mesh(new THREE.PlaneGeometry(len, 0.9), new THREE.MeshStandardMaterial({ color: 0x9fb4b8, transparent: true, opacity: 0.16, roughness: 0.05, metalness: 0.3, side: THREE.DoubleSide, depthWrite: false })); glass.rotation.z = -ang + 0; glass.rotation.z = ang; glass.position.set(5.55 + 1.8, 0.17 * 6 + 0.55, 2.43); root.add(glass);
       put(new THREE.BoxGeometry(0.05, 1.3, 1.2), std(0x020202, 1), 9.17, 2.7, 3.0);                                                                          // hueco oscuro de la planta superior
+      { const [k, g] = cv(128, 256); g.fillStyle = '#4a5054'; g.fillRect(0, 0, 128, 256); const r = Q.rng(5); for (let i = 0; i < 700; i++) { g.fillStyle = `rgba(${r() < 0.5 ? '20,22,24' : '120,126,130'},${r() * 0.18})`; g.fillRect(r() * 128, r() * 256, 1 + r() * 3, 1 + r() * 3); }
+        g.fillStyle = '#25292c'; g.fillRect(8, 8, 112, 240); g.strokeStyle = '#8a9094'; g.lineWidth = 3; g.strokeRect(14, 14, 100, 228); g.fillStyle = '#b8b020'; g.fillRect(52, 150, 24, 6);
+        const door = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.1, 1.0), new THREE.MeshStandardMaterial({ map: tx(k), roughness: 0.55, metalness: 0.5 })); door.position.set(9.12, 3.1, 3.025); root.add(door); W.doorMesh = door; W.actRoots.push(door); door.userData.act = 'escalera'; }
       const hl = new THREE.PointLight(0xdfe8ff, 0.5, 4, 2); hl.position.set(8.4, 2.6, 3.0); root.add(hl);
       W.obst.push({ minX: 5.4, maxX: 9.1, minZ: 2.35, maxZ: 3.6 }); }
 

@@ -151,6 +151,8 @@ const Sound = (() => {
     alarm(n = 6) { for (let i = 0; i < n; i++) { blip(1800, 0.09, 'square', 0.1, i * 0.22); blip(1800, 0.09, 'square', 0.1, i * 0.22 + 0.11); } },
     get clue() { return clue; }, set clue(v) { clue = v; },
     siren, shout, carAlarm, glass, dog, cough, chime, notify, doorBeep, brake,
+    knock(n = 3, v = 1) { for (let i = 0; i < n; i++) { blip(85, 0.11, 'sine', 0.28 * v, i * 0.32); blip(140, 0.05, 'triangle', 0.1 * v, i * 0.32); } },
+    scratch(v = 1) { for (let i = 0; i < 5; i++) burst(2400 + Math.random() * 1200, 0.18, 0.06 * v); },
     growl(v = 1) { blip(46 + Math.random() * 12, 1.0, 'sawtooth', 0.17 * v); blip(70, 0.7, 'square', 0.06 * v, 0.05); burst(170, 0.9, 0.2 * v); },
     scuttle(v = 1) { for (let i = 0; i < 6; i++) blip(900 + Math.random() * 700, 0.025, 'square', 0.035 * v, i * 0.05); },
     whoosh() { burst(400, 1.6, 0.25); burst(1200, 1.2, 0.08); },

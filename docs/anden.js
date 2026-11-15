@@ -158,6 +158,19 @@
     W.acts.senora = { label: 'Mirar a la señora', stand: [-5.6, 2.4], look: [-7.0, 1.4, 1.5], enabled: () => true, run: async (api) => { W.pistas++; await api.say(['Una señora tose sin parar, doblada sobre sí misma. La megafonía dice «por su seguridad, mantengan la distancia». Nadie la mantiene.', { text: 'Tose igual que la que viste en el telediario. Seguro que no es nada.', think: true }]); } };
 
     /* ---------- guion: cuatro trenes ---------- */
+    W.acts.escalera = { label: 'Subir las escaleras', stand: [5.0, 3.0], look: [9.1, 3.1, 3.0], enabled: () => true, run: async (api) => {
+      const { say, tween, P } = api, cl = (window.Sound && Sound.clue) || 0; W.pistas++;
+      await say('Las escaleras suben hasta una puerta metálica que nadie ha abierto en toda la mañana. Subes.');
+      const x0 = P.x, y0 = P.dy || 0; await tween(2400, (e) => { P.x = x0 + 3.5 * e; P.dy = y0 + 2.0 * e; P.walk = 1; }); P.walk = 0;
+      if (window.Sound && Sound.on) { if (cl >= 2) Sound.scratch(1); Sound.knock(cl >= 3 ? 6 : 3, 0.7 + 0.1 * cl); }
+      W.doorShake = cl;
+      const T = [['Pegas la oreja a la chapa. Un murmullo, como de máquinas. O de gente hablando bajito, muy lejos.'],
+        ['Tres golpes suaves, desde dentro. Una pausa. Otros tres.', { text: 'Alguien pide que le abran. O alguien pide que no lo hagas.', think: true }],
+        ['Arañazos contra la chapa, un forcejeo y una voz que no llega a ser palabra.', { text: 'La puerta está cerrada con llave. Por fuera. Eso lo cambia todo.', think: true }],
+        ['La puerta se curva hacia fuera con cada embestida. Hay manchas oscuras en el borde y el marco vibra en tus dientes.', 'Algo empuja. No es una persona. Son muchas, y no tienen prisa.', { text: 'Nunca se abre. Por eso es mejor no saber qué hay al otro lado.', think: true, block: true }]][Math.min(cl, 3)];
+      await say(T); W.doorShake = 0;
+      const x1 = P.x, y1 = P.dy; await tween(1800, (e) => { P.x = x1 - 3.5 * e; P.dy = y1 * (1 - e); P.walk = 1; }); P.walk = 0; P.dy = 0; } };
+    W.tick.push((dt, t) => { if (W.doorMesh) { const k = W.doorShake || 0; W.doorMesh.position.x = 9.12 + (k ? Math.max(0, Math.sin(t * 22)) * 0.012 * Math.min(k, 3) : 0); } });
     W.play = async (api) => {
       const { say, choose, tween, wait, setTime, free, P, S, chart } = api;
       const hh = (m) => `${String(Math.floor(m / 60)).padStart(2, '0')}:${String(m % 60).padStart(2, '0')}`;
@@ -165,21 +178,19 @@
       const trainTo = (x, ms, snd) => { if (snd && window.Sound && Sound.on) Sound.whoosh(); const x0 = train.position.x; return tween(ms, (e) => { train.position.x = x0 + (x - x0) * e; }); };
       const sT = setTime; const setTime2 = (v) => { W.timeStr = v; sT(v); }; setTime2(hh(t0));
       await say(['Andén de cercanías. Hora punta. Ochocientas personas esperan a un tren que aún no ha llegado y que, cuando llegue, ya irá lleno.', 'Todos tienen la misma expresión: la de quien ya ha hecho el cálculo y no le sale.']);
-      await free(24000, 'Puedes moverte (W A S D) y mirar. El tren llega en {s} s · V cambia la cámara');
+      await free(12000, 'Puedes moverte (W A S D) y mirar. El tren llega en {s} s · V cambia la cámara');
       let pensado = false;
-      for (let k = 1; k <= 4; k++) {
-        setTime2(hh(t0 + k * 6));
-        W.setBoard(`C-2  TREN ${k}`, k < 4 ? 'COMPLETO' : 'AÚN HAY HUECO*'); W.setTrainGap(k === 4); train.position.x = 60;
+      for (let k = 1; k <= 2; k++) {
+        setTime2(hh(t0 + k * 7));
+        W.setBoard(`C-2  TREN ${k}`, k < 2 ? 'COMPLETO' : 'AÚN HAY HUECO*'); W.setTrainGap(k === 2); train.position.x = 60;
         await trainTo(TX, 3200, true); if (window.Sound && Sound.on) { Sound.brake(); setTimeout(() => Sound.doorBeep(), 1100); }
         await say([[
           'Llega el primero. Va hasta arriba: la gente se pega a los cristales como pegatinas. Dos personas se bajan con la dignidad intacta, y no cabe nadie más.',
-          'Segundo tren. Mismo problema, distinta cara en la ventana. La ocupación del cercanías es una constante universal.',
-          'Tercer tren. En los cristales, siluetas aplastadas. Alguien ha dejado el codo fuera. Tu mochila ocupa más superficie que tú.',
-          'Cuarto tren. Se ve algo de hueco entre un abrigo y una axila. Es tu momento… o tu excusa.'][k - 1]]);
-        const base = [0, 0.04, 0.10, 0.22][k - 1], p = k < 4 ? Math.max(0.01, base - 0.012 * (S.snooze || 0)) : 1;
+          'Segundo tren. Se ve algo de hueco entre un abrigo y una axila. Es tu momento… o tu excusa.'][k - 1]]);
+        const base = [0.04, 0.22][k - 1], p = k < 2 ? Math.max(0.01, base - 0.012 * (S.snooze || 0)) : 1;
         const accion = await choose([
-          { id: 'empujar', label: 'Empujar y meterte como puedas', hint: k < 4 ? `Probabilidad de subir ≈ ${(p * 100).toFixed(0)} %` : 'Probabilidad de subir ≈ 100 % (es el último que te sirve)' },
-          { id: 'pasar', label: k < 4 ? 'Dejar pasar este tren' : 'Dejar pasar también este y ver qué pasa', hint: k < 4 ? 'Sin riesgo. Con culpa.' : 'Si pierdes este, hoy no llegas a trabajar.' }], `Tren ${k}. ¿Qué haces?`);
+          { id: 'empujar', label: 'Empujar y meterte como puedas', hint: k < 2 ? `Probabilidad de subir ≈ ${(p * 100).toFixed(0)} %` : 'Probabilidad de subir ≈ 100 % (es el último que te sirve)' },
+          { id: 'pasar', label: k < 2 ? 'Dejar pasar este tren' : 'Dejar pasar también este y ver qué pasa', hint: k < 2 ? 'Sin riesgo. Con culpa.' : 'Si pierdes este, hoy no llegas a trabajar.' }], `Tren ${k}. ¿Qué haces?`);
         if (accion === 'empujar') {
           const sx = P.x, sz = P.z;
           await tween(520, (e) => { P.z = sz - 0.9 * Math.sin(e * Math.PI / 2); P.walk = 1; });
@@ -193,13 +204,13 @@
           await tween(620, (e) => { P.z = (sz - 0.9) + 0.9 * e; P.walk = 0.6; }); P.walk = 0;
           await say('Empujas. El tren, no. Un señor con maletín te devuelve a tu sitio con una ligera presión del hombro. Educado, pero firme.');
         } else {
-          if (k === 4) { await trainTo(-60, 2400, true); return 'cervezas'; }
+          if (k === 2) { await trainTo(-60, 2400, true); return 'cervezas'; }
           S.descuido = (S.descuido || 0) + 1;
-          await say(['Lo dejas pasar. Rezas por una cosa: que el siguiente venga con un poco menos de gente.', 'Spoiler: no. Pero uno siempre reza.', 'Lo dejas pasar. Ya vas por tres. La esperanza de vida de tu paciencia es de unos cuatro minutos.'][Math.min(k, 3) - 1]);
+          await say('Lo dejas pasar. Rezas por una cosa: que el siguiente venga con un poco menos de gente.');
         }
-        if (k === 2 && !pensado) { pensado = true; await say([{ text: 'Dos trenes seguidos y la misma imagen: el andén lleno de gente de entre 40 y 50 años, pegada a las puertas.', think: true, block: true }, { text: '¿Por qué la curva de mortalidad no se mueve hacia ahí? Si lo hiciera, este andén sería una tabla de vida.', think: true, block: true }]); await chart(); }
+        if (k === 1 && !pensado) { pensado = true; await say([{ text: 'Un tren, y la misma imagen: el andén lleno de gente de entre 40 y 50 años, pegada a las puertas.', think: true, block: true }, { text: '¿Por qué la curva de mortalidad no se mueve hacia ahí? Si lo hiciera, este andén sería una tabla de vida.', think: true, block: true }]); await chart(); }
         if (window.Sound && Sound.on) Sound.doorBeep(); await trainTo(-60, 2600, true);
-        if (k < 4) await free(10000, 'Siguiente tren en {s} s');
+        if (k < 2) await free(7000, 'Siguiente tren en {s} s · las escaleras del fondo, a la derecha, también se pueden subir');
       }
       return 'cervezas';
     };

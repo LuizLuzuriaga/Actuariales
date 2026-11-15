@@ -34,7 +34,32 @@
     window.addEventListener('keydown', onKey, true); host.querySelector('#sh-ok').addEventListener('click', close);
   });
 
-  Q.buildTrain = (renderer, envTex) => {
+  /* Cartel de «se busca» que cambia con el descuido: 0 mascota · 1 anónimo · 2 alguien conocido · 3 tú */
+  Q.wantedStage = (clue) => Math.max(0, Math.min(3, clue - 1));
+  Q.drawWanted = (stage) => {
+    const c = Q.cvs(256, 360), g = c.getContext('2d'), r = Q.rng(70 + stage);
+    g.fillStyle = '#d8d0b8'; g.fillRect(0, 0, 256, 360); for (let i = 0; i < 900; i++) { g.fillStyle = `rgba(90,80,60,${r() * 0.12})`; g.fillRect(r() * 256, r() * 360, 1 + r() * 2, 1 + r() * 2); }
+    g.fillStyle = '#6a1a1a'; g.font = '700 44px Georgia'; g.textAlign = 'center'; g.fillText(stage === 0 ? 'SE BUSCA' : 'SE BUSCA', 128, 54);
+    g.fillStyle = '#1a1a1a'; g.fillRect(28, 72, 200, 170);
+    g.fillStyle = '#d8d0b8'; g.fillRect(32, 76, 192, 162);
+    const txt = (a, y, s = 17, w = '400') => { g.fillStyle = '#1a1a1a'; g.font = `${w} ${s}px Georgia`; g.textAlign = 'center'; a.forEach((l, i) => g.fillText(l, 128, y + i * (s + 4))); };
+    if (stage === 0) {                                                     // un gato
+      g.fillStyle = '#2a2622'; g.beginPath(); g.ellipse(128, 182, 40, 32, 0, 0, 7); g.fill(); g.beginPath(); g.arc(128, 142, 28, 0, 7); g.fill(); g.beginPath(); g.moveTo(104, 126); g.lineTo(108, 100); g.lineTo(124, 118); g.fill(); g.beginPath(); g.moveTo(152, 126); g.lineTo(148, 100); g.lineTo(132, 118); g.fill();
+      g.fillStyle = '#e8d890'; g.beginPath(); g.arc(118, 142, 4, 0, 7); g.arc(138, 142, 4, 0, 7); g.fill(); txt(['Responde al nombre de «Prima».', 'Muy asustadizo.'], 268); txt(['Recompensa: una caña'], 338, 14);
+    } else if (stage === 1) {                                              // silueta sin rostro
+      g.fillStyle = '#16181a'; g.beginPath(); g.arc(128, 132, 34, 0, 7); g.fill(); g.fillRect(96, 160, 64, 74); g.fillStyle = '#d8d0b8'; g.font = '700 42px Georgia'; g.textAlign = 'center'; g.fillText('?', 128, 146);
+      txt(['Sin identificar.', 'Puede ser cualquiera.'], 268); txt(['Visto por la zona. Mucho.'], 338, 14);
+    } else if (stage === 2) {                                              // un rostro conocido: alto, regordete, perilla y bigote
+      g.fillStyle = '#4a3220'; g.beginPath(); g.arc(128, 118, 40, Math.PI, 0); g.fill(); g.fillStyle = '#d6a888'; g.beginPath(); g.ellipse(128, 138, 38, 44, 0, 0, 7); g.fill();
+      g.fillStyle = '#4a3220'; g.fillRect(104, 150, 48, 6); g.beginPath(); g.moveTo(118, 156); g.lineTo(138, 156); g.lineTo(128, 182); g.fill(); g.fillStyle = '#1a1a1a'; g.beginPath(); g.arc(114, 132, 3, 0, 7); g.arc(142, 132, 3, 0, 7); g.fill();
+      g.fillStyle = '#8a8a8a'; g.fillRect(84, 186, 88, 52); txt(['Te suena de algo.', 'De muchas cañas.'], 268); txt(['Visto por última vez: de cañas'], 338, 14);
+    } else {                                                               // tú: cabeza de cruz y mochila
+      g.fillStyle = '#d6d6d0'; g.beginPath(); g.arc(128, 128, 34, 0, 7); g.fill(); g.strokeStyle = '#1a1a1a'; g.lineWidth = 3; g.beginPath(); g.arc(128, 128, 34, 0, 7); g.moveTo(112, 128); g.lineTo(144, 128); g.moveTo(128, 112); g.lineTo(128, 144); g.stroke();
+      g.fillStyle = '#4a4e56'; g.fillRect(100, 164, 56, 72); g.fillStyle = '#2a2e36'; g.fillRect(92, 172, 14, 52); txt(['TÚ.', 'Actuario, mochila, prisa.'], 268, 19, '700'); txt(['Visto por última vez: hoy'], 338, 14);
+    }
+    return c;
+  };
+  Q.buildTrain = (renderer, envTex, getClue) => {
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x050608); scene.fog = new THREE.FogExp2(0x0a0c0e, 0.07);
     if (envTex) scene.environment = envTex;
@@ -121,6 +146,8 @@
         ['Alcalá', 'Vicálvaro', 'Vallecas', 'Entrevías', 'Atocha', 'Recoletos', 'N. Ministerios', 'Chamartín'].forEach((n, i) => { const x = 110 + i * 260; g.fillStyle = i === 3 ? '#e8a23a' : '#d6d0c2'; g.beginPath(); g.arc(x, 56, i === 3 ? 12 : 9, 0, R2); g.fill(); g.fillStyle = '#b8b2a4'; g.font = '24px Arial'; g.textAlign = 'center'; g.fillText(n, x, 28); });
         put(new THREE.PlaneGeometry(12.5, 0.16), new THREE.MeshStandardMaterial({ map: tx(k), emissive: 0x333333, emissiveMap: tx(k), roughness: 0.5 }), 0, 2.15, 1.3 * s).rotation.y = rot; }
     });
+    { let cl = 1; try { cl = getClue ? getClue() : 1; } catch (e) { }
+      const poster = put(new THREE.PlaneGeometry(0.4, 0.56), new THREE.MeshStandardMaterial({ map: tx(Q.drawWanted(Q.wantedStage(cl))), roughness: 0.9 }), -0.6, 1.5, -1.3); tag(poster, 'cartel'); W.actRoots.push(poster); }
     W.tick.push((dt, t) => { outT.forEach((o, i) => { o.offset.x = (i ? -1 : 1) * t * 0.12; }); flick.forEach((l) => { l.intensity = 0; }); W.sway.roll = Math.sin(t * 1.15) * 0.005 + Math.sin(t * 3.7) * 0.0018; W.sway.y = Math.sin(t * 2.4) * 0.01; });
 
     /* ---------- asientos de tela con reposacabezas, barras, asas colgantes y extintor ---------- */
@@ -162,6 +189,12 @@
       await api.say('Es lo único que puedes sostener sin tocar a nadie. Así que repasas tu propio currículum, como quien relee su propio horóscopo.'); await Q.showFicha(); } };
     W.acts.ventana = { label: 'Mirar por la ventana', stand: [-0.95, 0.35], look: [-1.6, 1.55, -1.34], enabled: () => true, run: async (api) => {
       await api.say('Madrid pasa en rayas de luz. En las vías, la «velocidad media» y la «velocidad percibida» son dos variables incompatibles.'); } };
+    W.acts.cartel = { label: 'Leer el cartel de «se busca»', stand: [-0.6, 0.2], look: [-0.6, 1.5, -1.3], enabled: () => true, run: async (api) => {
+      const st = Q.wantedStage(((window.Sound && Sound.clue) || 1)); W.pistas++;
+      await api.say([['Pegado con celo en el cristal: «SE BUSCA». Un gato negro llamado Prima. Se asusta con facilidad. Tiene toda tu simpatía.'],
+        ['Otro cartel de «SE BUSCA». Esta vez, una silueta sin cara y un interrogante. «Sin identificar. Puede ser cualquiera.»', { text: 'No dice qué ha hecho. Eso es lo inquietante.', think: true }],
+        ['«SE BUSCA». La cara te suena: perilla, bigote, un aire de caña a deshoras. Es el de siempre.', { text: 'Chelu. Es Chelu en versión cartel de pared. ¿Qué ha hecho Chelu?', think: true }],
+        ['«SE BUSCA». Cabeza de cruz, mochila, prisa. Te reconoces antes de leerlo.', { text: 'Visto por última vez: hoy. Quien lo haya pegado sabe tu ruta.', think: true, block: true }]][st]); } };
     W.acts.vecino = { label: 'Notar a tu vecino', stand: [-0.95, 0.35], look: [-0.45, 1.45, 0.0], enabled: () => true, run: async (api) => {
       W.pistas++; await api.say(['El pelo de tu vecino está a dos centímetros de tu cara. No sabes su nombre, pero conoces su champú. Ya hay más intimidad en este vagón que en tu último comité.', { text: 'Está pálido, suda y respira raro. Será el madrugón. Seguro que es el madrugón.', think: true }]); } };
     W.acts.puertas = { label: 'Esperar a Nuevos Ministerios', stand: [-1.9, 0.35], look: [-4.0, 1.3, -1.34], enabled: () => true, run: async (api) => {

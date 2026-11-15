@@ -191,11 +191,11 @@
 
     /* ====================== Espejo ====================== */
     const MR = { x: 2.19, y: 1.3, z: 1.2, w: 0.64, h: 1.54 }; Q.MIRROR = MR;
-    const mscale = high ? 1.55 : 0.95;                                   // el reflejo es lo que más se mira de cerca
+    const mscale = high ? 1.0 : 0.8;                                   // el reflejo es lo que más se mira de cerca
     const OrigRT = THREE.WebGLRenderTarget;                                   // el reflejo con suavizado de bordes (MSAA) si hay WebGL2
-    if (THREE.WebGLMultisampleRenderTarget) THREE.WebGLRenderTarget = function (w, h, o) { return new THREE.WebGLMultisampleRenderTarget(w, h, o); };
     const mirror = new THREE.Reflector(new THREE.PlaneGeometry(MR.w, MR.h), { clipBias: 0.003, textureWidth: Math.floor(560 * mscale), textureHeight: Math.floor(1280 * mscale), color: 0x9aa2ae });
     THREE.WebGLRenderTarget = OrigRT;
+    { const ob = mirror.onBeforeRender; let n = 0; mirror.onBeforeRender = function (...a) { if ((n++ & 1) === 0) ob.apply(this, a); }; }     // el reflejo se redibuja un fotograma sí y otro no
     mirror.position.set(MR.x - 0.003, MR.y, MR.z); mirror.rotation.y = -Math.PI / 2; scene.add(mirror); R.g.mirror = mirror;
     const mf = grp(scene); R.g.mirrorFrame = mf;
     const fx = MR.x + 0.008;
@@ -286,13 +286,12 @@
     const pend = grp(scene, 0.2, H, 0.2); put(pend, new THREE.CylinderGeometry(0.004, 0.004, 0.5, 6), M.black, 0, -0.25, 0); put(pend, new THREE.SphereGeometry(0.1, 24, 18), new THREE.MeshPhysicalMaterial({ color: 0xe6ecf5, roughness: 0.1, transparent: true, opacity: 0.35, clearcoat: 1 }), 0, -0.56, 0, { cast: false }); put(pend, new THREE.SphereGeometry(0.02, 12, 10), mat(0xffe9b8, 0.5), 0, -0.56, 0, { cast: false });
 
     /* ====================== Luces y atmósfera ====================== */
-    scene.add(new THREE.HemisphereLight(0x4a5c90, 0x120d0a, 0.62));
+    scene.add(new THREE.HemisphereLight(0x5a6c9c, 0x16110d, 0.8));
     const faceLight = new THREE.PointLight(0xffe4c8, 0.5, 3.2, 2); faceLight.position.set(1.0, 2.2, 1.1); scene.add(faceLight);   // luz cálida de techo para ver bien la cara en el espejo
-    const fill = new THREE.PointLight(0x8aa0d8, 0.35, 6, 2); fill.position.set(0, 2.3, 0.2); scene.add(fill);
     const moon = new THREE.DirectionalLight(0x5878b8, 0.3); moon.position.set(2, 3, -4); scene.add(moon);
     const street = new THREE.SpotLight(0xff9a50, 12, 12, 0.34, 0.6, 1.2);
     street.position.set(0.9, 4.5, -4.0); street.target.position.set(0.9, 0, -0.4); street.castShadow = true;
-    street.shadow.mapSize.set(high ? 2048 : 1024, high ? 2048 : 1024); street.shadow.bias = -0.0004; street.shadow.normalBias = 0.02; street.shadow.camera.near = 1; street.shadow.camera.layers.enable(1); street.shadow.radius = 4;
+    street.shadow.mapSize.set(1024, 1024); street.shadow.bias = -0.0004; street.shadow.normalBias = 0.02; street.shadow.camera.near = 1; street.shadow.camera.layers.enable(1); street.shadow.radius = 4;
     scene.add(street, street.target); R.ref.street = street;
     const lampGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.glowTex, color: 0xff9a3c, blending: THREE.AdditiveBlending, transparent: true, depthWrite: false, fog: false })); lampGlow.scale.set(1.5, 1.5, 1); lampGlow.position.set(1.0, 1.75, -D / 2 - 0.25); scene.add(lampGlow); R.ref.lampGlow = lampGlow;
     const beamM = new THREE.MeshBasicMaterial({ map: Q.beamTex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide, opacity: 0.3, fog: false });
