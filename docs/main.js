@@ -1,4 +1,4 @@
-/* qx 3D — prueba del dormitorio en primera persona. Lógica de juego, cámara, entrada y bucle.
+/* qx 3D — portfolio en el dormitorio, en primera persona. Lógica de juego, cámara, entrada y bucle.
    (Texturas: lib.js · Habitación: room.js · Cuerpo: avatar.js · Posproceso: fx.js) */
 (() => {
   const Q = window.QX;
@@ -10,6 +10,14 @@
   const { clamp, lerp } = Q;
   const ease = (t) => t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
   const angDiff = (a, b) => { let d = (a - b) % (Math.PI * 2); if (d > Math.PI) d -= Math.PI * 2; if (d < -Math.PI) d += Math.PI * 2; return d; };
+
+  /* ============================== Ajustes y almacenamiento ============================== */
+  const CFG = (() => {
+    let c = {}; try { c = JSON.parse(localStorage.getItem('qx-cfg') || '{}'); } catch (e) { }
+    return Object.assign({ sens: 1, sound: true, quality: 'auto', calm: matchMedia('(prefers-reduced-motion: reduce)').matches }, c);
+  })();
+  const saveCfg = () => { try { localStorage.setItem('qx-cfg', JSON.stringify(CFG)); } catch (e) { } };
+  const store = (k, v) => { try { if (v !== undefined) localStorage.setItem('qx-' + k, v); return localStorage.getItem('qx-' + k); } catch (e) { return null; } };
 
   /* ============================== Renderer ============================== */
   const canvas = $('#gl');
@@ -56,7 +64,9 @@
   else document.querySelectorAll('.fx').forEach((e) => { e.style.display = 'none'; });
 
   /* ============================== Estado ============================== */
-  const S = { time: '05:45', alarmOn: true, dressed: false, bag: false, mirror: false, busy: true, started: false, tasks: { alarm: false, dress: false, bag: false, out: false } };
+  const S = { time: '05:45', min: 345, alarmOn: true, dressed: false, bag: false, mirror: false, busy: true, started: false, ended: false, lastProgress: 0, did: new Set(), tasks: { alarm: false, dress: false, bag: false, out: false } };
+  const fmt = (m) => String(Math.floor(m / 60)).padStart(2, '0') + ':' + String(m % 60).padStart(2, '0');
+  function advance(min) { S.min += min; S.time = fmt(S.min); $('#clock').textContent = S.time; }
   const P = { x: -0.35, z: -0.55, yaw: 0, pitch: 0, bodyYaw: 0, vx: 0, vz: 0, walk: 0, bob: 0 };
   const EYE = Q.EYE;
   function lookAngles(fx0, fy, fz, tx, ty, tz) { const dx = tx - fx0, dz = tz - fz, dy = ty - fy; return { yaw: Math.atan2(-dx, -dz), pitch: Math.atan2(dy, Math.hypot(dx, dz)) }; }
@@ -78,7 +88,9 @@
   /* ============================== Interactivos ============================== */
   const tasksEl = $('#tasks');
   const TASKS = [['alarm', 'Apagar el despertador'], ['dress', 'Vestirte para el día'], ['bag', 'Cargar la mochila y el bolso'], ['out', 'Salir de casa']];
-  function renderTasks() { tasksEl.innerHTML = TASKS.map(([k, t]) => `<li class="${S.tasks[k] ? 'done' : ''}">${t}</li>`).join(''); }
+  function renderTasks(flash) { tasksEl.innerHTML = TASKS.map(([k, t]) => `<li class="${S.tasks[k] ? 'done' : ''}${k === flash ? ' flash' : ''}">${t}</li>`).join(''); }
+  function completeTask(k) { S.tasks[k] = true; S.lastProgress = performance.now(); renderTasks(k); Sound.ok(); }
+  const allReady = () => S.tasks.alarm && S.tasks.dress && S.tasks.bag;
   function tag(obj, id) { obj.traverse((o) => { if (o.isMesh) o.userData.act = id; }); }
   tag(R.g.nightstand, 'movil'); tag(R.g.wardrobe, 'armario'); tag(R.g.mirror, 'espejo'); tag(R.g.mirrorFrame, 'espejo'); tag(R.g.doorG, 'puerta'); tag(R.g.chair, 'bolsos'); tag(R.g.bed, 'cama'); tag(R.g.desk, 'escritorio'); tag(R.g.shelf, 'medalla');
   const ACT_ROOTS = [R.g.nightstand, R.g.wardrobe, R.g.mirror, R.g.mirrorFrame, R.g.doorG, R.g.chair, R.g.bed, R.g.desk, R.g.shelf];
@@ -88,14 +100,52 @@
     espejo: { label: 'Mirarte al espejo', stand: [1.2, 1.2], look: [2.19, 1.5, 1.2], enabled: () => true, run: actEspejo },
     bolsos: { label: 'Cargar la mochila y el bolso', stand: [-0.55, 1.0], look: [-1.2, 0.72, 1.15], reach: true, enabled: () => !S.bag, run: actBolsos },
     puerta: { label: 'Salir de casa', stand: [0.05, 1.0], look: [0.05, 1.15, 1.8], reach: true, enabled: () => true, run: actPuerta },
-    cama: { label: 'Mirar la cama', stand: [-0.4, 0.05], look: [-1.5, 0.5, -0.4], enabled: () => true, run: async () => { await say('Tu cama, todavía caliente. Tiene un 100 % de retención y cero rentabilidad.'); } },
-    escritorio: { label: 'Mirar el escritorio', stand: [-0.95, 0.3], look: [-1.9, 0.85, 0.85], enabled: () => true, run: async () => { await say(['Apuntes de Previsión Social, el portátil cerrado y la taza de ayer. El escritorio de quien estudia a trozos y vive de tren en tren.']); } },
-    medalla: { label: 'Mirar la medalla', stand: [-0.9, 1.5], look: [-2.15, 1.5, 1.62], enabled: () => true, run: async () => { await say(['La medalla de la San Silvestre. Diez kilómetros a ritmo constante: el único estimador insesgado que tienes.']); } },
+    cama: { label: 'Mirar la cama', stand: [-0.4, 0.05], look: [-1.5, 0.5, -0.4], enabled: () => true, run: async () => { cost('cama', 3); await say('Tu cama, todavía caliente. Tiene un 100 % de retención y cero rentabilidad.'); } },
+    escritorio: { label: 'Mirar el escritorio', stand: [-0.95, 0.3], look: [-1.9, 0.85, 0.85], enabled: () => true, run: actEscritorio },
+    medalla: { label: 'Mirar la medalla', stand: [-0.9, 1.5], look: [-2.15, 1.5, 1.62], enabled: () => true, run: async () => { cost('medalla', 2); await say(['La medalla de la San Silvestre. Diez kilómetros a ritmo constante: el único estimador insesgado que tienes.']); } },
   };
+
+  /* Cada decisión opcional cuesta minutos la primera vez: ese reloj decide la probabilidad de llegar a tiempo */
+  function cost(id, min) { if (S.did.has(id)) return; S.did.add(id); advance(min); }
+
+  /* ---- Destellos sobre lo que toca hacer ---- */
+  const GLOW_ON = {
+    movil: () => S.alarmOn, armario: () => !S.dressed, bolsos: () => !S.bag, puerta: () => allReady(),
+    escritorio: () => !S.did.has('escritorio'), espejo: () => S.dressed && !S.did.has('espejo'), medalla: () => !S.did.has('medalla'),
+  };
+  const GLOWS = [];
+  (function () {
+    const c = Q.cvs(64, 64), g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+    gr.addColorStop(0, 'rgba(255,200,130,.95)'); gr.addColorStop(0.35, 'rgba(255,150,70,.35)'); gr.addColorStop(1, 'rgba(255,140,60,0)');
+    g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+    const tex = Q.toTex(c);
+    Object.keys(GLOW_ON).forEach((id, i) => {
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, fog: false, opacity: 0 }));
+      sp.position.set(...ACTS[id].look); sp.scale.setScalar(0.26); sp.renderOrder = 5; scene.add(sp); GLOWS.push({ id, sp, i });
+    });
+  })();
+  function updateGlows(t) {
+    const show = S.started && !S.busy && !S.ended;
+    GLOWS.forEach(({ id, sp, i }) => { const on = show && GLOW_ON[id](); sp.visible = on; if (on) { const k = 0.5 + 0.5 * Math.sin(t * 2.2 + i); sp.material.opacity = 0.35 + 0.4 * k; sp.scale.setScalar(0.22 + 0.08 * k); } });
+  }
 
   /* ---- Mensajes ---- */
   const msg = $('#msg'); let typingId = 0;
-  function say(lines) { if (!Array.isArray(lines)) lines = [lines]; S.busy = true; return (async () => { for (const l of lines) await sayOne(typeof l === 'string' ? { text: l } : l); S.busy = false; })(); }
+  let tipId = 0, tipWake = null;
+  const tipWait = (ms) => new Promise((r) => { const h = setTimeout(r, ms); tipWake = () => { clearTimeout(h); r(); }; });
+  msg.addEventListener('pointerup', () => { if (tipWake) tipWake(); });
+  /* Mensajes que no bloquean: pasan solos, se puede andar y se cortan al usar algo */
+  async function tip(lines) {
+    const id = ++tipId;
+    for (const l of lines) {
+      if (id !== tipId) return;
+      const o = typeof l === 'string' ? { text: l } : l;
+      msg.hidden = false; msg.innerHTML = `<p class="${o.think ? 'think' : ''}"></p>`; msg.firstChild.textContent = o.text;
+      await tipWait(Math.max(2800, o.text.length * 60));
+    }
+    if (id === tipId) { msg.hidden = true; tipWake = null; }
+  }
+  function say(lines) { if (!Array.isArray(lines)) lines = [lines]; tipId++; tipWake = null; S.busy = true; return (async () => { for (const l of lines) await sayOne(typeof l === 'string' ? { text: l } : l); S.busy = false; })(); }
   function sayOne({ text, think }) {
     return new Promise((resolve) => {
       const id = ++typingId; msg.hidden = false; msg.innerHTML = `<p class="${think ? 'think' : ''}"></p>`;
@@ -114,17 +164,20 @@
 
   /* ---- Movimiento guiado ---- */
   function tween(dur, fn) { return new Promise((res) => { const t0 = performance.now(); (function step(now) { const k = clamp((now - t0) / dur, 0, 1); fn(ease(k), k); if (k < 1) requestAnimationFrame(step); else res(); })(t0); }); }
+  let walking = false, walkCancel = false;                          // moverte o tocar la pantalla durante el paseo guiado lo cancela
   async function walkTo(stand, look) {
     const sx = P.x, sz = P.z, sy = P.yaw, sp = P.pitch, a = lookAngles(stand[0], EYE, stand[1], look[0], look[1], look[2]);
     const dist = Math.hypot(stand[0] - sx, stand[1] - sz), d = clamp(dist * 560, 500, 1800);
-    await tween(d, (e) => { P.x = lerp(sx, stand[0], e); P.z = lerp(sz, stand[1], e); P.yaw = sy + angDiff(a.yaw, sy) * e; P.pitch = lerp(sp, a.pitch, e); P.walk = dist > 0.05 ? 1 : 0; });
-    P.walk = 0; P.bodyYaw = P.yaw;                                  // el cuerpo termina mirando a lo mismo que tú
+    walking = true; walkCancel = false;
+    await new Promise((res) => { const t0 = performance.now(); (function step(now) { const k = clamp((now - t0) / d, 0, 1), e = ease(k); P.x = lerp(sx, stand[0], e); P.z = lerp(sz, stand[1], e); P.yaw = sy + angDiff(a.yaw, sy) * e; P.pitch = lerp(sp, a.pitch, e); P.walk = dist > 0.05 ? 1 : 0; if (walkCancel || k >= 1) res(); else requestAnimationFrame(step); })(t0); });
+    walking = false; P.walk = 0; P.bodyYaw = P.yaw;                 // el cuerpo termina mirando a lo mismo que tú
+    return !walkCancel;
   }
   async function interact(id) {
     const a = ACTS[id]; if (!a || S.busy) return;
     if (!a.enabled()) { await say('Eso ya está hecho.'); return; }
-    S.busy = true; $('#prompt').hidden = true;
-    await walkTo(a.stand, a.look);
+    S.busy = true; $('#prompt').hidden = true; tipId++; msg.hidden = true; S.lastProgress = performance.now(); Sound.click();
+    if (!(await walkTo(a.stand, a.look))) { S.busy = false; return; }
     if (a.reach) await tween(380, (e) => { A.reach = e; });
     await a.run();
     if (a.reach) await tween(380, (e) => { A.reach = 1 - e; });
@@ -133,51 +186,105 @@
 
   /* ---- Acciones ---- */
   async function actMovil() {
-    S.alarmOn = false; S.tasks.alarm = true; S.time = '05:47'; renderTasks();
+    S.alarmOn = false; advance(2); completeTask('alarm');
     R.ref.phoneLight.intensity = 0.25; R.ref.halo.material.opacity = 0.35;
     await say(['Apagas la alarma. Silencio. Por fin una variable que controlas.']);
   }
   async function actArmario() {
-    R.ref.wInside.intensity = 2.4;
+    R.ref.wInside.intensity = 2.4; Sound.doors();
     await tween(900, (e) => { R.ref.doorN.rotation.y = -e * 1.9; });
     await say(['Camisa azul, pantalón gris oscuro, zapatos negros. El uniforme de quien no tiene uniforme.']);
-    A.dress(true); R.ref.shirt.visible = false; R.ref.pants.visible = false; S.dressed = true; S.tasks.dress = true; S.time = '05:55'; renderTasks();
+    A.dress(true); R.ref.shirt.visible = false; R.ref.pants.visible = false; S.dressed = true; advance(8); completeTask('dress');
     await say([{ text: 'Mírate al espejo si quieres comprobar el resultado. Es la única reunión en la que estás seguro de quién va a estar.', think: true }]);
   }
+  async function actEscritorio() {
+    cost('escritorio', 4);
+    await say(['Apuntes de Previsión Social, el portátil cerrado y la taza de ayer. El escritorio de quien estudia a trozos y vive de tren en tren.']);
+    await openPanel(`<h2>Apuntes y portátil</h2>
+      <p>Luiz Alberto Luzuriaga Izquierdo · Madrid. Estudiante del Máster en Ciencias Actuariales y Financieras (Universidad de Alcalá).</p>
+      <h3>Lo que hay abierto</h3>
+      <ul>
+        <li><a href="https://luizluzuriaga.github.io/Gedankenpalast/Fundacion/" target="_blank" rel="noopener">Gedankenpalast</a> · atlas 3D de estudio</li>
+        <li><a href="https://luizluzuriaga.github.io/Gedankenpalast/Fundacion/guias/simulacion.html" target="_blank" rel="noopener">Simulación y modelos</a> · guía de estudio</li>
+        <li><a href="https://luizluzuriaga.github.io/Gedankenpalast/Fundacion/guias/bayesiana.html" target="_blank" rel="noopener">Estadística bayesiana</a> · guía con laboratorios</li>
+        <li><a href="https://luizluzuriaga.github.io/Gedankenpalast/Fundacion/guias/prevision_social.html" target="_blank" rel="noopener">Previsión social</a> · guía con líneas temporales</li>
+        <li><a href="https://luizluzuriaga.github.io/Gedankenpalast/Fundacion/guias/seguridad_social.html" target="_blank" rel="noopener">Seguridad Social</a> · tests de práctica</li>
+      </ul>
+      <h3>Contacto</h3>
+      <p><a href="https://www.linkedin.com/in/luiz-luzuriaga-izquierdo" target="_blank" rel="noopener">LinkedIn</a> · <a href="https://github.com/LuizLuzuriaga" target="_blank" rel="noopener">GitHub</a> · <a href="https://luizluzuriaga.github.io/" target="_blank" rel="noopener">Web</a></p>`);
+  }
   async function actBolsos() {
-    R.ref.chairBags.visible = false; A.carry(); S.bag = true; S.tasks.bag = true; S.time = '06:00'; renderTasks();
+    R.ref.chairBags.visible = false; A.carry(); S.bag = true; advance(5); completeTask('bag');
     await say(['Mochila negra, pesadísima: portátil, apuntes, ropa de gimnasio. Bolso marrón de los de hombre, con el tupper. Llevas media vida a cuestas, de forma literal.']);
   }
   async function actEspejo() {
-    S.mirror = true;
+    S.mirror = true; cost('espejo', 1);
     if (!S.dressed) await say(['Pijama arrugado, pelo de almohada y ojeras de actuario junior. El espejo no miente: solo redondea hacia abajo.']);
     else if (!S.bag) await say(['Camisa azul, pantalón gris oscuro, barba de semanas. Falta la mochila para parecer el que realmente eres.']);
     else await say(['Camisa azul, pantalón gris, mochila negra a la espalda y bolso marrón al costado: el tupper ya viaja contigo. Te reconoces, pero con más peso del que marca la báscula.']);
   }
   async function actPuerta() {
-    const ok = S.tasks.alarm && S.tasks.dress && S.tasks.bag;
-    if (!ok) { await say('Todavía no. En pijama, con el despertador sonando y sin mochila no llegas ni al portal.'); return; }
-    S.tasks.out = true; renderTasks();
+    if (!allReady()) { Sound.bad(); await say('Todavía no: te falta ' + TASKS.filter(([k]) => k !== 'out' && !S.tasks[k]).map(([, t]) => t.charAt(0).toLowerCase() + t.slice(1)).join(' y ') + '.'); return; }
+    advance(2); completeTask('out'); Sound.whoosh();
     await say(['Cierras la puerta con cuidado. La escalera huele a lunes. Fuera, el andén te espera con ochocientas personas y ninguna ganas de ser tu amigo.']);
-    $('#hud').hidden = true; if (document.pointerLockElement) document.exitPointerLock();
-    const end = document.createElement('div'); end.id = 'end';
-    end.innerHTML = '<div><h2>Fin de la prueba 3D</h2><p>Aquí seguiría la historia: el andén, el tren, Azca, la oficina y el café. Dime si el espejo, el movimiento y el nivel de detalle te convencen.</p><button class="btn primary" id="again">↻ Volver a probar</button></div>';
+    S.ended = true; $('#hud').hidden = true; $('#hint').hidden = true; if (document.pointerLockElement) document.exitPointerLock();
+    showEnd();
+  }
+
+  /* ---- Final: el día como simulación. Salida a hora X, trayecto ~ N(62, 14²) min, oficina a las 07:35 ---- */
+  function gauss() { let u = 0, v = 0; while (!u) u = Math.random(); while (!v) v = Math.random(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v); }
+  function simulate(depart) {
+    const N = 2000, LIMITE = 455, arr = [];
+    for (let k = 0; k < N; k++) arr.push(depart + 8 + Math.max(48, 62 + 14 * gauss()));
+    arr.sort((a, b) => a - b);
+    return { p: arr.filter((x) => x <= LIMITE).length / N, mediana: arr[N >> 1], p90: arr[Math.floor(N * 0.9)] };
+  }
+  const FINALES = [['impecable', 'Mañana impecable'], ['normal', 'Mañana normal'], ['justo', 'Vas justo']];
+  function showEnd() {
+    const r = simulate(S.min), pct = Math.round(r.p * 100);
+    const clave = pct >= 92 ? 'impecable' : pct >= 85 ? 'normal' : 'justo', titulo = FINALES.find(([k]) => k === clave)[1];
+    let vistos = []; try { vistos = JSON.parse(store('ends') || '[]'); } catch (e) { }
+    if (!vistos.includes(clave)) { vistos.push(clave); store('ends', JSON.stringify(vistos)); }
+    const hechos = [['espejo', 'Te miraste al espejo'], ['cama', 'Miraste la cama'], ['escritorio', 'Abriste el portátil'], ['medalla', 'Miraste la medalla']];
+    const end = document.createElement('div'); end.id = 'end'; end.setAttribute('role', 'dialog'); end.setAttribute('aria-label', 'Resumen de la mañana');
+    end.innerHTML = `<div class="card">
+      <h2>${titulo}</h2>
+      <p class="lede">Sales de casa a las ${fmt(S.min)}. Con un trayecto que dura 62 min de media (desviación 14) y la oficina a las 07:35, el modelo de 2.000 trayectorias dice:</p>
+      <div class="stats"><div><b>${pct} %</b><span>probabilidad de llegar a tiempo</span></div><div><b>${fmt(Math.round(r.mediana))}</b><span>llegada mediana</span></div><div><b>${fmt(Math.round(r.p90))}</b><span>percentil 90</span></div></div>
+      <ul class="did">${hechos.map(([k, t]) => `<li class="${S.did.has(k) ? 'y' : ''}">${t}</li>`).join('')}</ul>
+      <p class="fine">Cada detalle que miras cuesta minutos y cambia la probabilidad. Finales vistos: ${vistos.length} de 3.</p>
+      <p class="links"><a href="https://www.linkedin.com/in/luiz-luzuriaga-izquierdo" target="_blank" rel="noopener">LinkedIn</a> · <a href="https://github.com/LuizLuzuriaga" target="_blank" rel="noopener">GitHub</a> · <a href="https://luizluzuriaga.github.io/" target="_blank" rel="noopener">Web de Luiz</a></p>
+      <button class="btn primary" id="again">↻ Otra mañana</button></div>`;
     document.body.appendChild(end); end.querySelector('#again').addEventListener('click', () => location.reload());
+  }
+
+  /* ---- Panel de contenido ---- */
+  const panelEl = $('#panel');
+  function openPanel(html) {
+    return new Promise((resolve) => {
+      if (document.pointerLockElement) document.exitPointerLock();
+      panelEl.innerHTML = `<div class="box" tabindex="-1">${html}<button class="btn" id="pclose">Cerrar</button></div>`; panelEl.hidden = false;
+      const close = () => { panelEl.hidden = true; panelEl.innerHTML = ''; window.removeEventListener('keydown', onKey, true); resolve(); };
+      const onKey = (e) => { if (e.key === 'Escape' || e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); close(); } };
+      window.addEventListener('keydown', onKey, true);
+      panelEl.querySelector('#pclose').addEventListener('click', close); panelEl.querySelector('.box').focus({ preventScroll: true });
+    });
   }
 
   /* ============================== Entrada ============================== */
   function lockPointer() { if (COARSE || !canvas.requestPointerLock) return; try { const p = canvas.requestPointerLock(); if (p && p.catch) p.catch(() => { }); } catch (e) { } }
   const keys = {};
-  window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; if (!S.started || S.busy) return; if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') { if (current) interact(current); } });
+  window.addEventListener('keydown', (e) => { keys[e.key.toLowerCase()] = true; if (walking && ['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright'].includes(e.key.toLowerCase())) walkCancel = true; if (e.key === 'Escape' && !cfgEl.hidden) { closeCfg(); return; } if (!S.started || S.busy) return; if (e.key === 'e' || e.key === 'E' || e.key === 'Enter') { if (current) interact(current); } });
   window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
   window.addEventListener('blur', () => { for (const k in keys) keys[k] = false; });
   const touches = new Map(); let mouse = null;
   const stickEl = $('#stickL'), stickDot = stickEl.querySelector('i'); let moveVec = { x: 0, y: 0 };
-  const LOOK_SENS = COARSE ? 0.0052 : 0.0034;
-  function look(dx, dy) { P.yaw -= dx * LOOK_SENS; P.pitch = clamp(P.pitch - dy * LOOK_SENS, -1.35, 1.35); }
+  const LOOK_SENS = () => (COARSE ? 0.0052 : 0.0034) * CFG.sens;
+  function look(dx, dy) { const k = LOOK_SENS(); P.yaw -= dx * k; P.pitch = clamp(P.pitch - dy * k, -1.35, 1.35); }
 
   canvas.addEventListener('pointerdown', (e) => {
     if (!S.started) return;
+    if (walking) walkCancel = true;
     if (e.pointerType === 'touch') {
       const left = e.clientX < innerWidth * 0.45;
       touches.set(e.pointerId, { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t0: performance.now(), mode: left ? 'move' : 'look', moved: 0 });
@@ -196,6 +303,7 @@
     else if (mouse) { const dx = e.clientX - mouse.x, dy = e.clientY - mouse.y; mouse.x = e.clientX; mouse.y = e.clientY; mouse.moved = Math.hypot(e.clientX - mouse.x0, e.clientY - mouse.y0); if (!S.busy && mouse.moved > 4) look(dx, dy); }
   });
   const endPtr = (e) => {
+    if (S.busy && !msg.hidden && !S.ended) { msg.dispatchEvent(new Event('pointerup')); mouse = null; touches.delete(e.pointerId); stickEl.hidden = true; moveVec = { x: 0, y: 0 }; return; }
     if (e.pointerType === 'touch') {
       const t = touches.get(e.pointerId); if (!t) return; touches.delete(e.pointerId);
       if (t.mode === 'move') { stickEl.hidden = true; moveVec = { x: 0, y: 0 }; }
@@ -243,7 +351,7 @@
   function frame() {
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
-    if (S.started && !S.busy) {
+    if (S.started && !S.busy && cfgEl.hidden) {
       let fx0 = 0, fz = 0;
       if (keys['w'] || keys['arrowup']) fz += 1; if (keys['s'] || keys['arrowdown']) fz -= 1; if (keys['a']) fx0 -= 1; if (keys['d']) fx0 += 1;
       if (keys['arrowleft']) P.yaw += 1.8 * dt; if (keys['arrowright']) P.yaw -= 1.8 * dt;
@@ -262,16 +370,16 @@
     A.update(dt, t, P.walk, P.pitch);
 
     P.bob += dt * 8.5 * P.walk;
-    const bobY = Math.abs(Math.sin(P.bob)) * 0.028 * P.walk + Math.sin(t * 1.6) * 0.004, bobX = Math.cos(P.bob) * 0.012 * P.walk;
+    const calm = CFG.calm ? 0 : 1, bobY = Math.abs(Math.sin(P.bob)) * 0.028 * P.walk * calm + Math.sin(t * 1.6) * 0.004 * calm, bobX = Math.cos(P.bob) * 0.012 * P.walk * calm;
     camera.position.set(P.x + Math.cos(P.yaw) * bobX, EYE + bobY, P.z - Math.sin(P.yaw) * bobX);
-    camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob) * 0.004 * P.walk);
+    camera.rotation.set(P.pitch, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm);
 
     drawPhone(S.alarmOn, t);
     if (S.alarmOn) { const k = Math.max(0, Math.sin(t * 9)); R.ref.phoneLight.intensity = 0.5 + k * 0.9; R.ref.halo.material.opacity = 0.45 + k * 0.45; R.ref.phone.position.x = -0.5 + Math.sin(t * 60) * 0.0012; }
     alarmT += dt; if (S.alarmOn && S.started && alarmT > 3.4 && Sound.on) { alarmT = 0; Sound.alarm(3); }
     R.tick.forEach((f) => f(dt, t));
 
-    updatePrompt();
+    updatePrompt(); updateGlows(t); updateHint();
     renderer.shadowMap.needsUpdate = (frameN++ % 2 === 0);
     if (!fx.render(t)) renderer.render(scene, camera);
     lastCalls = renderer.info.render.calls; lastTris = renderer.info.render.triangles; renderer.info.reset();
@@ -280,8 +388,8 @@
     frames++; tAdapt += dt; fpsT += dt; fpsN++;
     if (tAdapt > 2.5) {
       const avg = tAdapt / frames;
-      if (avg > 0.036) {
-        if (pr > 0.8) { pr = Math.max(0.7, pr * 0.82); resize(); }
+      if (adapt && avg > 0.036) {
+        if (pr > 0.8) { pr = Math.max(0.7, pr * 0.82); resize(); toast('Bajé la resolución para que vaya fluido. Puedes cambiarlo en ⚙ Ajustes.'); }
         else if (tier < 1 && fx.on) { fx.bloom.enabled = false; tier = 1; }
         else if (pr > 0.55) { pr = 0.55; resize(); }
       }
@@ -290,15 +398,48 @@
     if (DEBUG && fpsT > 0.5) { fpsEl.hidden = false; fpsEl.textContent = `${Math.round(fpsN / fpsT)} fps · ${lastCalls} llamadas · ${Math.round(lastTris / 1000)}k tri · ratio ${pr.toFixed(2)} · ${fx.on ? 'HDR+bloom' : 'directo'}${fx.bloom && !fx.bloom.enabled ? ' (sin bloom)' : ''}`; fpsT = 0; fpsN = 0; }
   }
 
+  /* ============================== Pistas, avisos y ajustes ============================== */
+  const hintEl = $('#hint'), toastEl = $('#toast'); let toastT = 0, toasted = false;
+  function toast(text) { if (toasted) return; toasted = true; toastEl.textContent = text; toastEl.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => { toastEl.hidden = true; }, 6000); }
+  const NEXT = [['alarm', 'el móvil de la mesilla, que suena y brilla'], ['dress', 'el armario'], ['bag', 'la silla con la mochila y el bolso'], ['out', 'la puerta']];
+  function updateHint() {
+    if (!S.started || S.busy || S.ended || !cfgEl.hidden || performance.now() - S.lastProgress < 30000) { hintEl.hidden = true; return; }
+    const n = NEXT.find(([k]) => !S.tasks[k]); if (!n) { hintEl.hidden = true; return; }
+    hintEl.textContent = 'Pista: mira hacia ' + n[1] + '.'; hintEl.hidden = false;
+  }
+  const cfgEl = $('#cfg');
+  function closeCfg() { cfgEl.hidden = true; $('#cfgBtn').focus(); }
+  function openCfg() { cfgEl.hidden = false; if (document.pointerLockElement) document.exitPointerLock(); $('#cfgSens').focus(); }
+  function setSound(on) {
+    if (on !== Sound.on) Sound.toggle();
+    const e = $('#snd'); e.textContent = Sound.on ? '🔊' : '🔇'; e.setAttribute('aria-pressed', Sound.on); $('#cfgSound').checked = Sound.on;
+    if (Sound.on) Sound.ambience('room');
+  }
+  function applyQuality(q) {
+    CFG.quality = q; adapt = q === 'auto'; tier = 0;
+    if (q === 'baja') { pr = 0.7; tier = 1; } else pr = Math.min(window.devicePixelRatio || 1, q === 'alta' ? 1.75 : (HIGH ? 1.75 : 1.4));
+    if (fx.on && fx.bloom) fx.bloom.enabled = q !== 'baja';
+    resize();
+  }
+  let adapt = CFG.quality === 'auto';
+  $('#cfgBtn').addEventListener('click', () => (cfgEl.hidden ? openCfg() : closeCfg())); $('#cfgClose').addEventListener('click', closeCfg);
+  $('#cfgSens').value = CFG.sens; $('#cfgSens').addEventListener('input', (e) => { CFG.sens = +e.target.value; saveCfg(); });
+  $('#cfgSound').addEventListener('change', (e) => { CFG.sound = e.target.checked; setSound(CFG.sound); saveCfg(); });
+  $('#cfgCalm').checked = CFG.calm; $('#cfgCalm').addEventListener('change', (e) => { CFG.calm = e.target.checked; saveCfg(); });
+  $('#cfgQ').value = CFG.quality; $('#cfgQ').addEventListener('change', (e) => { applyQuality(e.target.value); saveCfg(); });
+
   /* ============================== Arranque ============================== */
   renderTasks(); frame();
-  $('#snd').addEventListener('click', () => { const on = Sound.toggle(); $('#snd').textContent = on ? '🔊' : '🔇'; $('#snd').setAttribute('aria-pressed', on); if (on) Sound.ambience('room'); });
-  $('#go').addEventListener('click', async () => {
-    $('#start').style.display = 'none'; $('#hud').hidden = false; S.started = true; S.busy = true;
-    lockPointer();
-    await say(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.',
-      { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true },
-      COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.']);
+  $('#snd').addEventListener('click', () => { CFG.sound = !Sound.on; saveCfg(); setSound(CFG.sound); });
+  if (CFG.quality !== 'auto') applyQuality(CFG.quality);
+  const go = $('#go');
+  requestAnimationFrame(() => requestAnimationFrame(() => { go.disabled = false; go.textContent = '▶ Despertar'; go.focus(); }));   // el botón se activa cuando ya hay un fotograma dibujado
+  go.addEventListener('click', () => {
+    $('#start').style.display = 'none'; $('#hud').hidden = false; S.started = true; S.busy = false; S.lastProgress = performance.now();
+    lockPointer(); if (CFG.sound) setSound(true);
+    const how = COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
+    if (store('intro')) tip([how]);
+    else { store('intro', '1'); tip(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.', { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true }, how]); }
   });
   window.__qx = { S, P, ACTS, interact, camera, scene, renderer, say, fx, R, A };
 })();

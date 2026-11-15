@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
-  <title>Luiz Luzuriaga — Portfolio Actuarial RPG</title>
-  <meta name="description" content="Portfolio interactivo de Luiz Alberto Luzuriaga Izquierdo, estudiante de Máster en Ciencias Actuariales y Financieras. Explora una habitación y descubre su perfil con minijuegos actuariales." />
+  <title>Luiz Luzuriaga — Portfolio Actuarial</title>
+  <meta name="description" content="Portfolio interactivo de Luiz Alberto Luzuriaga Izquierdo, estudiante de Máster en Ciencias Actuariales y Financieras. Recorre su dormitorio en 3D, en primera persona, y descubre su perfil actuarial." />
   <meta name="author" content="Luiz Alberto Luzuriaga Izquierdo" />
   <meta name="theme-color" content="#0a0818" />
   <link rel="canonical" href="https://luizluzuriaga.github.io/Actuariales/" />
@@ -13,16 +13,16 @@
   <meta property="og:type" content="website" />
   <meta property="og:locale" content="es_ES" />
   <meta property="og:site_name" content="Luiz Luzuriaga" />
-  <meta property="og:title" content="Luiz Luzuriaga — Portfolio Actuarial RPG" />
-  <meta property="og:description" content="Explora mi habitación y descubre mi perfil actuarial con minijuegos: tabla de mortalidad, cadena de Markov, Monte Carlo y prima pura." />
+  <meta property="og:title" content="Luiz Luzuriaga — Portfolio Actuarial" />
+  <meta property="og:description" content="Recorre mi dormitorio en 3D, en primera persona, y descubre mi perfil actuarial. Al final, una simulación Monte Carlo decide si llegas a tiempo." />
   <meta property="og:url" content="https://luizluzuriaga.github.io/Actuariales/" />
   <meta property="og:image" content="https://luizluzuriaga.github.io/Actuariales/img/og-card.png" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
-  <meta property="og:image:alt" content="Dormitorio en 3D con el título «Luiz Luzuriaga — Portfolio Actuarial RPG»" />
+  <meta property="og:image:alt" content="Dormitorio en 3D con el título «Luiz Luzuriaga — Portfolio Actuarial»" />
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Luiz Luzuriaga — Portfolio Actuarial RPG" />
-  <meta name="twitter:description" content="Explora mi habitación y descubre mi perfil actuarial con minijuegos." />
+  <meta name="twitter:title" content="Luiz Luzuriaga — Portfolio Actuarial" />
+  <meta name="twitter:description" content="Recorre mi dormitorio en 3D y descubre mi perfil actuarial." />
   <meta name="twitter:image" content="https://luizluzuriaga.github.io/Actuariales/img/og-card.png" />
 
   <script type="application/ld+json">
@@ -50,27 +50,41 @@
   <div id="start">
     <div class="inner">
       <h1>q<small>x</small> <span>3D</span></h1>
-      <p class="sub">Prueba del dormitorio en primera persona</p>
-      <p class="blurb">Mismo despertar, otro motor. Mírate al espejo: lo que ves eres tú, con tu camisa, tu mochila y tu barba de semanas.</p>
-      <button type="button" class="btn primary" id="go">▶ Despertar</button>
+      <p class="sub">Una mañana en mi dormitorio, en primera persona</p>
+      <p class="blurb">Apaga el despertador, vístete, carga la mochila y sal de casa. Cada objeto cuenta algo del perfil de Luiz Luzuriaga, y lo que decidas mirar te cuesta minutos de la mañana.</p>
+      <button type="button" class="btn primary" id="go" disabled>Cargando…</button>
+      <noscript><p class="fine">Hace falta JavaScript para ver la escena 3D.</p></noscript>
       <ul class="how">
         <li><b>Ordenador:</b> clic para capturar el ratón · <kbd>WASD</kbd> moverte · <kbd>E</kbd> o clic en lo marcado · <kbd>Esc</kbd> soltar · <kbd>Shift</kbd> correr</li>
         <li><b>Móvil:</b> arrastra con el pulgar izquierdo para andar y con el derecho para mirar · toca un objeto para ir hasta él</li>
       </ul>
-      <p class="fine">Prueba técnica de un solo escenario. Nada se descarga: el modelado es procedural. Con <code>?debug</code> en la URL ves los fotogramas por segundo.</p>
+      <p class="fine">Dura unos cinco minutos. Nada se descarga: el modelado es procedural. Los ajustes (sensibilidad, sonido, calidad) están en ⚙ dentro del juego.</p>
     </div>
   </div>
 
   <div id="hud" hidden>
     <ul id="tasks" aria-label="Qué hacer"></ul>
     <div id="clock">05:45</div>
-    <button type="button" class="chip" id="snd" aria-label="Activar sonido" aria-pressed="false">🔇</button>
+    <button type="button" class="chip" id="snd" aria-label="Activar o silenciar el sonido" aria-pressed="false">🔇</button>
+    <button type="button" class="chip" id="cfgBtn" aria-label="Ajustes">⚙</button>
+    <div id="hint" hidden></div>
+    <div id="toast" hidden role="status"></div>
     <div id="cross" aria-hidden="true"></div>
     <div id="prompt" hidden></div>
     <div id="msg" hidden></div>
     <div id="stickL" class="stick" hidden><i></i></div>
     <div id="fps" hidden></div>
   </div>
+
+  <div id="cfg" hidden role="dialog" aria-label="Ajustes">
+    <h2>Ajustes</h2>
+    <label>Sensibilidad del ratón o el dedo <input type="range" id="cfgSens" min="0.4" max="2.2" step="0.1" /></label>
+    <label class="row"><input type="checkbox" id="cfgSound" /> Sonido</label>
+    <label class="row"><input type="checkbox" id="cfgCalm" /> Reducir el balanceo de la cámara</label>
+    <label>Calidad gráfica <select id="cfgQ"><option value="auto">Automática</option><option value="alta">Alta</option><option value="baja">Baja (más fluida)</option></select></label>
+    <button type="button" class="btn" id="cfgClose">Cerrar</button>
+  </div>
+  <div id="panel" hidden role="dialog" aria-label="Contenido"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/objects/Reflector.js"></script>
