@@ -39,7 +39,7 @@
     bld(0, -18, 14, 14, 4, '#b8987a', 37);
     // el portal de casa: puerta con luz, escalón y número
     { const g = new THREE.Group(); g.position.set(6.4, 0, -3.0); root.add(g); put(new THREE.BoxGeometry(0.2, 2.5, 1.5), std(0x2a2218, 0.6), 0, 1.25, 0, g); put(new THREE.BoxGeometry(0.1, 2.2, 1.2), std(0x4a3a28, 0.5), -0.06, 1.1, 0, g); put(new THREE.BoxGeometry(0.5, 0.18, 1.8), std(0x8a8890, 0.9), -0.3, 0.09, 0, g);
-      const [c, k] = cv(256, 64); k.fillStyle = '#16171c'; k.fillRect(0, 0, 256, 64); k.fillStyle = '#e8dcc0'; k.font = '700 26px Georgia'; k.textAlign = 'center'; k.fillText('C/ ALBUFERA, 14', 128, 42); put(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: Q.toTex(c), toneMapped: false }), -0.12, 2.75, 0, g).rotation.y = -Math.PI / 2;
+      const [c, k] = cv(256, 64); k.fillStyle = '#16171c'; k.fillRect(0, 0, 256, 64); k.fillStyle = '#e8dcc0'; k.font = '700 26px Georgia'; k.textAlign = 'center'; k.fillText('VALLECAS', 128, 42); put(new THREE.PlaneGeometry(1.6, 0.4), new THREE.MeshBasicMaterial({ map: Q.toTex(c), toneMapped: false }), -0.12, 2.75, 0, g).rotation.y = -Math.PI / 2;
       const l = new THREE.PointLight(0xffc880, 1.4, 8, 2); l.position.set(-0.8, 2.4, 0); g.add(l); put(new THREE.SphereGeometry(0.13, 10, 8), emis(0xffd8a0, 2), -0.45, 2.5, 0, g); tag(g, 'portal'); }
     // farolas y un coche abandonado
     [[-3.4, 3], [3.4, -8], [-3.4, -7]].forEach(([x, z], i) => { const g = new THREE.Group(); g.position.set(x, 0, z); root.add(g); put(new THREE.CylinderGeometry(0.05, 0.08, 4.4, 8), std(0x202326, 0.4, { metalness: 0.7 }), 0, 2.2, 0, g); put(new THREE.SphereGeometry(0.24, 10, 8), emis(0xffc080, 1.8), 0, 4.5, 0, g); if (i < 2) { const l = new THREE.PointLight(0xffb070, 0.9, 10, 2); l.position.set(0, 4.3, 0); g.add(l); W.tick.push((dt, t) => { l.intensity = 0.9 * (Math.sin(t * 31 + i) * Math.sin(t * 4.3) > 0.9 ? 0.25 : 1); }); } });
@@ -65,7 +65,7 @@
     W.acts.cartel = { label: 'Leer el cartel de «se busca»', stand: [-4.4, -3.4], look: [-6.3, 1.6, -3.4], enabled: () => true, run: async (api) => { await api.say(['«SE BUSCA». Cabeza de cruz, mochila, prisa. Eres tú.', { text: 'Visto por última vez, hoy. Visto de nuevo, ahora, en la misma calle donde empezó todo. Cerrando el intervalo.', think: true }]); } };
     W.play = async (api) => {
       const { say, free } = api;
-      await say(['Danny frena en la esquina de la calle de la Albufera. «Aquí os dejo, que tengo que buscar a mi madre», dice, y la moto se pierde calle abajo con Chelu agarrado al sillín.',
+      await say(['Danny frena en la esquina, a la entrada de Vallecas. «Aquí os dejo, que tengo que buscar a mi madre», dice, y la moto se pierde calle abajo con Chelu agarrado al sillín.',
         'Vallecas, otra vez. Amanece entre humo y farolas que parpadean. El portal de casa está igual que siempre. Y en el escalón, con el pelo oscuro revuelto y los ojos verdes, está Amor.']);
       await free(1e9, 'Acércate a Amor y habla con ella · mira la calle si quieres', () => W.fin); return 'fin';
     };
