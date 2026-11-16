@@ -53,7 +53,7 @@
     },
     push() {
       if (!S.on || S.cool > 0 || !S.W.api || S.W.api.S.busy) return; const P = S.W.api.P; S.cool = 0.9; let hit = 0;
-      S.en.forEach((e) => { if (e.dead) return; const dx = e.g.position.x - P.x, dz = e.g.position.z - P.z, d = Math.hypot(dx, dz) || 1; if (d < 2.3) { const k = (S.weapon ? 4.2 : 2.4) / d; e.g.position.x += dx * k; e.g.position.z += dz * k; e.stun = S.weapon ? 4.5 : 2.2; hit++; } });
+      S.en.forEach((e) => { if (e.dead) return; const dx = e.g.position.x - P.x, dz = e.g.position.z - P.z, d = Math.hypot(dx, dz) || 1; if (d < 2.3) { const k = (S.weapon ? 4.2 : 2.4) / d; for (let s = 0; s < 6; s++) Q.npcStep(e.g.position, dx * k / 6, dz * k / 6, 0.34, S.W.obst, S.en.filter((q) => q !== e && !q.dead && q.g.visible).map((q) => q.g.position)); e.stun = S.weapon ? 4.5 : 2.2; hit++; } });
       if (window.Sound && Sound.on) { Sound.knock(1, 1.4); if (hit) Sound.shout(0.05); }
     },
     kill(e) { e.dead = true; e.dying = 0.9; if (window.Sound && Sound.on) Sound.shout(0.06); S.frame.classList.add('hit'); setTimeout(() => S.frame && S.frame.classList.remove('hit'), 160); },
@@ -81,7 +81,7 @@
         if (S.grace > 0) { e.g.rotation.y = Math.atan2(P.x - e.g.position.x, P.z - e.g.position.z) + Math.PI; return; }
         if (e.stun > 0) { e.stun -= dt; e.g.rotation.z = 0.5; return; } e.g.rotation.z = Math.sin(S.t * 3 + (e.ph || 0)) * 0.1; e.g.rotation.x = 0;
         const dx = P.x - e.g.position.x, dz = P.z - e.g.position.z, d = Math.hypot(dx, dz) || 1;
-        if (d > 0.8) { const v = e.v || 1.8; e.g.position.x += dx / d * v * dt; e.g.position.z += dz / d * v * dt; } e.g.rotation.y = Math.atan2(dx, dz) + Math.PI;
+        if (d > 0.8) { const v = e.v || 1.8; Q.npcStep(e.g.position, dx / d * v * dt, dz / d * v * dt, 0.34, S.W.obst, S.en.filter((q) => !q.dead && q.g.visible).map((q) => q.g.position)); } e.g.rotation.y = Math.atan2(dx, dz) + Math.PI;
         if (d < 0.9 && S.inv <= 0) { S.lives--; S.inv = 1.8; this.hud(); P.x = Math.max(b.minX + 0.3, Math.min(b.maxX - 0.3, P.x - dx / d * 0.9)); P.z = Math.max(b.minZ + 0.3, Math.min(b.maxZ - 0.3, P.z - dz / d * 0.9)); if (window.Sound && Sound.on) { Sound.growl(0.9); Sound.bad(); } S.frame.classList.add('hurt'); setTimeout(() => S.frame && S.frame.classList.remove('hurt'), 300); }
       });
       // oleada abatida: el número romano titila y llega la siguiente (II con 10, III con 20); tras la III, sobrevives

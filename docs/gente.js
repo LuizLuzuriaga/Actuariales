@@ -32,6 +32,16 @@
 
   /* spots: [[x, z], …] sobre el suelo (y = 0). Devuelve { group, obst, count }.
      opts: seed, yaw(R) → giro de cada persona (por defecto: casi todos mirando a −z), floorY. */
+  /* Paso físico de un personaje no jugador: se desliza por los obstáculos (cajas) y respeta a los demás.
+     pos: Vector3 del personaje · obst: cajas {minX, maxX, minZ, maxZ, own?} · others: posiciones de los demás personajes · devuelve true si algo le ha bloqueado. */
+  Q.npcStep = (pos, dx, dz, r, obst, others) => {
+    const hit = (x, z) => { for (let i = 0; i < obst.length; i++) { const o = obst[i]; if (o.own === pos) continue; if (x > o.minX - r && x < o.maxX + r && z > o.minZ - r && z < o.maxZ + r) return true; }
+      for (let i = 0; i < others.length; i++) { const q = others[i]; if (q === pos) continue; const ex = x - q.x, ez = z - q.z; if (ex * ex + ez * ez < (r * 1.8) * (r * 1.8)) return true; } return false; };
+    let nx = pos.x + dx, nz = pos.z, blocked = false;
+    if (hit(nx, pos.z)) { nx = pos.x; blocked = true; }
+    nz = pos.z + dz; if (hit(nx, nz)) { nz = pos.z; blocked = true; }
+    pos.x = nx; pos.z = nz; return blocked;
+  };
   Q.buildCrowd = (spots, opts = {}) => {
     const R = Q.rng(opts.seed || 88), heads = [], bodies = [], feet = [], crosses = [], obst = [];
     const yawOf = opts.yaw || ((r) => (r() < 0.8 ? 0 : r() * Math.PI * 2) + (r() - 0.5) * 0.8);

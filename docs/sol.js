@@ -99,7 +99,9 @@
     { const C = Q.buildCrowd([[3.5, 2.6]], { seed: 12, yaw: () => Math.PI / 2 }); root.add(C.group); C.obst.forEach((o) => W.obst.push(o)); tag(C.group, 'chelu'); W.chelu = C.group; }
 
     /* ---------- gente que pasea; en el apocalipsis, la que huye ---------- */
-    const walkers = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 300 + i, yaw: () => 0 }); const z = -6 + rnd() * 13, dir = i % 2 ? 1 : -1; w.group.position.set(-11 + rnd() * 22, 0, z); root.add(w.group); walkers.push({ g: w.group, dir, v: 0.7 + rnd() * 0.5, z }); }
+    const walkers = []; for (let i = 0; i < 9; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 300 + i, yaw: () => 0 }); const z = -6 + rnd() * 13, dir = i % 2 ? 1 : -1; w.group.position.set(-11 + rnd() * 22, 0, z); root.add(w.group); const o = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, own: w.group.position }; W.obst.push(o); walkers.push({ g: w.group, dir, v: 0.7 + rnd() * 0.5, z, o }); }
+    const walkerPos = () => walkers.filter((q) => q.g.visible).map((q) => q.g.position).concat(waiter.group.visible ? [waiter.group.position] : []);
+    { let tries = 0; walkers.forEach((w) => { while (tries++ < 400 && (W.obst.some((o) => o.own !== w.g.position && w.g.position.x > o.minX - 0.4 && w.g.position.x < o.maxX + 0.4 && w.g.position.z > o.minZ - 0.4 && w.g.position.z < o.maxZ + 0.4))) w.g.position.z += 0.7; }); }
     const infected = []; for (let i = 0; i < 20; i++) { const w = Q.buildCrowd([[0, 0]], { seed: 400 + i, yaw: () => 0, zombie: true }); w.group.visible = false; root.add(w.group); const gate = [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]][i % 5]; w.group.position.set(gate[0], 0, gate[1]); infected.push({ g: w.group, v: 1.0 + rnd() * 0.7, ph: rnd() * 6, start: gate }); }
     W.infected = infected;
     /* ---------- la moto del Pasota: llega al final y os rescata al Grandullón y a ti ---------- */
@@ -142,7 +144,9 @@
     W.setApoc = (on) => { W.apoc = on; sky.material.map = on ? skyB : skyA; sky.material.needsUpdate = true; scene.fog.color.set(on ? 0x4a1810 : 0x4a4058); scene.background.set(on ? 0x3a1008 : 0x3a3350); sun.color.set(on ? 0xff4a20 : 0xff9a60); hemi.color.set(on ? 0xa05040 : 0x8a82ac); infected.forEach((z) => { z.g.visible = on; }); fxg.visible = on; gun.visible = on && !Q.apoc.hasGun(); shot.visible = on && !Q.apoc.hasGun('escopeta'); };
     W.tick.push((dt, t) => {
       walkers.forEach((w) => { if (W.apoc) { w.g.position.x += (w.g.position.x < 0 ? -1 : 1) * 3.6 * dt; w.g.rotation.y = w.g.position.x < 0 ? -Math.PI / 2 : Math.PI / 2; if (Math.abs(w.g.position.x) > 17) w.g.visible = false; }
-        else { w.g.position.x += w.dir * w.v * dt; if (w.g.position.x > 11.5) w.dir = -1; if (w.g.position.x < -11.5) w.dir = 1; w.g.rotation.y = w.dir > 0 ? Math.PI / 2 : -Math.PI / 2; } });
+        else { const p = w.g.position; if (Q.npcStep(p, w.dir * w.v * dt, 0, 0.3, W.obst, walkerPos())) { w.dir *= -1; p.z = Math.max(-6.5, Math.min(7.5, p.z + (rnd() < 0.5 ? -0.8 : 0.8))); }      // choca con algo: da la vuelta y cambia de carril
+          if (p.x > 11.5) w.dir = -1; if (p.x < -11.5) w.dir = 1; w.g.rotation.y = w.dir > 0 ? Math.PI / 2 : -Math.PI / 2; }
+        w.o.minX = w.g.position.x - 0.27; w.o.maxX = w.g.position.x + 0.27; w.o.minZ = w.g.position.z - 0.27; w.o.maxZ = w.g.position.z + 0.27; });
       if (W.apoc) lamps.forEach((l, i) => { l.intensity = 0.5 + 0.5 * Math.max(0, Math.sin(t * 4 + i * 2)); });
     });
 
