@@ -57,6 +57,7 @@
       const { say, choose } = api;
       await say(['—Llegas tarde —dice Amor, sin sonreír del todo—. Tres horas y media tarde. Sin apocalipsis, sería un récord personal.', '—Tengo un diagnóstico —añade, cruzándose de brazos—: apego evitativo con sesgo de optimismo actuarial. Pero el pronóstico es bueno.']);
       const r = await choose([{ id: 'a', label: '«Te quiero. Con un intervalo de confianza del 99 %»', hint: 'Declararte con rigor' }, { id: 'b', label: '«Hemos sobrevivido. Mi probabilidad de acabar aquí era del 0,3 %»', hint: 'Estadística, como siempre' }, { id: 'c', label: 'Abrazarla sin decir nada', hint: 'Lo que tu terapeuta recomendaría' }], 'Amor te mira');
+      if (r === 'c') { const P = api.P, x0 = P.x; await api.tween(1100, (e) => { P.x = x0 + 1.1 * e; P.walk = 1; }); P.walk = 0; if (window.Sound && Sound.on) Sound.ok(); }
       await say(r === 'a' ? ['—Rechazo la hipótesis nula de que no —responde Amor, y por fin sonríe.'] : r === 'b' ? ['—El 0,3 % eres tú explicándome las cosas. Anda, sube —dice, y te despeina con la mano.'] : ['Ella no dice nada. Te abraza fuerte, con la cara contra tu mochila rota. Su respiración huele a café y a lluvia que no ha caído.']);
       await say(['Fuera, la ciudad arde a lo lejos y una radio repite alertas. Dentro del portal, la luz funciona y alguien ha puesto música de piano.', { text: 'Casi todo el día pensando en curvas de mortalidad. Y lo que importaba, al final, eral denominador: ella.', think: true, block: true }]);
       W.fin = true; } };

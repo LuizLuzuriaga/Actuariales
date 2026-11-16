@@ -36,6 +36,13 @@
       if (S.gun) S.ammo = AMMO[S.gun][w - 1];
     },
     pick() { S.weapon = true; this.hud(); },
+    /* el arma sale de la mesa y vuela hasta ti antes de pasar a tu mano */
+    async fly(api, mesh) {
+      if (!mesh) return; const P = api.P, p0 = mesh.position.clone(), yaw = P.yaw, tx = P.x - Math.sin(yaw) * 0.45, tz = P.z - Math.cos(yaw) * 0.45;
+      if (window.Sound && Sound.on) Sound.click();
+      await api.tween(520, (e) => { mesh.position.set(p0.x + (tx - p0.x) * e, p0.y + (1.15 - p0.y) * e + Math.sin(e * Math.PI) * 0.25, p0.z + (tz - p0.z) * e); mesh.rotation.z = e * 1.2; mesh.rotation.y += 0.08; });
+      mesh.visible = false; mesh.position.copy(p0); mesh.rotation.set(0, mesh.rotation.y, 0);
+    },
     hasGun(type) { return type ? S.gun === type : !!S.gun; },
     giveGun(type = 'pistola') { S.gun = type; S.ammo = AMMO[type][Math.max(0, (S.wave || 1) - 1)]; this.hud(); },
     hud() {
