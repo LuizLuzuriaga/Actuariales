@@ -18,19 +18,19 @@
       S.hud.querySelector('.push').addEventListener('click', () => this.push()); S.hud.querySelector('.shoot').addEventListener('click', () => this.shoot());
       S.frame = document.createElement('div'); S.frame.id = 'apocframe'; S.frame.innerHTML = '<span class="roman" aria-label="Oleada"></span><span class="ammo"></span>'; document.body.appendChild(S.frame);
       S.key = (e) => { if ((e.key === 'f' || e.key === 'F') && !e.repeat) this.push(); }; window.addEventListener('keydown', S.key);
-      S.mouse = (e) => { if (e.button === 0 && S.gun) this.shoot(); }; window.addEventListener('mousedown', S.mouse);
+      S.mouse = (e) => { if (e.button === 0 && S.gun) { S.hold = true; this.shoot(); } }; S.mouseUp = (e) => { if (e.button === 0) S.hold = false; }; window.addEventListener('mousedown', S.mouse); window.addEventListener('mouseup', S.mouseUp);
       S.tick = (dt, t) => this.tick(dt, t); W.tick.push(S.tick); W.apocOn = true;
       this.spawn(1); this.hud(); if (Q.notify) Q.notify('Alerta', 'Tienes unos segundos antes de que lleguen: busca un arma (pistola o escopeta) y ponte en posición.');
     },
     stop() {
-      if (!S.on) return; S.on = false; window.removeEventListener('keydown', S.key); window.removeEventListener('mousedown', S.mouse);
+      if (!S.on) return; S.on = false; window.removeEventListener('keydown', S.key); window.removeEventListener('mousedown', S.mouse); window.removeEventListener('mouseup', S.mouseUp); S.hold = false; S.kick = 0; S.flash = 0;
       [S.el, S.hud, S.frame].forEach((n) => n && n.remove());
       if (S.W) { S.W.apocOn = false; const i = S.W.tick.indexOf(S.tick); if (i >= 0) S.W.tick.splice(i, 1); }
     },
     spawn(w) {
       const n = Math.min(SIZES[w - 1], S.en.length);
       S.en.forEach((e, i) => {
-        if (i < n) { e.dead = false; e.dying = 0; e.stun = 0; e.v = e.v0 * (1 + 0.06 * (w - 1)); e.g.visible = true; e.g.rotation.set(0, 0, 0); const gp = S.gates ? S.gates[i % S.gates.length] : e.p0; e.g.position.set(gp[0] + ((i * 0.77) % 2.4) - 1.2, 0, gp[1] + ((i * 1.31) % 2.4) - 1.2); }
+        if (i < n) { e.dead = false; e.dying = 0; e.stun = 0; e.free = 1.5; e.v = e.v0 * (1 + 0.32 * (w - 1)); e.g.visible = true; e.g.rotation.set(0, 0, 0); const gp = S.gates ? S.gates[i % S.gates.length] : e.p0; e.g.position.set(gp[0] + ((i * 0.77) % 2.4) - 1.2, 0, gp[1] + ((i * 1.31) % 2.4) - 1.2); }
         else { e.dead = true; e.dying = 0; e.g.visible = false; }
       });
       if (S.gun) S.ammo = AMMO[S.gun][w - 1];
@@ -43,6 +43,7 @@
       await api.tween(520, (e) => { mesh.position.set(p0.x + (tx - p0.x) * e, p0.y + (1.15 - p0.y) * e + Math.sin(e * Math.PI) * 0.25, p0.z + (tz - p0.z) * e); mesh.rotation.z = e * 1.2; mesh.rotation.y += 0.08; });
       mesh.visible = false; mesh.position.copy(p0); mesh.rotation.set(0, mesh.rotation.y, 0);
     },
+    view() { return { on: S.on, gun: S.gun, kick: S.kick || 0, flash: S.flash || 0, ammo: S.ammo }; },
     hasGun(type) { return type ? S.gun === type : !!S.gun; },
     giveGun(type = 'pistola') { S.gun = type; S.ammo = AMMO[type][Math.max(0, (S.wave || 1) - 1)]; this.hud(); },
     hud() {
@@ -60,7 +61,8 @@
     shoot() {
       if (!S.on || !S.gun || S.shotCool > 0 || !S.W.api || S.W.api.S.busy) return;
       if (S.ammo <= 0) { if (window.Sound && Sound.on) Sound.click(); return; }
-      S.ammo--; S.shotCool = S.gun === 'escopeta' ? 0.6 : 0.28; this.hud();
+      S.ammo--; S.shotCool = S.gun === 'escopeta' ? 0.7 : 0.28; this.hud();
+      S.kick = 1; S.flash = 0.07; { const P = S.W.api.P, big = S.gun === 'escopeta'; P.pitch = Math.min(1.35, P.pitch + (big ? 0.06 : 0.028)); P.yaw += (Math.random() - 0.5) * (big ? 0.03 : 0.012); }
       const cam = window.__qx && window.__qx.camera; if (window.Sound && Sound.on) Sound.shot();
       S.frame.classList.add('flash'); setTimeout(() => S.frame && S.frame.classList.remove('flash'), 90);
       if (!cam) return;
@@ -74,6 +76,8 @@
       if (!S.on || S.res || !S.W.api) return; const A = S.W.api; if (A.S.busy) return; const P = A.P, b = S.W.bounds; S.t += dt; S.cool -= dt; S.inv -= dt; S.shotCool -= dt;
       const rx = S.cfg.refuge[0], rz = S.cfg.refuge[1], rd = Math.hypot(rx - P.x, rz - P.z);
       if (S.t > 1.2 && S.lab) { let rel = Math.atan2(-(rx - P.x), -(rz - P.z)) - P.yaw; rel = ((rel + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; S.el.firstChild.style.transform = 'rotate(' + (-rel) + 'rad)'; S.lab.textContent = Math.round(rd) + ' m · ' + (S.cfg.refugeLabel || 'refugio'); }
+      S.kick = Math.max(0, (S.kick || 0) - dt * (S.gun === 'escopeta' ? 3.2 : 7)); S.flash = Math.max(0, (S.flash || 0) - dt);
+      if (S.hold && S.gun && S.shotCool <= 0) this.shoot();                                                    // mantener el clic: dispara a la cadencia del arma
       if (S.grace > 0) S.grace -= dt;                                                            // margen al empezar cada oleada: tiempo para moverte, coger el arma y apuntar
       S.en.forEach((e) => {
         if (e.dying > 0) { e.dying -= dt; e.g.rotation.x = Math.min(1.5, e.g.rotation.x + dt * 3.2); if (e.dying <= 0) e.g.visible = false; return; }
@@ -81,7 +85,8 @@
         if (S.grace > 0) { e.g.rotation.y = Math.atan2(P.x - e.g.position.x, P.z - e.g.position.z) + Math.PI; return; }
         if (e.stun > 0) { e.stun -= dt; e.g.rotation.z = 0.5; return; } e.g.rotation.z = Math.sin(S.t * 3 + (e.ph || 0)) * 0.1; e.g.rotation.x = 0;
         const dx = P.x - e.g.position.x, dz = P.z - e.g.position.z, d = Math.hypot(dx, dz) || 1;
-        if (d > 0.8) { const v = e.v || 1.8; Q.npcStep(e.g.position, dx / d * v * dt, dz / d * v * dt, 0.34, S.W.obst, S.en.filter((q) => !q.dead && q.g.visible).map((q) => q.g.position)); } e.g.rotation.y = Math.atan2(dx, dz) + Math.PI;
+        if (e.free > 0) { e.free -= dt; e.g.scale.setScalar(0.35 + 0.65 * (1 - e.free / 1.5)); if (d > 0.8) { const v = (e.v || 1.8) * 0.8; e.g.position.x += dx / d * v * dt; e.g.position.z += dz / d * v * dt; } }                      // salen de la tienda de campaña, ya sin chocar con ella
+        else if (d > 0.8) { e.g.scale.setScalar(1); const v = e.v || 1.8; Q.npcStep(e.g.position, dx / d * v * dt, dz / d * v * dt, 0.34, S.W.obst, S.en.filter((q) => !q.dead && q.g.visible).map((q) => q.g.position)); } e.g.rotation.y = Math.atan2(dx, dz) + Math.PI;
         if (d < 0.9 && S.inv <= 0) { S.lives--; S.inv = 1.8; this.hud(); P.x = Math.max(b.minX + 0.3, Math.min(b.maxX - 0.3, P.x - dx / d * 0.9)); P.z = Math.max(b.minZ + 0.3, Math.min(b.maxZ - 0.3, P.z - dz / d * 0.9)); if (window.Sound && Sound.on) { Sound.growl(0.9); Sound.bad(); } S.frame.classList.add('hurt'); setTimeout(() => S.frame && S.frame.classList.remove('hurt'), 300); }
       });
       // oleada abatida: el número romano titila y llega la siguiente (II con 10, III con 20); tras la III, sobrevives

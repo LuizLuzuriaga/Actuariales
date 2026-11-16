@@ -77,7 +77,7 @@
     const lbl = ['12→24', '24→36', '36→48'];
     const wrong = [[fmt(493 / 460), 'Metiste en el denominador un año que aún no tiene dato siguiente.'], [fmt(1.9, 3), 'Eso no sale de los datos: multiplica por 12 meses o por la columna equivocada.'], [fmt(1.5, 3), 'Es solo la media del primer ratio aproximada, sin ponderar por volumen.']];
     for (let k = 0; k < 3; k++) {
-      const bad = [{ t: fmt(inv[k]), fb: 'Lo has puesto del revés: el factor de desarrollo es (siguiente columna) / (actual), y es mayor que 1.' }, { t: k === 0 ? wrong[0][0] : k === 1 ? fmt(f[k] + 0.14) : fmt(f[k] + 0.07), fb: k === 0 ? wrong[0][1] : 'Se aleja del cociente de las sumas, que es lo que pidel factor ponderado.' }];
+      const bad = [{ t: fmt(inv[k]), fb: 'Lo has puesto del revés: el factor de desarrollo es (siguiente columna) / (actual), y es mayor que 1.' }, { t: k === 0 ? wrong[0][0] : k === 1 ? fmt(f[k] + 0.14) : fmt(f[k] + 0.07), fb: k === 0 ? wrong[0][1] : 'Se aleja del cociente de las sumas, que es lo que pide el factor ponderado.' }];
       s += await pick(H, `Factor de desarrollo <b>${lbl[k]}</b>`, tabla + '<p>Pondera por volumen: suma de la columna siguiente entre suma de la actual, solo con los años que tienen ambos datos.</p>', shuffle([{ t: fmt(f[k]), ok: true, fb: `Correcto: ${fmt(f[k])}.` }, ...bad]));
     }
     const lat = tri.map((r) => r.filter((v) => v != null).pop()), cum = [f[0] * f[1] * f[2], f[1] * f[2], f[2], 1], ult = [180, 192 * f[2], 175 * f[1] * f[2], 130 * f[0] * f[1] * f[2]], res = ult.reduce((a, b) => a + b, 0) - lat.reduce((a, b) => a + b, 0);

@@ -1,5 +1,5 @@
 /* cafe.js — nivel 6: la cafetería de la planta baja. El Grandullón te espera en una mesa. Tres rondas de conversación deciden el final; si has ido dejando
-   que todo se descuide (descuido ≥ 7), por la ventana se ve cómo acabal mundo. Devuelve { score, zombi } al terminar. */
+   que todo se descuide (descuido ≥ 7), por la ventana se ve cómo acaba el mundo. Devuelve { score, zombi } al terminar. */
 (() => {
   const Q = window.QX;
   const MG = THREE.BufferGeometryUtils;
@@ -73,7 +73,7 @@
 
     if (apoc) W.startApoc = async (api, quick) => {
         const say = api.say;
-        if (!quick) await say(['—Qué pinta tienes —dice el Grandullón sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpeal marco. Luego, otra cosa. Luego, todas.']);
+        if (!quick) await say(['—Qué pinta tienes —dice el Grandullón sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpea el marco. Luego, otra cosa. Luego, todas.']);
         W.doBreach(); if (window.Sound && Sound.on) { Sound.glass(); setTimeout(() => Sound.shout(0.08), 500); Sound.growl(0.9); } await api.wait(1800);
         await say(quick ? ['El cristal vuelve a caer y la calle entra otra vez. Corre.'] : ['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'El Grandullón se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Corre.']);
         Q.apoc.start(W, { refuge: [bounds.maxX - 0.7, -2.8], r: 1.5, refugeLabel: 'puerta de la cocina', gates: [[-6.5, -3], [-6.5, 0], [-6.5, 3], [-8, -1.5], [-8, 1.5]], enemies: W.zs.map((z, i) => ({ g: z.g, v: 1.35 + 0.02 * i, stun: i * 0.15, ph: z.ph })),
@@ -118,7 +118,7 @@
         await say(['Entra un mensaje de Amor: «¿Cenamos hoy?». Debajo, la caña del Grandullón, ya recién tirada. Alguien en la barra ha puesto música de ascensor.', '—Una rápida —dice el Grandullón—, y no te pregunto nada más en todo el día.']);
         const r = await choose([{ id: 'a', label: 'Una caña', hint: 'Son las nueve de la mañana' }, { id: 'b', label: 'Otro café, y luego subo', hint: 'Termino lo que empecé' }, { id: 'c', label: 'Me voy ya', hint: 'El Sheldon y el triángulo esperan' }], 'Tercera ronda');
         W.score += r === 'a' ? -2 : r === 'b' ? 0 : 1; W.exit = true;
-        await say(r === 'a' ? 'La caña llega fría y perfecta. Las nueve de la mañana nunca habían sido tan razonables.' : r === 'b' ? 'El segundo café sabe igual que el primero, pero con más culpa.' : 'Te levantas. El Grandullón levantal vaso: —Por los que suben. Luego te cuento el cotilleo.');
+        await say(r === 'a' ? 'La caña llega fría y perfecta. Las nueve de la mañana nunca habían sido tan razonables.' : r === 'b' ? 'El segundo café sabe igual que el primero, pero con más culpa.' : 'Te levantas. El Grandullón levanta el vaso: —Por los que suben. Luego te cuento el cotilleo.');
       } } };
     W.play = async (api) => {
       W.api = api; const { say, free } = api;

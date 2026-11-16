@@ -30,7 +30,7 @@
   renderer.shadowMap.autoUpdate = false;                  // el mapa de sombras se redibuja un fotograma sí y otro no (casi todo es estático)
   renderer.info.autoReset = false;                        // contamos todas las pasadas del fotograma: sombras, espejo y posproceso
 
-  /* La cabeza solo existe paral espejo: la cámara principal (capa 0) no la ve; las cámaras virtuales del espejo sí. */
+  /* La cabeza solo existe para el espejo: la cámara principal (capa 0) no la ve; las cámaras virtuales del espejo sí. */
   const mainRender = renderer.render.bind(renderer);
   let mainCamera = null;
   renderer.render = (s, cam) => { if (mainCamera && cam !== mainCamera) cam.layers.enableAll(); return mainRender(s, cam); };
@@ -92,7 +92,7 @@
 
   /* ============================== Interactivos ============================== */
   const tasksEl = $('#tasks');
-  const TASKS = [['alarm', 'Apagar el despertador'], ['dress', 'Vestirte paral día'], ['bag', 'Cargar la mochila'], ['out', 'Salir de casa']];
+  const TASKS = [['alarm', 'Apagar el despertador'], ['dress', 'Vestirte para el día'], ['bag', 'Cargar la mochila'], ['out', 'Salir de casa']];
   function renderTasks(flash) { tasksEl.innerHTML = TASKS.map(([k, t]) => `<li class="${S.tasks[k] ? 'done' : ''}${k === flash ? ' flash' : ''}">${t}</li>`).join(''); }
   function completeTask(k) { S.tasks[k] = true; S.lastProgress = performance.now(); renderTasks(k); Sound.ok(); }
   const allReady = () => S.tasks.alarm && S.tasks.dress && S.tasks.bag;
@@ -112,9 +112,9 @@
       if (window.Sound && Sound.on) { if (cl >= 1) Sound.siren(3.6); else Sound.dog(); if (cl >= 3) setTimeout(() => Sound.shout(0.06), 900); }
       await say([['Te asomas y miras hacia abajo. La calle, a esta hora: una farola naranja, dos borrachos junto al banco del parque y poco más. Lo normal.'],
         ['Abajo, luces azules intermitentes al fondo del parque. Alguien cruza corriendo y no mira atrás.', { text: 'Una pelea, un atropello. Seguro que es eso.', think: true }],
-        ['Un coche parado en mitad de la calle con las luces de emergencia y la puerta abierta. Nadie dentro. Más gente corriendo, y ninguna hacial metro.'],
+        ['Un coche parado en mitad de la calle con las luces de emergencia y la puerta abierta. Nadie dentro. Más gente corriendo, y ninguna hacia el metro.'],
         ['Humo gris sobre los edificios del fondo. Uno de los borrachos está en el suelo y no se mueve. Dos figuras se le acercan, cojeando, sin prisa.', { text: 'Esto no es una resaca.', think: true, block: true }],
-        ['La calle está llena de gente que camina torcida. Un coche ha chocado contral quiosco. Sobre el horizonte, columnas de humo.', { text: 'Tendrías que haber salido hace una hora.', think: true, block: true }]][Math.min(cl, 4)]); } },
+        ['La calle está llena de gente que camina torcida. Un coche ha chocado contra el quiosco. Sobre el horizonte, columnas de humo.', { text: 'Tendrías que haber salido hace una hora.', think: true, block: true }]][Math.min(cl, 4)]); } },
     cama: { label: 'Mirar la cama', stand: [-0.4, 0.05], look: [-1.5, 0.5, -0.4], enabled: () => true, run: async () => { cost('cama', 3); await say('Tu cama, todavía caliente. Tiene un 100 % de retención y cero rentabilidad.'); } },
     escritorio: { label: 'Mirar el escritorio', stand: [-0.95, 0.3], look: [-1.9, 0.85, 0.85], enabled: () => true, run: actEscritorio },
     medalla: { label: 'Mirar la medalla', stand: [-0.9, 1.5], look: [-2.15, 1.5, 1.62], enabled: () => true, run: async () => { cost('medalla', 2); await say(['La medalla de la San Silvestre. Diez kilómetros a ritmo constante: el único estimador insesgado que tienes.']); } },
@@ -162,7 +162,7 @@
     if (id === tipId) { msg.hidden = true; tipWake = null; }
   }
   /* Textos: lo clave bloquea hasta pulsar (interactuar, decisiones, pensamientos con block:true); los pensamientos y comentarios de fondo
-     (think:true) salen como aviso que no paral juego y se va solo. */
+     (think:true) salen como aviso que no para el juego y se va solo. */
   function say(lines) {
     if (!Array.isArray(lines)) lines = [lines];
     const soft = lines.filter((l) => l && typeof l === 'object' && l.think && !l.block), hard = lines.filter((l) => !soft.includes(l));
@@ -263,7 +263,7 @@
   function setTime(t) { S.time = t; clockEl.textContent = t; }
   function enterWorld(w, name) {
     if (A.group.parent) A.group.parent.remove(A.group);
-    scene = w.scene; scene.add(A.group); if (GOAL.parent) GOAL.parent.remove(GOAL); scene.add(GOAL); try { renderer.compile(scene, camera); } catch (e) { }                  // precompila los shaders del mundo para evitar el tirón al entrar
+    scene = w.scene; scene.add(A.group); if (GOAL.parent) GOAL.parent.remove(GOAL); scene.add(GOAL); if (VIEW.parent) VIEW.parent.remove(VIEW); scene.add(VIEW); try { renderer.compile(scene, camera); } catch (e) { }                  // precompila los shaders del mundo para evitar el tirón al entrar
     if (fx.on && fx.composer.passes[0]) fx.composer.passes[0].scene = scene;
     ROOM = w.bounds; OBST = w.obst; TICK = w.tick; ACTS = w.acts; ACT_ROOTS = w.actRoots; WORLD = name;
     P.x = w.spawn[0]; P.z = w.spawn[1]; P.vx = P.vz = 0; P.walk = 0;
@@ -282,7 +282,7 @@
       choiceEl.querySelectorAll('.opt').forEach((b) => b.addEventListener('click', () => done(+b.dataset.i)));
     });
   }
-  async function free(ms, hint, until) {                    // ventana en la que puedes pasear y mirar antes de que sigal guion; devuelve true si se ha saltado
+  async function free(ms, hint, until) {                    // ventana en la que puedes pasear y mirar antes de que siga el guion; devuelve true si se ha saltado
     inFree = true; S.busy = false; freeHintEl.hidden = !hint;
     const t0 = performance.now(); let skipped = false; const sb = $('#saltar');
     sb.onclick = () => { skipped = true; }; const onN = (e) => { if ((e.key === 'n' || e.key === 'N') && !sb.hidden && !e.repeat) skipped = true; }; window.addEventListener('keydown', onN);
@@ -317,6 +317,16 @@
     const stem = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.2), mat); stem.position.y = 0.87; GOAL.add(stem);
     const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.52, 20), mat2); ring.rotation.x = -Math.PI / 2; ring.position.y = -0.04; GOAL.add(ring);
     GOAL.traverse((o) => { o.renderOrder = 999; }); GOAL.visible = false; GOAL.frustumCulled = false; scene.add(GOAL); }
+  /* Arma en primera persona: delante de la cámara, con balanceo al andar, retroceso al disparar y fogonazo */
+  const VIEW = new THREE.Group(); VIEW.visible = false;
+  { const dark = new THREE.MeshStandardMaterial({ color: 0x15171b, roughness: 0.35, metalness: 0.7, depthTest: false }), steel = new THREE.MeshStandardMaterial({ color: 0x4a4e56, roughness: 0.25, metalness: 0.9, depthTest: false }), wood = new THREE.MeshStandardMaterial({ color: 0x5a3a22, roughness: 0.6, depthTest: false });
+    const mk = (geo, mat, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.renderOrder = 1000; return o; };
+    const pis = new THREE.Group(); pis.add(mk(new THREE.BoxGeometry(0.055, 0.07, 0.26), steel, 0, 0.0, -0.1), mk(new THREE.BoxGeometry(0.05, 0.045, 0.2), dark, 0, -0.012, -0.12), mk(new THREE.BoxGeometry(0.045, 0.13, 0.07), dark, 0, -0.1, 0.0), mk(new THREE.BoxGeometry(0.012, 0.012, 0.012), steel, 0, 0.04, 0.0));
+    const esc = new THREE.Group(); esc.add(mk(new THREE.BoxGeometry(0.05, 0.05, 0.62), steel, 0, 0.02, -0.28), mk(new THREE.BoxGeometry(0.04, 0.04, 0.5), dark, 0, -0.03, -0.22), mk(new THREE.BoxGeometry(0.06, 0.06, 0.2), wood, 0, -0.03, -0.06), mk(new THREE.BoxGeometry(0.055, 0.11, 0.3), wood, 0, -0.07, 0.18));
+    const fl = (z) => { const c = Q.cvs(64, 64), g = c.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32); gr.addColorStop(0, 'rgba(255,250,220,1)'); gr.addColorStop(0.35, 'rgba(255,190,70,.85)'); gr.addColorStop(1, 'rgba(255,90,10,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+      const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.toTex(c), transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false })); sp.position.set(0, 0.02, z); sp.renderOrder = 1001; sp.visible = false; return sp; };
+    pis.userData.flash = fl(-0.28); esc.userData.flash = fl(-0.6); pis.add(pis.userData.flash); esc.add(esc.userData.flash);
+    VIEW.userData = { pis, esc }; VIEW.add(pis, esc); scene.add(VIEW); }
   const objEl = document.createElement('div'); objEl.id = 'objetivo'; objEl.hidden = true; document.body.appendChild(objEl); let objT = 0;
   let CINE = null;
   const API = { cine: (cfg) => { CINE = cfg; A.group.visible = !cfg; }, chart: async () => { if (document.pointerLockElement) document.exitPointerLock(); await Q.showMortality(); lockPointer(); }, say: async (l) => { await say(l); if (inScript && !inFree) S.busy = true; }, choose, tween, wait: sleep, setTime, free, P, S };
@@ -462,7 +472,7 @@
       if (sr === 'rescatado') break;
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
-      await deathCard('Te alcanzan en la plaza', 'Los infectados te rodean frente a la boca del metro. El Grandullón levanta la caña por última vez: «Por los que suben». Pero tú no subes. Probemos otra vez desdel apocalipsis.');
+      await deathCard('Te alcanzan en la plaza', 'Los infectados te rodean frente a la boca del metro. El Grandullón levanta la caña por última vez: «Por los que suben». Pero tú no subes. Probemos otra vez desde el apocalipsis.');
       retrySol = true;
     }
     inScript = false;
@@ -505,7 +515,7 @@
       if (pr === 'atrapado2') p2 = true;
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
-      await deathCard('Parte de la planta 4', 'La bacteria negra te alcanza entre dos cubículos. No duele: simplemente dejas de ser una persona y pasas a ser un patrón en la moqueta. Vuelve a empezar la carrera desdel ascensor.');
+      await deathCard('Parte de la planta 4', 'La bacteria negra te alcanza entre dos cubículos. No duele: simplemente dejas de ser una persona y pasas a ser un patrón en la moqueta. Vuelve a empezar la carrera desde el ascensor.');
       retryPla = true;
     }
     inScript = false;
@@ -531,7 +541,7 @@
       if (!(r.zombi && r.res === 'muerto')) break;
       if (window.Sound && Sound.on) Sound.bad();
       await fade(true);
-      await deathCard('Te alcanzan en la cafetería', 'Entre el cristal roto y las sillas volcadas, los infectados te rodean antes de llegar a la cocina. Otra vez desdel cristal que revienta.');
+      await deathCard('Te alcanzan en la cafetería', 'Entre el cristal roto y las sillas volcadas, los infectados te rodean antes de llegar a la cocina. Otra vez desde el cristal que revienta.');
       retryCaf = true;
     }
     inScript = false;
@@ -637,7 +647,7 @@
     if (on) { g.fillStyle = '#ff6b6b'; g.beginPath(); g.arc(128, 380, 44, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '22px Segoe UI'; g.fillText('Parar', 128, 388); }
     R.ref.phoneTex.needsUpdate = true;
   }
-  let holdW = 0, joyT = 0, leanT = 0, crouchK = 0; const gpHeld = {};
+  let holdW = 0, joyT = 0, leanT = 0, crouchK = 0, lastStep = 0, strafeK = 0, sprintK = 0; const gpHeld = {};
   function frame() {
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
@@ -657,7 +667,7 @@
       const joyFwd = moveVec.y < -0.6 && Math.hypot(moveVec.x, moveVec.y) > 0.8; joyT = joyFwd ? joyT + dt : 0;                // joystick sostenido hacia delante ~1 s = correr
       const sp = (keys['shift'] || gpHeld.run || joyT > 3.0 ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)) * (1 - 0.42 * crouchK), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
       const tvx = (-sy * fz + cy * fx0) * sp, tvz = (-cy * fz - sy * fx0) * sp;
-      P.vx = lerp(P.vx, tvx, Math.min(1, dt * 9)); P.vz = lerp(P.vz, tvz, Math.min(1, dt * 9));
+      { const want = tvx * tvx + tvz * tvz, have = P.vx * P.vx + P.vz * P.vz, k = 1 - Math.exp(-dt * (want > have ? 6.5 : 4.2)); P.vx = lerp(P.vx, tvx, k); P.vz = lerp(P.vz, tvz, k); }   // arranque y frenada con inercia, sin brusquedad
       const [nx, nz] = collide(P.x + P.vx * dt, P.z + P.vz * dt); P.x = nx; P.z = nz; P.walk = Math.min(1, Math.hypot(P.vx, P.vz) / 1.5);
     } else if (!S.busy) { P.vx = P.vz = 0; }
 
@@ -667,8 +677,11 @@
     A.headPivot.rotation.set(clamp(P.pitch, -1.0, 1.0) * 0.9, angDiff(P.yaw, P.bodyYaw), 0);
     A.update(dt, t, P.walk, P.pitch);
 
-    P.bob += dt * 8.5 * P.walk;
-    const calm = CFG.calm ? 0 : 1, bobY = Math.abs(Math.sin(P.bob)) * 0.028 * P.walk * calm + Math.sin(t * 1.6) * 0.004 * calm, bobX = Math.cos(P.bob) * 0.012 * P.walk * calm;
+    const spd = Math.hypot(P.vx, P.vz), spdK = clamp(spd / 3, 0, 1); P.bob += dt * (4.6 + spd * 1.6) * P.walk;
+    { const st = Math.floor(P.bob / Math.PI); if (st !== lastStep) { lastStep = st; if (spd > 0.6 && S.started && !S.busy && !CINE && window.Sound && Sound.on && Sound.step) Sound.step(0.5 + spdK * 0.6); } }
+    strafeK = lerp(strafeK, clamp(-(Math.cos(P.yaw) * P.vx - Math.sin(P.yaw) * P.vz) / 3, -1, 1), Math.min(1, dt * 6));
+    sprintK = lerp(sprintK, spd > 2.3 ? 1 : 0, Math.min(1, dt * 4)); { const f = CFG.fov + 7 * sprintK; if (Math.abs(camera.fov - f) > 0.05) { camera.fov = f; camera.updateProjectionMatrix(); } }
+    const calm = CFG.calm ? 0 : 1, bobY = Math.abs(Math.sin(P.bob)) * (0.026 + 0.03 * spdK) * P.walk * calm + Math.sin(t * 1.6) * 0.004 * calm, bobX = Math.cos(P.bob) * (0.014 + 0.012 * spdK) * P.walk * calm;
     camK = lerp(camK, third ? 1 : 0, Math.min(1, dt * 7));
     let ex = P.x + Math.cos(P.yaw) * bobX, ey = EYE + bobY + (P.dy || 0), ez = P.z - Math.sin(P.yaw) * bobX;
     if (camK > 0.01) {                                          // tercera persona: detrás y algo por encima, sin atravesar paredes ni techo
@@ -681,10 +694,17 @@
     leanT = lerp(leanT, (keys['r'] ? 1 : 0) - (keys['q'] ? 1 : 0), Math.min(1, dt * 9)); crouchK = lerp(crouchK, (keys['c'] || gpHeld.crouch) ? 1 : 0, Math.min(1, dt * 8));
     ex += Math.cos(P.yaw) * leanT * 0.32 * (1 - camK); ez -= Math.sin(P.yaw) * leanT * 0.32 * (1 - camK); ey -= 0.55 * crouchK * (1 - camK);
     camera.position.set(ex, ey, ez);
-    camera.rotation.set(P.pitch - 0.14 * camK, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm * (1 - camK) - leanT * 0.13 * (1 - camK));
+    camera.rotation.set(P.pitch - 0.14 * camK, P.yaw, Math.sin(P.bob) * (0.005 + 0.006 * spdK) * P.walk * calm * (1 - camK) - leanT * 0.13 * (1 - camK) + strafeK * 0.022 * calm * (1 - camK));
     if (WORLD === 'train' && TRN) { camera.position.y += TRN.sway.y; camera.rotation.z += TRN.sway.roll; }
     { objT -= dt; if (objT <= 0) { objT = 0.3; const o = objetivo(); objEl.textContent = o.t ? 'Objetivo · ' + o.t : ''; objEl.hidden = !o.t || !S.started || !!CINE || !!document.getElementById('apocframe') && false; GOAL.userData.g = o.g; }
       const g = GOAL.userData.g; if (g && !CINE && S.started && !S.busy) { const d = Math.hypot(g[0] - P.x, g[2] - P.z); GOAL.visible = d > 1.6; const s = clamp(d * 0.075, 0.45, 2.4); GOAL.scale.setScalar(s); GOAL.position.set(g[0], g[1] + (0.3 + 0.28 * Math.sin(t * 4.4)) * s, g[2]); GOAL.rotation.y = t * 1.2; } else GOAL.visible = false; }
+    { const av = Q.apoc && Q.apoc.view ? Q.apoc.view() : null, show = !!(av && av.on && av.gun && camK < 0.1 && !CINE && !S.busy && S.started);
+      VIEW.visible = show;
+      if (show) { const esc = av.gun === 'escopeta'; VIEW.userData.pis.visible = !esc; VIEW.userData.esc.visible = esc; const g = esc ? VIEW.userData.esc : VIEW.userData.pis, k = av.kick;
+        const bob = Math.sin(P.bob) * 0.012 * P.walk, sway = Math.cos(P.bob * 0.5) * 0.008 * P.walk;
+        const off = new THREE.Vector3(0.2 + sway, -0.2 + bob - k * 0.015 - crouchK * 0.03, -0.45 + k * (esc ? 0.14 : 0.08)); camera.updateMatrixWorld(); camera.localToWorld(off); VIEW.position.copy(off);
+        VIEW.quaternion.copy(camera.quaternion); VIEW.rotateX(k * (esc ? 0.4 : 0.3)); VIEW.rotateY(-0.05);
+        const f = g.userData.flash; f.visible = av.flash > 0; if (f.visible) { f.scale.setScalar((esc ? 0.55 : 0.34) * (0.8 + Math.random() * 0.5)); f.material.rotation = Math.random() * 6.28; } } }
     if (CINE) { const l = CINE.look(); camera.position.set(CINE.pos[0], CINE.pos[1], CINE.pos[2]); camera.lookAt(l[0], l[1], l[2]); }                // plano fijo de cine
     if (camK > 0.05) camera.layers.enable(1); else camera.layers.disable(1);     // la cabeza (capa 1) solo se ve en el espejo y en tercera persona
 
@@ -765,7 +785,7 @@
     if (/[?&]sol/.test(location.search)) { S.alarmOn = false; startSol(); return; }
     if (/[?&]cafe/.test(location.search)) { S.alarmOn = false; S.descuido = +(location.search.match(/desc=(\d+)/) || [0, 0])[1]; startCafe(); return; }
     if (/[?&](oficina|planta|cafe)/.test(location.search) && !/[?&]cafe/.test(location.search)) { S.alarmOn = false; startOficina(); return; }
-    const how = COARSE ? 'Arrastral pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
+    const how = COARSE ? 'Arrastra el pulgar izquierdo para andar y el derecho para mirar. Toca lo que quieras usar.' : 'Mueve el ratón para mirar, W A S D para andar y E sobre lo que brille.';
     if (store('intro')) tip([how]);
     else { store('intro', '1'); tip(['05:45. Fuera todavía es de noche y una farola pinta la pared de naranja. El despertador cree que es una buena hora para vivir.', { text: 'Primera estimación del día: probabilidad de que el tren vaya vacío. Estimador puntual: cero.', think: true }, how]); }
   });

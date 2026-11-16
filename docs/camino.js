@@ -3,7 +3,7 @@
 (() => {
   const Q = window.QX;
   const BASE = [
-    'Calle de la Albufera, 06:05. A esta hora la demanda de café es perfectamente inelástica: nadie preguntal precio, solo el tamaño.',
+    'Calle de la Albufera, 06:05. A esta hora la demanda de café es perfectamente inelástica: nadie pregunta el precio, solo el tamaño.',
     'Un hombre pasea a su perro; el perro pasea al hombre. Equilibrio de Nash: nadie cede la acera.',
     'Tu novia diría que caminas deprisa para no oír tus pensamientos. Tú dirías que es cardio. Los dos tenéis sesgo de confirmación.',
     'Nueve viandantes. Muestra diminuta, perfecta para sacar conclusiones, como en toda red social que se precie.',
@@ -11,6 +11,11 @@
     'Riesgo de morir esta mañana, por persona: 0,00002 %. Riesgo de llegar tarde: 38 %. El ser humano es muy de ordenar mal sus miedos.',
     'El café con tostada ha subido un 4 %. Tu sueldo, un 0 %. La correlación es espuria; la causalidad, el jefe.',
     'Freud explicaría por qué cruzas en rojo. Tu novia lo explicaría mejor, aunque te cobraría por sesión.'];
+  BASE.push('Un hombre discute con el cajero: «Es que yo soy muy de renta variable». El cajero, de renta fija.',
+    'Heurística de anclaje: te dicen que el café vale 2,40 y 2,10 ya te parece una ganga.',
+    'Una paloma toma decisiones óptimas bajo incertidumbre: come lo que cae. Tú, no.',
+    'Un cartel anuncia «30 % de descuento» sobre un precio que subió un 40 % la semana pasada.',
+    'Regresión a la media: hoy llegas puntual por pura casualidad. Mañana, de vuelta al promedio.');
   const WEIRD = [
     [],
     ['Una persiana cerrada a golpes. Desde dentro. Habrá sido el viento. Dentro de la casa.', 'Pasa una ambulancia sin sirena. Es lo único en Madrid que llega rápido y nadie quiere ver llegar.'],
@@ -25,7 +30,12 @@
     'Un modelo lineal generalizado no es lineal ni general. Pero tiene un enlace logarítmico y una paciencia infinita.',
     'La esperanza de vida es una media: nadie vive el promedio, igual que nadie viaja en el vagón medio de la línea C-2.',
     'Las tablas de mortalidad se publican cada año con rigor. De los zombis, de momento, no hay tablas.',
-    'En seguros, la franquicia es lo que pones tú. En el apocalipsis, la franquicia es todo.'];
+    'En seguros, la franquicia es lo que pones tú. En el apocalipsis, la franquicia es todo.',
+    'Falacia del jugador: la ruleta no «debe» el rojo. Y el tren tampoco te debe un asiento.',
+    'Overfitting es memorizar el examen en lugar de aprender la asignatura. Los modelos de aprendizaje automático también lo hacen.',
+    'La paradoja de Simpson: una tendencia puede invertirse al agrupar los datos. Como tu humor al agrupar lunes.',
+    'En economía, el coste de oportunidad es lo que dejas de hacer. Mirar esta pantalla, por ejemplo, te cuesta una siesta.',
+    'El sesgo de confirmación te hace buscar solo los datos que ya esperabas. Por eso los lunes siempre confirman que lo son.'];
   const stat = () => { const H = Q.hooks, d = Math.max(0, Math.min(9, (H && H.descuido ? H.descuido() : 0) | 0)); return '<span>descuido</span><i>' + '▮'.repeat(d) + '▯'.repeat(9 - d) + '</i><span>' + d + '/9</span>'; };
   const extras = (el) => { const s = document.createElement('p'); s.className = 'cm-desc'; s.innerHTML = stat(); const f = document.createElement('p'); f.className = 'cm-fact'; f.innerHTML = '<b>Dato actuarial</b>'; f.appendChild(document.createTextNode(DATOS[Math.floor(Math.random() * DATOS.length)])); el.appendChild(s); el.appendChild(f); };
   Q.cargaExtras = extras;

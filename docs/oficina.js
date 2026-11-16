@@ -108,7 +108,7 @@
       W.gente = new THREE.Group(); W.gente.visible = false; root.add(W.gente); W.walkers = [];
       { const spots = cubs.filter((c, i) => i % 3 !== 1).map(([x, z, ry]) => [x + (ry ? 0.1 : -0.1), z + (ry ? -0.35 : 0.35)]); const C = Q.buildCrowd(spots, { seed: 91, yaw: (r) => r() * 6.28 }); W.gente.add(C.group); C.obst.forEach((q) => W.obst.push(q));
         [-5.7, -1.5, 2.7, 6.9].forEach((ax, k) => { const w = Q.buildCrowd([[0, 0]], { seed: 120 + k, yaw: () => 0 }); w.group.position.set(ax, 0, -9 + k * 3); W.gente.add(w.group); const ob = { minX: 0, maxX: 0, minZ: 0, maxZ: 0, own: w.group.position }; W.obst.push(ob); W.walkers.push({ g: w.group, v: 0.9 + k * 0.12, dir: k % 2 ? 1 : -1, o: ob }); }); }
-      W.tick.push((dt) => { if (!W.gente.visible) return; const others = W.walkers.map((q) => q.g.position); W.walkers.forEach((w) => { if (Q.npcStep(w.g.position, 0, w.dir * w.v * dt, 0.3, W.obst, others)) w.dir *= -1; if (w.g.position.z > 3.2) w.dir = -1; if (w.g.position.z < -9.6) w.dir = 1; w.g.rotation.y = w.dir > 0 ? 0 : Math.PI; w.o.minX = w.g.position.x - 0.27; w.o.maxX = w.g.position.x + 0.27; w.o.minZ = w.g.position.z - 0.27; w.o.maxZ = w.g.position.z + 0.27; }); });
+      W.tick.push((dt) => { if (!W.gente.visible) return; const others = W.walkers.map((q) => q.g.position); W.walkers.forEach((w) => { if (Q.npcStep(w.g.position, 0, w.dir * w.v * dt, 0.3, W.obst, others)) w.dir *= -1; if (w.g.position.z > 3.2) w.dir = -1; if (w.g.position.z < -9.6) w.dir = 1; w.g.rotation.y = w.dir > 0 ? Math.PI : 0; w.o.minX = w.g.position.x - 0.27; w.o.maxX = w.g.position.x + 0.27; w.o.minZ = w.g.position.z - 0.27; w.o.maxZ = w.g.position.z + 0.27; }); });
       // la bacteria
       { const mon = Q.buildBacteria(); mon.group.visible = false; mon.group.position.set(6, 0, 10.4); root.add(mon.group); W.mon = mon;
         const st = W.chase = { on: false, t: 0, ng: 0, ns: 0, surge: 0, nextSurge: 4 }, touch = 'ontouchstart' in window;
@@ -151,12 +151,12 @@
       W.acts.ascensor = { label: 'Llamar al ascensor', stand: [3.6, -3.0], look: [3.6, 1.4, bounds.minZ], enabled: () => true, run: async (api) => { await api.say(['Planta 4. El ascensor tarda lo suficiente para que pienses en todo lo que no has pensado.', 'Las puertas se abren con un suspiro de metal. Dentro, un espejo y una luz que no favorece a nadie.']);
         if (window.Sound && Sound.on) Sound.doorBeep(); const P = api.P, z0 = P.z; await api.tween(1000, (e) => { W.elL.position.x = -0.85 - 0.8 * e; W.elR.position.x = 0.85 + 0.8 * e; }); await api.tween(1100, (e) => { P.z = z0 - 1.7 * e; P.walk = 1; }); P.walk = 0; W.exit = true; } };
       W.play = async (api) => {
-        const { say, free } = api; await say(['El vestíbulo. Terrazo gris, fluorescentes y un cartel rojo sin una letra. No hace falta una marca: lo sabes de memoria.', 'Aquí se cruzal torno de la entrada con el de la salida. Solo uno de los dos se usa de verdad.']);
-        await free(1e9, 'Cruzal torno · llama al ascensor cuando quieras', () => W.exit); return 'subir'; };
+        const { say, free } = api; await say(['El vestíbulo. Terrazo gris, fluorescentes y un cartel rojo sin una letra. No hace falta una marca: lo sabes de memoria.', 'Aquí se cruza el torno de la entrada con el de la salida. Solo uno de los dos se usa de verdad.']);
+        await free(1e9, 'Cruza el torno · llama al ascensor cuando quieras', () => W.exit); return 'subir'; };
     } else {
       W.acts.mesa = { label: 'Sentarte y trabajar', stand: [MX + 0.1, MZ + 1.5], look: [MX, 0.95, MZ - 0.85], enabled: () => !W.sat && !!W.api && Math.hypot(W.api.P.x - MX, W.api.P.z - (MZ + 1.3)) < 4.2, run: async (api) => {
         W.sat = true; W.chase.on = false; W.mon.group.visible = false; W.hideArrow();
-        await api.say(['Te dejas caer en la silla. El ruido se detiene de golpe, como si alguien hubiera bajado una palanca.', 'Las dos pantallas se encienden solas: a la izquierdal modelo de tarificación, a la derechal triángulo de reservas.']);
+        await api.say(['Te dejas caer en la silla. El ruido se detiene de golpe, como si alguien hubiera bajado una palanca.', 'Las dos pantallas se encienden solas: a la izquierda el modelo de tarificación, a la derecha el triángulo de reservas.']);
         await api.tween(650, (e) => { api.P.dy = -0.36 * e; api.P.pitch = -0.12 * e; });                                  // te sientas: la vista baja hacia las pantallas
         api.S.busy = true; const a = await Q.miniGLM(); api.S.busy = true; const b = await Q.miniReservas(); api.S.busy = true; api.S.mini = a.score + b.score; api.S.miniMax = a.max + b.max;
         await api.say(a.score + b.score >= a.max + b.max - 1 ? ['Las dos cuadran. Por un momento, la oficina entera te parece razonable.'] : ['Algo no cuadra, pero con suficiente formato nadie lo notará.']);
@@ -178,7 +178,7 @@
         if (W.caught) { W.hideArrow(); if (window.Sound && Sound.on) Sound.growl(1.6); await say(['Notas algo frío y poligonal en los tobillos. Las patas se cruzan sobre ti como un alambre.', 'La moqueta te parece, por primera vez, cómoda.']); return 'atrapado'; }
         if (!W.caught && !W.up) { W.sat = true; W.up = true; W.gente.visible = true; W.chase.on = false; W.hideArrow(); }
         } else { W.sat = true; W.up = true; W.gente.visible = true; }
-        // la bacteria vuelve cuando te levantas: segunda persecución hastal ascensor
+        // la bacteria vuelve cuando te levantas: segunda persecución hasta el ascensor
         await say(opts.phase2 ? ['Otra vez desde tu mesa: la bacteria vuelve a despegarse de la pared. El ascensor sigue al fondo. Corre.'] : ['Mientras tus compañeros teclean como si nada, el pasillo del fondo se oscurece. Algo muy largo y negro se despega de la pared: la bacteria vuelve, y nadie levanta la vista.', { text: 'Siempre ha estado aquí. Solo espera a que te levantes para ir a buscarte.', think: true }]);
         W.tgt = [0, 9.0]; W.mon.group.position.set(-12.2, 0, -10.3); W.mon.group.visible = true; W.chase.on = true; W.chase.t = 0; W.chase.nextSurge = 6; W.caught = false; W.showArrow();
         await free(1e9, '¡CORRE al ascensor! (Shift) · sigue la flecha roja y pulsa E para bajar', () => W.exit || W.caught);
