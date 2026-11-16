@@ -157,7 +157,7 @@
       if (window.Sound && Sound.on) Sound.siren(5);
       if (opts.retry) await say(['Otra vez: la plaza se vacía, el cielo se pone naranja y ya vienen por las calles. Corre hacial metro.']); else await say(['De pronto, el ruido de la plaza cambia. Primero una sirena. Luego otra, más cerca. Los paseantes aceleran, luego corren.', 'El cielo se vuelve de un naranja antinatural. Las farolas parpadean. En la boca de la calle Mayor se mueve algo que no camina como un vecino.']);
       W.setApoc(true); if (window.Sound && Sound.on) { Sound.shout(0.07); setTimeout(() => Sound.shout(0.07), 700); }
-      Q.apoc.start(W, { refuge: [-10.5, 5.3], r: 1.9, refugeLabel: 'marquesina del metro', gates: [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]], enemies: infected.map((z) => ({ g: z.g, v: z.v * 1.3, ph: z.ph })),
+      Q.apoc.start(W, { refuge: [-10.5, 5.3], r: 1.9, refugeLabel: 'marquesina del metro', gates: [[-14, -1.5], [14, -2.5], [-3, -11], [-7, 12], [12, 11]], enemies: infected.map((z) => ({ g: z.g, v: z.v * 0.7, ph: z.ph })),
         quips: [['Chelu', '¡A la boca del metro! Arriba hay turistas y abajo hay cobertura. Elige.'], ['Amor', 'No te pares. Huir es una conducta adaptativa, no una derrota.'], ['Chelu', 'Si pierdes una vida, recuerda: el seguro no cubre mordiscos.'], ['Sheldon', 'Pregunta técnica: ¿con qué frecuencia mueren los asegurados? Es para la tarifa.'], ['Amor', 'Coge algo contundente. Un argumento, una silla, lo que tengas a mano.']], onEnd: () => { } });
       const skipped = await free(1e9, 'Corre (Shift) hasta la boca del metro, la flecha roja · F empuja a los infectados · puedes coger una silla de la terraza', () => W.apocRes);
       if (skipped && !W.apocRes) { Q.apoc.stop(); W.apocRes = 'refugio'; }

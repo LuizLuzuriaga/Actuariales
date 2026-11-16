@@ -76,7 +76,7 @@
         if (!quick) await say(['—Qué pinta tienes —dice el Grandullón sin mirarte, mirando al cristal—. Mira cómo está la calle.', 'El cristal tiembla. Algo golpeal marco. Luego, otra cosa. Luego, todas.']);
         W.doBreach(); if (window.Sound && Sound.on) { Sound.glass(); setTimeout(() => Sound.shout(0.08), 500); Sound.growl(0.9); } await api.wait(1800);
         await say(quick ? ['El cristal vuelve a caer y la calle entra otra vez. Corre.'] : ['El cristal cae en mil trozos y la calle entra a la cafetería. Cuerpos torcidos, bocas abiertas, un olor a lunes pasado.', 'El Grandullón se gira despacio. Tiene los ojos blancos y una sonrisa que no es suya. «Cañas», murmura. Corre.']);
-        Q.apoc.start(W, { refuge: [bounds.maxX - 0.7, -2.8], r: 1.5, refugeLabel: 'puerta de la cocina', gates: [[-6.5, -3], [-6.5, 0], [-6.5, 3], [-8, -1.5], [-8, 1.5]], enemies: W.zs.map((z, i) => ({ g: z.g, v: 2.2 + 0.04 * i, stun: i * 0.2, ph: z.ph })),
+        Q.apoc.start(W, { refuge: [bounds.maxX - 0.7, -2.8], r: 1.5, refugeLabel: 'puerta de la cocina', gates: [[-6.5, -3], [-6.5, 0], [-6.5, 3], [-8, -1.5], [-8, 1.5]], enemies: W.zs.map((z, i) => ({ g: z.g, v: 1.35 + 0.02 * i, stun: i * 0.15, ph: z.ph })),
           quips: [['Amor', 'Si estás en la cafetería: la cocina siempre tiene salida de emergencia. Es una norma, no una opinión.'], ['Sheldon', 'No es por meter prisa, pero este evento no está tarificado.'], ['Chelu', 'Soy yo. Sigo siendo yo. Más o menos. Quiero una caña.']], onEnd: () => { W.exit = true; } });
     };
     W.acts.barra = { label: 'Pedir un café', stand: [0, -1.9], look: [0, 1.2, bounds.minZ + 0.7], enabled: () => !W.barra, run: async (api) => {

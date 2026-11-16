@@ -9,7 +9,7 @@
   Q.apoc = {
     start(W, cfg) {
       this.stop();
-      Object.assign(S, { on: true, W, cfg, lives: 3, inv: 0, cool: 0, shotCool: 0, weapon: S.weapon || false, res: null, t: 0, quip: 0, wave: 1, wait: 0, quips: (cfg.quips || []).slice(), gates: cfg.gates || null });
+      Object.assign(S, { on: true, W, cfg, lives: 3, inv: 0, cool: 0, shotCool: 0, weapon: S.weapon || false, res: null, t: 0, quip: 0, wave: 1, wait: 0, grace: cfg.grace == null ? 8 : cfg.grace, quips: (cfg.quips || []).slice(), gates: cfg.gates || null });
       S.en = cfg.enemies.map((e) => Object.assign({ stun: 0, dead: true, dying: 0, v0: e.v || 1.8, p0: [e.g.position.x, e.g.position.z] }, e));
       S.el = document.createElement('div'); S.el.id = 'flecha';
       S.el.innerHTML = '<svg viewBox="0 0 60 80" width="54" height="72"><path d="M30 2 L58 40 H40 V78 H20 V40 H2 Z" fill="#c4202c" stroke="#2a0508" stroke-width="3"/></svg><b></b>';
@@ -20,7 +20,7 @@
       S.key = (e) => { if ((e.key === 'f' || e.key === 'F') && !e.repeat) this.push(); }; window.addEventListener('keydown', S.key);
       S.mouse = (e) => { if (e.button === 0 && S.gun) this.shoot(); }; window.addEventListener('mousedown', S.mouse);
       S.tick = (dt, t) => this.tick(dt, t); W.tick.push(S.tick); W.apocOn = true;
-      this.spawn(1); this.hud();
+      this.spawn(1); this.hud(); if (Q.notify) Q.notify('Alerta', 'Tienes unos segundos antes de que lleguen: busca un arma (pistola o escopeta) y ponte en posición.');
     },
     stop() {
       if (!S.on) return; S.on = false; window.removeEventListener('keydown', S.key); window.removeEventListener('mousedown', S.mouse);
@@ -30,7 +30,7 @@
     spawn(w) {
       const n = Math.min(SIZES[w - 1], S.en.length);
       S.en.forEach((e, i) => {
-        if (i < n) { e.dead = false; e.dying = 0; e.stun = 0; e.v = e.v0 * (1 + 0.1 * (w - 1)); e.g.visible = true; e.g.rotation.set(0, 0, 0); const gp = S.gates ? S.gates[i % S.gates.length] : e.p0; e.g.position.set(gp[0] + ((i * 0.77) % 2.4) - 1.2, 0, gp[1] + ((i * 1.31) % 2.4) - 1.2); }
+        if (i < n) { e.dead = false; e.dying = 0; e.stun = 0; e.v = e.v0 * (1 + 0.06 * (w - 1)); e.g.visible = true; e.g.rotation.set(0, 0, 0); const gp = S.gates ? S.gates[i % S.gates.length] : e.p0; e.g.position.set(gp[0] + ((i * 0.77) % 2.4) - 1.2, 0, gp[1] + ((i * 1.31) % 2.4) - 1.2); }
         else { e.dead = true; e.dying = 0; e.g.visible = false; }
       });
       if (S.gun) S.ammo = AMMO[S.gun][w - 1];
@@ -67,16 +67,18 @@
       if (!S.on || S.res || !S.W.api) return; const A = S.W.api; if (A.S.busy) return; const P = A.P, b = S.W.bounds; S.t += dt; S.cool -= dt; S.inv -= dt; S.shotCool -= dt;
       const rx = S.cfg.refuge[0], rz = S.cfg.refuge[1], rd = Math.hypot(rx - P.x, rz - P.z);
       if (S.t > 1.2 && S.lab) { let rel = Math.atan2(-(rx - P.x), -(rz - P.z)) - P.yaw; rel = ((rel + Math.PI) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2) - Math.PI; S.el.firstChild.style.transform = 'rotate(' + (-rel) + 'rad)'; S.lab.textContent = Math.round(rd) + ' m · ' + (S.cfg.refugeLabel || 'refugio'); }
+      if (S.grace > 0) S.grace -= dt;                                                            // margen al empezar cada oleada: tiempo para moverte, coger el arma y apuntar
       S.en.forEach((e) => {
         if (e.dying > 0) { e.dying -= dt; e.g.rotation.x = Math.min(1.5, e.g.rotation.x + dt * 3.2); if (e.dying <= 0) e.g.visible = false; return; }
         if (e.dead) return;
+        if (S.grace > 0) { e.g.rotation.y = Math.atan2(P.x - e.g.position.x, P.z - e.g.position.z) + Math.PI; return; }
         if (e.stun > 0) { e.stun -= dt; e.g.rotation.z = 0.5; return; } e.g.rotation.z = Math.sin(S.t * 3 + (e.ph || 0)) * 0.1; e.g.rotation.x = 0;
         const dx = P.x - e.g.position.x, dz = P.z - e.g.position.z, d = Math.hypot(dx, dz) || 1;
         if (d > 0.8) { const v = e.v || 1.8; e.g.position.x += dx / d * v * dt; e.g.position.z += dz / d * v * dt; } e.g.rotation.y = Math.atan2(dx, dz) + Math.PI;
         if (d < 0.9 && S.inv <= 0) { S.lives--; S.inv = 1.8; this.hud(); P.x = Math.max(b.minX + 0.3, Math.min(b.maxX - 0.3, P.x - dx / d * 0.9)); P.z = Math.max(b.minZ + 0.3, Math.min(b.maxZ - 0.3, P.z - dz / d * 0.9)); if (window.Sound && Sound.on) { Sound.growl(0.9); Sound.bad(); } S.frame.classList.add('hurt'); setTimeout(() => S.frame && S.frame.classList.remove('hurt'), 300); }
       });
       // oleada abatida: el número romano titila y llega la siguiente (II con 10, III con 20); tras la III, sobrevives
-      if (S.wait > 0) { S.wait -= dt; if (S.wait <= 0) { S.frame.querySelector('.roman').classList.remove('blink'); S.wave++; this.spawn(S.wave); this.hud(); if (Q.notify) Q.notify('Alerta', 'Oleada ' + ROMAN[S.wave] + ': ' + SIZES[S.wave - 1] + ' infectados. Recargad.'); } }
+      if (S.wait > 0) { S.wait -= dt; if (S.wait <= 0) { S.frame.querySelector('.roman').classList.remove('blink'); S.grace = 5; S.wave++; this.spawn(S.wave); this.hud(); if (Q.notify) Q.notify('Alerta', 'Oleada ' + ROMAN[S.wave] + ': ' + SIZES[S.wave - 1] + ' infectados. Recargad.'); } }
       else if (S.en.every((e) => e.dead && e.dying <= 0)) {
         if (S.wave >= 3) { this.end('refugio'); return; }
         S.wait = 2.2; S.frame.querySelector('.roman').classList.add('blink'); if (window.Sound && Sound.on) Sound.ok();
