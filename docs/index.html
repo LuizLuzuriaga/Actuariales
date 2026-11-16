@@ -48,8 +48,9 @@
       <noscript><p class="fine">Hace falta JavaScript para ver el juego en 3D.</p></noscript>
       <dl class="ficha" aria-label="Ficha del juego"><div><dt>duración</dt><dd>~20 min</dd></div><div><dt>mapas</dt><dd>11</dd></div><div><dt>finales</dt><dd>8</dd></div><div><dt>descargas</dt><dd>0</dd></div></dl>
       <ul class="how">
-        <li><b>Ordenador:</b> clic para capturar el ratón · <kbd>WASD</kbd> moverte · <kbd>Shift</kbd> correr · <kbd>E</kbd> interactuar · <kbd>F</kbd> empujar · clic para disparar · <kbd>Esc</kbd> soltar</li>
-        <li><b>Móvil:</b> joystick a la izquierda (mantenlo hacia delante para correr) y arrastra a la derecha para mirar</li>
+        <li><b>Ordenador:</b> clic para capturar el ratón · <kbd>WASD</kbd> moverte · <kbd>Shift</kbd> correr · <kbd>E</kbd> interactuar · <kbd>Q</kbd>/<kbd>R</kbd> asomarte · <kbd>C</kbd> agacharte · <kbd>F</kbd> empujar · clic para disparar · <kbd>Esc</kbd> soltar</li>
+        <li><b>Mando:</b> sticks para moverte y mirar · A interactuar · X empujar · RT disparar · B agacharte · Y cámara</li>
+        <li><b>Móvil:</b> joystick a la izquierda (mantenlo 3 s hacia delante para correr) y arrastra a la derecha para mirar</li>
       </ul>
       <p class="fine">Hecho por Luiz Luzuriaga, actuario en formación. Ajustes y selección de niveles en ⚙ dentro del juego.</p>
     </div>
@@ -76,6 +77,8 @@
   <div id="cfg" hidden role="dialog" aria-label="Ajustes">
     <h2>Ajustes</h2>
     <label>Sensibilidad del ratón o el dedo <input type="range" id="cfgSens" min="0.4" max="2.2" step="0.1" /></label>
+    <label>Campo de visión <input type="range" id="cfgFov" min="60" max="100" step="1" /></label>
+    <label class="row"><input type="checkbox" id="cfgInvY" /> Invertir eje vertical</label>
     <label class="row"><input type="checkbox" id="cfgSound" /> Sonido</label>
     <label class="row"><input type="checkbox" id="cfgCalm" /> Reducir el balanceo de la cámara</label>
     <label>Calidad gráfica <select id="cfgQ"><option value="auto">Automática</option><option value="alta">Alta</option><option value="baja">Baja (más fluida)</option></select></label>

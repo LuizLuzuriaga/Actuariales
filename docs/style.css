@@ -253,3 +253,7 @@ code { font: 12px Consolas, monospace; color: #8fae8f; }
 #end .pips i { width: 14px; height: 14px; border: 1px solid #5a4a30; display: block; }
 #end .pips i.on { background: #b3202a; border-color: #e0303c; box-shadow: 0 0 8px #b3202a99; }
 #end h2 { text-shadow: 0 0 26px #b3202a55; }
+
+#objetivo { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 18; max-width: min(720px, 92vw); padding: 7px 16px; background: rgba(8,9,11,.82); border: 1px solid #3a3326; border-left: 3px solid #e0a030; color: #e6dfcd; font: 14px/1.35 Georgia, serif; text-align: center; pointer-events: none; }
+#objetivo[hidden] { display: none; }
+@media (max-width: 700px) { #objetivo { bottom: 84px; font-size: 13px; } }

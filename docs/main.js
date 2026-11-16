@@ -14,7 +14,7 @@
   /* ============================== Ajustes y almacenamiento ============================== */
   const CFG = (() => {
     let c = {}; try { c = JSON.parse(localStorage.getItem('qx-cfg') || '{}'); } catch (e) { }
-    return Object.assign({ sens: 1, sound: true, quality: 'auto', calm: matchMedia('(prefers-reduced-motion: reduce)').matches }, c);
+    return Object.assign({ sens: 1, fov: 72, invY: false, sound: true, quality: 'auto', calm: matchMedia('(prefers-reduced-motion: reduce)').matches }, c);
   })();
   const saveCfg = () => { try { localStorage.setItem('qx-cfg', JSON.stringify(CFG)); } catch (e) { } };
   const store = (k, v) => { try { if (v !== undefined) localStorage.setItem('qx-' + k, v); return localStorage.getItem('qx-' + k); } catch (e) { return null; } };
@@ -263,7 +263,7 @@
   function setTime(t) { S.time = t; clockEl.textContent = t; }
   function enterWorld(w, name) {
     if (A.group.parent) A.group.parent.remove(A.group);
-    scene = w.scene; scene.add(A.group); try { renderer.compile(scene, camera); } catch (e) { }                  // precompila los shaders del mundo para evitar el tirón al entrar
+    scene = w.scene; scene.add(A.group); if (GOAL.parent) GOAL.parent.remove(GOAL); scene.add(GOAL); try { renderer.compile(scene, camera); } catch (e) { }                  // precompila los shaders del mundo para evitar el tirón al entrar
     if (fx.on && fx.composer.passes[0]) fx.composer.passes[0].scene = scene;
     ROOM = w.bounds; OBST = w.obst; TICK = w.tick; ACTS = w.acts; ACT_ROOTS = w.actRoots; WORLD = name;
     P.x = w.spawn[0]; P.z = w.spawn[1]; P.vx = P.vz = 0; P.walk = 0;
@@ -287,7 +287,7 @@
     const t0 = performance.now(); let skipped = false; const sb = $('#saltar');
     sb.onclick = () => { skipped = true; }; const onN = (e) => { if ((e.key === 'n' || e.key === 'N') && !sb.hidden && !e.repeat) skipped = true; }; window.addEventListener('keydown', onN);
     while ((performance.now() - t0 < ms && !(until && until()) && !skipped) || S.busy) {
-      if (hint) freeHintEl.textContent = hint.replace('{s}', Math.max(0, Math.ceil((ms - (performance.now() - t0)) / 1000)));
+      if (hint) { const wait = performance.now() - t0, o = wait > 6000 && until ? objetivo().t : ''; freeHintEl.textContent = hint.replace('{s}', Math.max(0, Math.ceil((ms - wait) / 1000))) + (o ? '  ·  Pista: ' + o : ''); }
       sb.hidden = !(until && ms > 60000 && performance.now() - t0 > 12000 && !S.busy);          // a los 12 s aparece «Avanzar» para no quedarte atascado
       await sleep(150);
     }
@@ -295,6 +295,29 @@
     freeHintEl.hidden = true; inFree = false; S.busy = true; return skipped;
   }
 
+  /* Objetivo del momento y dónde está, por mapa. La flecha 3D baja y sube sin parar sobre el sitio; el texto fijo repite qué hacer. */
+  function objetivo() {
+    const w = WORLD, A = ACTS || {}, at = (id, dy = 0.6) => (A[id] ? [A[id].look[0], A[id].look[1] + dy, A[id].look[2]] : null);
+    if (S.ended) return { t: '', g: null };
+    if (w === 'bed') { if (S.alarmOn) return { t: 'Apaga el despertador del móvil, en la mesilla', g: at('movil') }; if (!S.dressed) return { t: 'Vístete: abre el armario', g: at('armario') }; if (!S.bag) return { t: 'Carga la mochila que hay en la silla', g: at('bolsos') }; return { t: 'Sal de casa por la puerta', g: at('puerta', 0.9) }; }
+    if (w === 'fachada') return { t: 'Entra en la estación por las puertas de cristal (E)', g: [0, 3.6, -5.6] };
+    if (w === 'platform') { const P2 = PLAT; const here = P2 && Math.abs(P2.train.position.x - P2.TX) < 0.4; return here ? { t: 'Decide: empujar para subir al tren (1) o dejarlo pasar (2)', g: [P2.doorX, 2.6, -1.9] } : { t: 'Espera el tren en el andén. Puedes mirar alrededor y subir las escaleras', g: null }; }
+    if (w === 'train') return { t: 'Aguanta el trayecto y baja en Nuevos Ministerios: acércate a las puertas (E)', g: [-4.0, 2.4, -1.2] };
+    if (w === 'azca') return { t: 'Entra en la aseguradora: la torre de la entrada iluminada', g: [8.5, 4.6, -4.6] };
+    if (w === 'lobby') return { t: 'Llama al ascensor para subir a la planta 4 (E)', g: [3.6, 3.0, -4.4] };
+    if (w === 'planta' && PLA) { if (!PLA.sat) return { t: 'Corre (Shift) hasta tu mesa, al fondo a la izquierda, y siéntate (E)', g: [-11.7, 2.6, -8.6] }; if (!PLA.up) return { t: 'Resuelve los dos minijuegos y levántate', g: null }; return { t: 'Corre al ascensor y bájalo (E)', g: [0, 2.9, 10.3] }; }
+    if (w === 'cafe' && CAF) { if (CAF.apocOn) return { t: 'Llega a la puerta de la cocina; F empuja, clic dispara', g: [4.3, 2.6, -2.8] }; if (!CAF.barra) return { t: 'Pide un café en la barra (E)', g: [0, 2.3, -3.3] }; return CAF.exit ? { t: '', g: null } : { t: 'Habla con el Grandullón: tres rondas (E)', g: [3.7, 2.9, 0.4] }; }
+    if (w === 'sol' && SOL) { if (SOL.apocOn) return { t: 'Llega a la marquesina del metro; F empuja, clic dispara', g: [-10.5, 3.6, 5.3] }; if (!SOL.barra) return { t: 'Pide unas cañas en la mesa de la terraza (E)', g: [2.6, 2.0, 2.6] }; return { t: 'Habla con el Grandullón (E): dos rondas', g: [3.5, 2.9, 2.6] }; }
+    if (w === 'vallecas' && VAL) return VAL.fin ? { t: '', g: null } : { t: 'Habla con Amor, en el portal (E)', g: [5.3, 2.9, -3.0] };
+    return { t: '', g: null };
+  }
+  const GOAL = new THREE.Group();
+  { const mat = new THREE.MeshBasicMaterial({ color: 0xe0a030, toneMapped: false, depthTest: false, transparent: true, opacity: 0.95 }), mat2 = new THREE.MeshBasicMaterial({ color: 0xb3202a, toneMapped: false, depthTest: false, transparent: true, opacity: 0.9 });
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(0.34, 0.62, 4), mat); cone.rotation.x = Math.PI; cone.position.y = 0.31; GOAL.add(cone);
+    const stem = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.5, 0.2), mat); stem.position.y = 0.87; GOAL.add(stem);
+    const ring = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.52, 20), mat2); ring.rotation.x = -Math.PI / 2; ring.position.y = -0.04; GOAL.add(ring);
+    GOAL.traverse((o) => { o.renderOrder = 999; }); GOAL.visible = false; GOAL.frustumCulled = false; scene.add(GOAL); }
+  const objEl = document.createElement('div'); objEl.id = 'objetivo'; objEl.hidden = true; document.body.appendChild(objEl); let objT = 0;
   let CINE = null;
   const API = { cine: (cfg) => { CINE = cfg; A.group.visible = !cfg; }, chart: async () => { if (document.pointerLockElement) document.exitPointerLock(); await Q.showMortality(); lockPointer(); }, say: async (l) => { await say(l); if (inScript && !inFree) S.busy = true; }, choose, tween, wait: sleep, setTime, free, P, S };
   function endScreen(title, text) {
@@ -544,7 +567,7 @@
   const touches = new Map(); let mouse = null;
   const stickEl = $('#stickL'), stickDot = stickEl.querySelector('i'); let moveVec = { x: 0, y: 0 };
   const LOOK_SENS = () => (COARSE ? 0.0052 : 0.0034) * CFG.sens;
-  function look(dx, dy) { const k = LOOK_SENS(); P.yaw -= dx * k; P.pitch = clamp(P.pitch - dy * k, -1.35, 1.35); }
+  function look(dx, dy) { const k = LOOK_SENS(); P.yaw -= dx * k; P.pitch = clamp(P.pitch - (CFG.invY ? -dy : dy) * k, -1.35, 1.35); }
 
   canvas.addEventListener('pointerdown', (e) => {
     if (!S.started) return;
@@ -614,19 +637,25 @@
     if (on) { g.fillStyle = '#ff6b6b'; g.beginPath(); g.arc(128, 380, 44, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '22px Segoe UI'; g.fillText('Parar', 128, 388); }
     R.ref.phoneTex.needsUpdate = true;
   }
-  let holdW = 0, joyT = 0;
+  let holdW = 0, joyT = 0, leanT = 0, crouchK = 0; const gpHeld = {};
   function frame() {
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+    let gp = null; try { gp = (navigator.getGamepads && navigator.getGamepads()[0]) || null; } catch (e) { }
+    if (gp) { const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v); const rx = dz(gp.axes[2] || 0), ry = dz(gp.axes[3] || 0); if (S.started && !S.busy) { P.yaw -= rx * 2.4 * dt * CFG.sens; P.pitch = clamp(P.pitch - (CFG.invY ? -ry : ry) * 1.9 * dt * CFG.sens, -1.35, 1.35); }
+      const bt = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed); gpHeld.crouch = bt(1);
+      const edge = (i, f) => { const k = 'g' + i; if (bt(i) && !gpHeld[k]) f(); gpHeld[k] = bt(i); };
+      edge(0, () => { if (current) interact(current); }); edge(2, () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }))); edge(7, () => window.dispatchEvent(new MouseEvent('mousedown', { button: 0 }))); edge(3, () => toggleCam()); }
     if (S.started && !S.busy && cfgEl.hidden) {
       let fx0 = 0, fz = 0;
+      if (gp) { const ax = (Math.abs(gp.axes[0]) < 0.18 ? 0 : gp.axes[0]), ay = (Math.abs(gp.axes[1]) < 0.18 ? 0 : gp.axes[1]); fx0 += ax; fz -= ay; gpHeld.run = !!(gp.buttons[10] && gp.buttons[10].pressed); } else { gpHeld.run = false; gpHeld.crouch = false; }
       if (keys['w'] || keys['arrowup']) fz += 1; if (keys['s'] || keys['arrowdown']) fz -= 1; if (keys['a']) fx0 -= 1; if (keys['d']) fx0 += 1;
       if (keys['arrowleft']) P.yaw += 1.8 * dt; if (keys['arrowright']) P.yaw -= 1.8 * dt;
       fx0 += moveVec.x; fz -= moveVec.y;
       const len = Math.hypot(fx0, fz); if (len > 1) { fx0 /= len; fz /= len; }
       holdW = fz > 0 ? Math.min(4, holdW + dt) : Math.max(0, holdW - dt * 3);                    // 4 s hacia delante: hasta +30 % de velocidad
       const joyFwd = moveVec.y < -0.6 && Math.hypot(moveVec.x, moveVec.y) > 0.8; joyT = joyFwd ? joyT + dt : 0;                // joystick sostenido hacia delante ~1 s = correr
-      const sp = (keys['shift'] || joyT > 1.0 ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
+      const sp = (keys['shift'] || gpHeld.run || joyT > 3.0 ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)) * (1 - 0.42 * crouchK), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
       const tvx = (-sy * fz + cy * fx0) * sp, tvz = (-cy * fz - sy * fx0) * sp;
       P.vx = lerp(P.vx, tvx, Math.min(1, dt * 9)); P.vz = lerp(P.vz, tvz, Math.min(1, dt * 9));
       const [nx, nz] = collide(P.x + P.vx * dt, P.z + P.vz * dt); P.x = nx; P.z = nz; P.walk = Math.min(1, Math.hypot(P.vx, P.vz) / 1.5);
@@ -649,9 +678,13 @@
       for (let i = 0; i < 40; i++) { cx = ex - fx1 * d; cy = ey - fy1 * d + 0.7 * camK; cz = ez - fz1 * d; if (cx > ROOM.minX + 0.2 && cx < ROOM.maxX - 0.2 && cz > zMin && cz < ROOM.maxZ - 0.2 && cy > 0.25 && cy < top) break; d *= 0.9; }
       ex = cx; ey = cy; ez = cz;
     }
+    leanT = lerp(leanT, (keys['r'] ? 1 : 0) - (keys['q'] ? 1 : 0), Math.min(1, dt * 9)); crouchK = lerp(crouchK, (keys['c'] || gpHeld.crouch) ? 1 : 0, Math.min(1, dt * 8));
+    ex += Math.cos(P.yaw) * leanT * 0.32 * (1 - camK); ez -= Math.sin(P.yaw) * leanT * 0.32 * (1 - camK); ey -= 0.55 * crouchK * (1 - camK);
     camera.position.set(ex, ey, ez);
-    camera.rotation.set(P.pitch - 0.14 * camK, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm * (1 - camK));
+    camera.rotation.set(P.pitch - 0.14 * camK, P.yaw, Math.sin(P.bob) * 0.004 * P.walk * calm * (1 - camK) - leanT * 0.13 * (1 - camK));
     if (WORLD === 'train' && TRN) { camera.position.y += TRN.sway.y; camera.rotation.z += TRN.sway.roll; }
+    { objT -= dt; if (objT <= 0) { objT = 0.3; const o = objetivo(); objEl.textContent = o.t ? 'Objetivo · ' + o.t : ''; objEl.hidden = !o.t || !S.started || !!CINE || !!document.getElementById('apocframe') && false; GOAL.userData.g = o.g; }
+      const g = GOAL.userData.g; if (g && !CINE && S.started && !S.busy) { const d = Math.hypot(g[0] - P.x, g[2] - P.z); GOAL.visible = d > 1.6; const s = clamp(d * 0.075, 0.45, 2.4); GOAL.scale.setScalar(s); GOAL.position.set(g[0], g[1] + (0.3 + 0.28 * Math.sin(t * 4.4)) * s, g[2]); GOAL.rotation.y = t * 1.2; } else GOAL.visible = false; }
     if (CINE) { const l = CINE.look(); camera.position.set(CINE.pos[0], CINE.pos[1], CINE.pos[2]); camera.lookAt(l[0], l[1], l[2]); }                // plano fijo de cine
     if (camK > 0.05) camera.layers.enable(1); else camera.layers.disable(1);     // la cabeza (capa 1) solo se ve en el espejo y en tercera persona
 
@@ -705,6 +738,8 @@
   }
   let adapt = CFG.quality === 'auto';
   $('#cfgBtn').addEventListener('click', () => (cfgEl.hidden ? openCfg() : closeCfg())); $('#cfgClose').addEventListener('click', closeCfg);
+  $('#cfgFov').value = CFG.fov; camera.fov = CFG.fov; camera.updateProjectionMatrix(); $('#cfgFov').addEventListener('input', (e) => { CFG.fov = +e.target.value; camera.fov = CFG.fov; camera.updateProjectionMatrix(); saveCfg(); });
+  $('#cfgInvY').checked = CFG.invY; $('#cfgInvY').addEventListener('change', (e) => { CFG.invY = e.target.checked; saveCfg(); });
   $('#cfgSens').value = CFG.sens; $('#cfgSens').addEventListener('input', (e) => { CFG.sens = +e.target.value; saveCfg(); });
   $('#cfgSound').addEventListener('change', (e) => { CFG.sound = e.target.checked; setSound(CFG.sound); saveCfg(); });
   $('#cfgCalm').checked = CFG.calm; $('#cfgCalm').addEventListener('change', (e) => { CFG.calm = e.target.checked; saveCfg(); });
