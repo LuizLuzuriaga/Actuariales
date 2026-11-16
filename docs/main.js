@@ -656,8 +656,12 @@
       const bt = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed); gpHeld.crouch = bt(1);
       const edge = (i, f) => { const k = 'g' + i; if (bt(i) && !gpHeld[k]) f(); gpHeld[k] = bt(i); };
       edge(0, () => { if (current) interact(current); }); edge(2, () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }))); edge(7, () => window.dispatchEvent(new MouseEvent('mousedown', { button: 0 }))); edge(3, () => toggleCam()); }
+    const RM = Q.remote && Q.remote.on ? Q.remote : null;
+    if (RM) { if (S.started && !S.busy) { P.yaw -= RM.lx * 2.6 * dt * CFG.sens; P.pitch = clamp(P.pitch - (CFG.invY ? -RM.ly : RM.ly) * 1.9 * dt * CFG.sens, -1.35, 1.35); }
+      while (RM.ev.length) { const k = RM.ev.shift(); if (k === 'interact' && current && !S.busy) interact(current); else if (k === 'push') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' })); else if (k === 'skip') { const sb = $('#saltar'); if (sb && !sb.hidden) sb.click(); else window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n' })); window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space' })); } else if (k === 'cam') toggleCam(); } }
     if (S.started && !S.busy && cfgEl.hidden) {
       let fx0 = 0, fz = 0;
+      if (RM) { fx0 += RM.mx; fz -= RM.my; }
       if (gp) { const ax = (Math.abs(gp.axes[0]) < 0.18 ? 0 : gp.axes[0]), ay = (Math.abs(gp.axes[1]) < 0.18 ? 0 : gp.axes[1]); fx0 += ax; fz -= ay; gpHeld.run = !!(gp.buttons[10] && gp.buttons[10].pressed); } else { gpHeld.run = false; gpHeld.crouch = false; }
       if (keys['w'] || keys['arrowup']) fz += 1; if (keys['s'] || keys['arrowdown']) fz -= 1; if (keys['a']) fx0 -= 1; if (keys['d']) fx0 += 1;
       if (keys['arrowleft']) P.yaw += 1.8 * dt; if (keys['arrowright']) P.yaw -= 1.8 * dt;
@@ -665,7 +669,7 @@
       const len = Math.hypot(fx0, fz); if (len > 1) { fx0 /= len; fz /= len; }
       holdW = fz > 0 ? Math.min(4, holdW + dt) : Math.max(0, holdW - dt * 3);                    // 4 s hacia delante: hasta +30 % de velocidad
       const joyFwd = moveVec.y < -0.6 && Math.hypot(moveVec.x, moveVec.y) > 0.8; joyT = joyFwd ? joyT + dt : 0;                // joystick sostenido hacia delante ~1 s = correr
-      const sp = (keys['shift'] || gpHeld.run || joyT > 3.0 ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)) * (1 - 0.42 * crouchK), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
+      const sp = (keys['shift'] || gpHeld.run || (Q.remote && Q.remote.on && Q.remote.run) || joyT > 3.0 ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)) * (1 - 0.42 * crouchK), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
       const tvx = (-sy * fz + cy * fx0) * sp, tvz = (-cy * fz - sy * fx0) * sp;
       { const want = tvx * tvx + tvz * tvz, have = P.vx * P.vx + P.vz * P.vz, k = 1 - Math.exp(-dt * (want > have ? 6.5 : 4.2)); P.vx = lerp(P.vx, tvx, k); P.vz = lerp(P.vz, tvz, k); }   // arranque y frenada con inercia, sin brusquedad
       const [nx, nz] = collide(P.x + P.vx * dt, P.z + P.vz * dt); P.x = nx; P.z = nz; P.walk = Math.min(1, Math.hypot(P.vx, P.vz) / 1.5);
@@ -691,7 +695,7 @@
       for (let i = 0; i < 40; i++) { cx = ex - fx1 * d; cy = ey - fy1 * d + 0.7 * camK; cz = ez - fz1 * d; if (cx > ROOM.minX + 0.2 && cx < ROOM.maxX - 0.2 && cz > zMin && cz < ROOM.maxZ - 0.2 && cy > 0.25 && cy < top) break; d *= 0.9; }
       ex = cx; ey = cy; ez = cz;
     }
-    leanT = lerp(leanT, (keys['r'] ? 1 : 0) - (keys['q'] ? 1 : 0), Math.min(1, dt * 9)); crouchK = lerp(crouchK, (keys['c'] || gpHeld.crouch) ? 1 : 0, Math.min(1, dt * 8));
+    leanT = lerp(leanT, (keys['r'] ? 1 : 0) - (keys['q'] ? 1 : 0), Math.min(1, dt * 9)); crouchK = lerp(crouchK, (keys['c'] || gpHeld.crouch || (Q.remote && Q.remote.on && Q.remote.crouch)) ? 1 : 0, Math.min(1, dt * 8));
     ex += Math.cos(P.yaw) * leanT * 0.32 * (1 - camK); ez -= Math.sin(P.yaw) * leanT * 0.32 * (1 - camK); ey -= 0.55 * crouchK * (1 - camK);
     camera.position.set(ex, ey, ez);
     camera.rotation.set(P.pitch - 0.14 * camK, P.yaw, Math.sin(P.bob) * (0.005 + 0.006 * spdK) * P.walk * calm * (1 - camK) - leanT * 0.13 * (1 - camK) + strafeK * 0.022 * calm * (1 - camK));

@@ -257,3 +257,17 @@ code { font: 12px Consolas, monospace; color: #8fae8f; }
 #objetivo { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 18; max-width: min(720px, 92vw); padding: 7px 16px; background: rgba(8,9,11,.82); border: 1px solid #3a3326; border-left: 3px solid #e0a030; color: #e6dfcd; font: 14px/1.35 Georgia, serif; text-align: center; pointer-events: none; }
 #objetivo[hidden] { display: none; }
 @media (max-width: 700px) { #objetivo { bottom: 84px; font-size: 13px; } }
+
+/* móvil como mando */
+.qrbox { margin: 16px 0 4px; border: 1px solid #2f2b22; padding: 10px 14px; text-align: left; }
+.qrbox summary { cursor: pointer; font: 600 14px var(--serif); color: #c98d3a; letter-spacing: .04em; }
+.qrwrap { display: flex; gap: 16px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+#qrcode, .qrbig { background: #f2ead8; padding: 8px; display: grid; place-items: center; min-width: 192px; min-height: 192px; }
+#qrcode canvas, #qrcode img, .qrbig canvas, .qrbig img { display: block; }
+.qrid { display: block; margin-top: 6px; font: 600 13px ui-monospace, Consolas, monospace; color: #1a1612; text-align: center; letter-spacing: .12em; }
+.qrtxt { margin: 0 0 8px; font: 14px/1.5 var(--serif); color: #b8b29c; max-width: 30ch; }
+.qrstate { margin: 0; font: 12px ui-monospace, Consolas, monospace; color: #8a8470; } .qrstate.ok { color: #5fb87a; }
+#qrmodal { position: fixed; inset: 0; z-index: 80; background: rgba(0,0,0,.8); display: grid; place-items: center; }
+#qrmodal[hidden] { display: none; }
+.qrcard { background: #0a0b0d; border: 1px solid #3a3326; padding: 20px 24px; text-align: center; display: grid; gap: 12px; justify-items: center; }
+.qrcard h3 { margin: 0; font: 400 20px var(--serif); color: #e6dfcd; }

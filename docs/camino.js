@@ -35,6 +35,11 @@
     'Overfitting es memorizar el examen en lugar de aprender la asignatura. Los modelos de aprendizaje automático también lo hacen.',
     'La paradoja de Simpson: una tendencia puede invertirse al agrupar los datos. Como tu humor al agrupar lunes.',
     'En economía, el coste de oportunidad es lo que dejas de hacer. Mirar esta pantalla, por ejemplo, te cuesta una siesta.',
+    'Cómo se juega con el móvil: el QR de la portada abre una sala, tu móvil se conecta al navegador por WebRTC y le envía unas 30 lecturas por segundo de los joysticks. El juego las lee como un mando.',
+    'Un código QR guarda la dirección de la sala y un sistema de corrección de errores: aunque esté sucio, se lee. Un seguro de su propio contenido.',
+    'Se debate en el Congreso la urgencia de aprobar una comisión para estudiar los efectos de las comisiones. Se aprueba por mayoría, la sesión se levanta por hambre.',
+    'Las encuestas siguen midiendo la intención de voto con un margen de error del 3 %. Tu intención de ir a trabajar, con uno del 40 %.',
+    'Sube el precio del alquiler y baja la paciencia. La correlación es fuerte; la causalidad, un debate de tertulia.',
     'El sesgo de confirmación te hace buscar solo los datos que ya esperabas. Por eso los lunes siempre confirman que lo son.'];
   const stat = () => { const H = Q.hooks, d = Math.max(0, Math.min(9, (H && H.descuido ? H.descuido() : 0) | 0)); return '<span>descuido</span><i>' + '▮'.repeat(d) + '▯'.repeat(9 - d) + '</i><span>' + d + '/9</span>'; };
   const extras = (el) => { const s = document.createElement('p'); s.className = 'cm-desc'; s.innerHTML = stat(); const f = document.createElement('p'); f.className = 'cm-fact'; f.innerHTML = '<b>Dato actuarial</b>'; f.appendChild(document.createTextNode(DATOS[Math.floor(Math.random() * DATOS.length)])); el.appendChild(s); el.appendChild(f); };
