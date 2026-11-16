@@ -271,3 +271,23 @@ code { font: 12px Consolas, monospace; color: #8fae8f; }
 #qrmodal[hidden] { display: none; }
 .qrcard { background: #0a0b0d; border: 1px solid #3a3326; padding: 20px 24px; text-align: center; display: grid; gap: 12px; justify-items: center; }
 .qrcard h3 { margin: 0; font: 400 20px var(--serif); color: #e6dfcd; }
+
+/* QR grande en la portada (solo ordenador) */
+.qrmain { display: flex; gap: 22px; align-items: center; justify-content: center; flex-wrap: wrap; margin: 22px 0 6px; padding: 18px; border: 1px solid #2f2b22; background: #0a0709; }
+.qrmain[hidden] { display: none; }
+.qrmain #qrcode { min-width: 264px; min-height: 264px; }
+.qrside { max-width: 24ch; text-align: left; }
+.qrside h2 { margin: 0 0 6px; font: 400 22px var(--serif); color: #e6dfcd; }
+body.mando-on .qrmain { border-color: #2a6a3a; background: #08110b; }
+@media (pointer: coarse) { .qrmain { display: none !important; } }
+
+/* el cuadro de arriba reúne misiones, objetivo y pista; el aviso suelto de abajo ya no se usa */
+#freehint, #objetivo { display: none !important; }
+#tasks { max-width: min(430px, 46vw); }
+#tasks li.obj { margin-top: 8px; padding-top: 8px; border-top: 1px solid #2f2b22; color: #e6b25a; font-size: 13.5px; line-height: 1.45; }
+#tasks li.obj::before { content: ''; }
+#tasks li.hintline { color: #9a927e; font-size: 12.5px; font-style: italic; line-height: 1.4; margin-top: 4px; }
+#tasks li.hintline::before { content: ''; }
+#tasks li[hidden] { display: none; }
+#vidas { bottom: auto !important; top: 64px; }
+@media (max-width: 700px) { #tasks { max-width: 62vw; font-size: 12.5px; padding: 10px 12px; } #vidas { top: 56px; } }

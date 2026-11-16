@@ -6,68 +6,103 @@
   <meta name="theme-color" content="#0a0507" />
   <title>qx · Mando</title>
   <style>
-    :root { --bg: #0a0507; --fg: #e6dfcd; --muted: #8a8470; --red: #b3202a; --amber: #c98d3a; --line: #3a3326; }
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; user-select: none; -webkit-user-select: none; }
+    :root { --bg: #0a0507; --fg: #e6dfcd; --muted: #8a8470; --red: #b3202a; --amber: #c98d3a; --line: #3a3326; --u: min(12vh, 8vw); }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
     html, body { margin: 0; height: 100%; background: var(--bg); color: var(--fg); font: 15px Georgia, serif; overflow: hidden; overscroll-behavior: none; }
-    body { padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0); }
-    #bar { position: fixed; top: max(8px, env(safe-area-inset-top, 0px)); left: 0; right: 0; text-align: center; font: 12px ui-monospace, Consolas, monospace; letter-spacing: .1em; color: var(--muted); pointer-events: none; }
+    body { background: radial-gradient(120% 90% at 50% 0%, #1a1012 0%, #08060a 60%, #030203 100%); }
+    /* en vertical se pide girar el móvil: todo el mando es horizontal */
+    #rot { position: fixed; inset: 0; z-index: 30; background: var(--bg); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 18px; text-align: center; padding: 24px; }
+    #rot svg { width: 96px; height: 96px; animation: gira 2.6s ease-in-out infinite; } @keyframes gira { 0%, 20% { transform: rotate(0); } 60%, 100% { transform: rotate(-90deg); } }
+    @media (orientation: portrait) { #rot { display: flex; } }
+    #go { position: fixed; inset: 0; z-index: 25; background: rgba(5,3,6,.94); display: grid; place-items: center; text-align: center; }
+    #go button { padding: 16px 30px; background: #1a0f10; color: var(--fg); border: 2px solid var(--red); font: 600 20px Georgia, serif; letter-spacing: .08em; border-radius: 6px; }
+    #bar { position: fixed; top: 6px; left: 0; right: 0; text-align: center; font: 11px ui-monospace, Consolas, monospace; letter-spacing: .1em; color: var(--muted); pointer-events: none; z-index: 2; }
     #bar b { color: var(--amber); } #bar.ok b { color: #5fb87a; } #bar.bad b { color: var(--red); }
-    .zone { position: fixed; bottom: 0; top: 0; }
-    #L { left: 0; width: 42%; } #R { right: 0; width: 58%; }
-    .hint { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #3a3326; font: 13px ui-monospace, Consolas, monospace; text-align: center; pointer-events: none; }
-    .stick { position: fixed; width: 120px; height: 120px; margin: -60px 0 0 -60px; border-radius: 50%; border: 2px solid #5a4a30; background: rgba(201,141,58,.08); display: none; pointer-events: none; }
-    .stick i { position: absolute; left: 50%; top: 50%; width: 52px; height: 52px; margin: -26px 0 0 -26px; border-radius: 50%; background: #c98d3a; opacity: .8; }
-    .btns { position: fixed; right: max(14px, env(safe-area-inset-right, 0px)); bottom: max(14px, env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: repeat(2, 64px); gap: 10px; z-index: 5; }
-    .b { width: 64px; height: 64px; border-radius: 50%; border: 2px solid var(--line); background: rgba(10,10,12,.85); color: var(--fg); font: 600 14px Georgia, serif; display: grid; place-items: center; }
-    .b.on, .b:active { background: #3a0f12; border-color: var(--red); }
-    .b.fire { border-color: var(--red); color: #ff6a6a; } .b small { display: block; font: 9px ui-monospace, monospace; color: var(--muted); margin-top: 2px; }
-    .top { position: fixed; left: 12px; bottom: max(14px, env(safe-area-inset-bottom, 0px)); display: flex; gap: 8px; z-index: 5; }
-    .t { padding: 10px 12px; border-radius: 6px; border: 1px solid var(--line); background: rgba(10,10,12,.85); color: var(--fg); font: 13px Georgia, serif; }
-    #err { position: fixed; inset: 0; background: var(--bg); display: none; place-items: center; text-align: center; padding: 24px; z-index: 20; }
+    .btn { position: absolute; border-radius: 50%; border: 2px solid var(--line); background: rgba(14,12,14,.9); color: var(--fg); display: grid; place-items: center; font: 600 calc(var(--u) * .34) Georgia, serif; box-shadow: inset 0 0 0 3px rgba(0,0,0,.4), 0 2px 8px #000a; }
+    .btn.on, .btn:active { filter: brightness(1.5); transform: scale(.94); }
+    /* cruceta (arriba, abajo, izquierda, derecha) en la parte superior izquierda */
+    #dpad { position: absolute; left: calc(var(--u) * .7); top: calc(var(--u) * 1.7); width: calc(var(--u) * 3.2); height: calc(var(--u) * 3.2); }
+    .d { position: absolute; width: calc(var(--u) * 1.0); height: calc(var(--u) * 1.0); border-radius: 12px; background: rgba(20,17,16,.92); border: 2px solid var(--line); display: grid; place-items: center; font-size: calc(var(--u) * .46); color: var(--amber); }
+    .d.on, .d:active { background: #3a2a10; border-color: var(--amber); }
+    #dU { left: calc(var(--u) * 1.1); top: 0; } #dD { left: calc(var(--u) * 1.1); top: calc(var(--u) * 2.2); } #dL { left: 0; top: calc(var(--u) * 1.1); } #dR { left: calc(var(--u) * 2.2); top: calc(var(--u) * 1.1); }
+    #dC { position: absolute; left: calc(var(--u) * 1.1); top: calc(var(--u) * 1.1); width: calc(var(--u) * 1.0); height: calc(var(--u) * 1.0); background: #120e0e; border-radius: 4px; }
+    .lab { position: absolute; font: 9px ui-monospace, monospace; color: var(--muted); letter-spacing: .05em; pointer-events: none; text-align: center; width: calc(var(--u) * 1.4); }
+    /* botones de acción (△ ○ ✕ □) en la parte superior derecha */
+    #face { position: absolute; right: calc(var(--u) * .7); top: calc(var(--u) * 1.7); width: calc(var(--u) * 3.4); height: calc(var(--u) * 3.4); }
+    .f { width: calc(var(--u) * 1.0); height: calc(var(--u) * 1.0); font-size: calc(var(--u) * .5); font-family: Arial, sans-serif; font-weight: 700; }
+    #fT { left: calc(var(--u) * 1.2); top: 0; color: #5fd0a0; border-color: #2a6a50; } #fB { left: calc(var(--u) * 1.2); top: calc(var(--u) * 2.4); color: #6aa0ff; border-color: #2a4a8a; } #fL { left: 0; top: calc(var(--u) * 1.2); color: #ff8ac0; border-color: #8a2a5a; } #fR { left: calc(var(--u) * 2.4); top: calc(var(--u) * 1.2); color: #ff6a6a; border-color: #8a2a2a; }
+    /* hombros: L1 agacharse, R1 disparar */
+    .sh { border-radius: 12px; height: calc(var(--u) * 1.0); width: calc(var(--u) * 2.6); font-size: calc(var(--u) * .34); }
+    #L1 { left: calc(var(--u) * .9); top: calc(var(--u) * .25); } #R1 { right: calc(var(--u) * .9); top: calc(var(--u) * .25); border-color: var(--red); color: #ff7070; }
+    /* joysticks abajo, uno bajo la cruceta y otro bajo los botones */
+    .stick { position: absolute; bottom: calc(var(--u) * .25); width: calc(var(--u) * 2.9); height: calc(var(--u) * 2.9); border-radius: 50%; border: 3px solid #5a4a30; background: radial-gradient(circle, #150f10 0%, #0b0809 70%); box-shadow: inset 0 0 0 4px #0b0809, 0 4px 14px #000b; }
+    .stick::before { content: ""; position: absolute; inset: 14%; border-radius: 50%; border: 1px dashed #3a3326; } .stick::after { content: ""; position: absolute; left: 50%; top: 8%; bottom: 8%; width: 1px; background: #2a2418; box-shadow: 0 0 0 #000; transform: translateX(-.5px); }
+    .stick i { position: absolute; left: 50%; top: 50%; width: 46%; height: 46%; margin: -23% 0 0 -23%; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #e7b05a, #8a5a1a 70%); border: 2px solid #c98d3a; box-shadow: 0 3px 10px #000c; }
+    .stick.run { border-color: var(--red); box-shadow: inset 0 0 0 4px #0b0809, 0 0 18px #b3202a99; }
+    #sL { left: calc(var(--u) * 2.4); } #sR { right: calc(var(--u) * 2.4); }
+    #ch { position: absolute; left: 50%; top: calc(var(--u) * .3); transform: translateX(-50%); display: flex; gap: calc(var(--u) * .35); }
+    #ch .btn { position: static; width: calc(var(--u) * .95); height: calc(var(--u) * .95); font-size: calc(var(--u) * .42); }
+    #err { position: fixed; inset: 0; background: var(--bg); display: none; place-items: center; text-align: center; padding: 24px; z-index: 40; }
   </style>
 </head>
 <body>
   <div id="bar"><b>qx · mando</b> · <span id="st">conectando…</span></div>
-  <div class="zone" id="L"><div class="hint">mover<br>(arrastra aquí)</div></div>
-  <div class="zone" id="R"><div class="hint">mirar<br>(arrastra aquí)</div></div>
-  <div class="stick" id="sL"><i></i></div><div class="stick" id="sR"><i></i></div>
-  <div class="top"><button class="t" data-ev="skip">Avanzar</button><button class="t" data-ev="cam">Cámara</button></div>
-  <div class="btns">
-    <button class="b" data-ev="interact">E<small>actuar</small></button>
-    <button class="b" data-ev="push">F<small>empujar</small></button>
-    <button class="b" id="bRun">⇧<small>correr</small></button>
-    <button class="b" id="bCr">C<small>agachar</small></button>
-    <button class="b fire" id="bFire">●<small>disparar</small></button>
+
+  <div id="dpad" aria-label="Cruceta">
+    <div id="dC"></div>
+    <button class="d" id="dU" data-ev="adv">▲</button><button class="d" id="dD" data-ev="skip">▼</button><button class="d" id="dL" data-hold="ln-">◀</button><button class="d" id="dR" data-hold="ln+">▶</button>
   </div>
-  <div id="err"><div><h2>No se pudo conectar</h2><p id="errtxt">Abre la portada del juego en el ordenador, despliega «Jugar con el móvil» y vuelve a escanear el QR.</p></div></div>
+
+  <div id="ch"><button class="btn" data-ev="c1">1</button><button class="btn" data-ev="c2">2</button><button class="btn" data-ev="c3">3</button></div>
+
+  <div id="face" aria-label="Botones de acción">
+    <button class="btn f" id="fT" data-ev="cam">△</button><button class="btn f" id="fR" data-ev="push">○</button><button class="btn f" id="fB" data-ev="interact">✕</button><button class="btn f" id="fL" data-tog="run">□</button>
+  </div>
+
+  <button class="btn sh" id="L1" data-hold="cr">L1 agachar</button>
+  <button class="btn sh" id="R1" data-hold="sh">R1 disparar</button>
+
+  <div class="stick" id="sL"><i></i></div>
+  <div class="stick" id="sR"><i></i></div>
+
+  <div id="go"><div><p style="max-width: 28ch; margin: 0 auto 18px; color: var(--muted)">Toca para entrar en pantalla completa y jugar en horizontal.</p><button id="goBtn">▶ Jugar</button></div></div>
+  <div id="rot"><svg viewBox="0 0 64 64" fill="none" stroke="#c98d3a" stroke-width="3"><rect x="22" y="6" width="20" height="52" rx="4"/><circle cx="32" cy="52" r="2" fill="#c98d3a"/></svg><h2 style="margin:0">Gira el móvil</h2><p style="margin:0;color:var(--muted)">El mando funciona en horizontal.</p></div>
+  <div id="err"><div><h2>No se pudo conectar</h2><p>Abre la portada del juego en el ordenador, despliega «Jugar con el móvil» y vuelve a escanear el QR.</p></div></div>
 
   <script src="https://cdn.jsdelivr.net/npm/peerjs@1.5.2/dist/peerjs.min.js"></script>
   <script>
     (() => {
       const $ = (id) => document.getElementById(id), id = new URLSearchParams(location.search).get('id');
-      const S = { mx: 0, my: 0, lx: 0, ly: 0, run: false, cr: false, sh: false }; let conn = null, ready = false;
+      const S = { mx: 0, my: 0, lx: 0, ly: 0, run: false, cr: false, sh: false, ln: 0, hold: false }; let conn = null, ready = false;
       const st = (t, cls) => { $('st').textContent = t; $('bar').className = cls || ''; };
-      if (!id || !window.Peer) { $('err').style.display = 'grid'; }
+      if (!id || !window.Peer) $('err').style.display = 'grid';
       else {
         const peer = new Peer();
-        peer.on('open', () => { conn = peer.connect(id, { reliable: false }); conn.on('open', () => { ready = true; st('conectado', 'ok'); }); conn.on('close', () => { ready = false; st('desconectado', 'bad'); }); conn.on('error', () => st('error', 'bad')); });
-        peer.on('error', (e) => { st('error: ' + (e && e.type), 'bad'); });
+        peer.on('open', () => { conn = peer.connect(id, { reliable: true }); conn.on('open', () => { ready = true; st('conectado', 'ok'); }); conn.on('close', () => { ready = false; st('desconectado', 'bad'); }); conn.on('error', () => st('error', 'bad')); });
+        peer.on('error', (e) => st('error: ' + (e && e.type), 'bad'));
       }
-      /* joysticks táctiles: el izquierdo mueve; el derecho mira (la mirada es la velocidad del dedo respecto al centro) */
-      const stick = (zone, el, cb) => { let tid = null, ox = 0, oy = 0; const kn = el.firstElementChild;
-        zone.addEventListener('pointerdown', (e) => { if (tid !== null) return; tid = e.pointerId; zone.setPointerCapture(tid); ox = e.clientX; oy = e.clientY; el.style.display = 'block'; el.style.left = ox + 'px'; el.style.top = oy + 'px'; kn.style.transform = ''; cb(0, 0); });
-        zone.addEventListener('pointermove', (e) => { if (e.pointerId !== tid) return; const dx = Math.max(-1, Math.min(1, (e.clientX - ox) / 50)), dy = Math.max(-1, Math.min(1, (e.clientY - oy) / 50)); kn.style.transform = 'translate(' + dx * 34 + 'px,' + dy * 34 + 'px)'; cb(dx, dy); });
-        const end = (e) => { if (e.pointerId !== tid) return; tid = null; el.style.display = 'none'; cb(0, 0); }; zone.addEventListener('pointerup', end); zone.addEventListener('pointercancel', end); };
-      stick($('L'), $('sL'), (x, y) => { S.mx = x; S.my = y; });
-      stick($('R'), $('sR'), (x, y) => { S.lx = x; S.ly = y; });
-      document.querySelectorAll('[data-ev]').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); if (ready) conn.send({ t: 'e', k: b.dataset.ev }); if (navigator.vibrate) navigator.vibrate(12); }));
-      const tog = (el, key) => el.addEventListener('pointerdown', (e) => { e.preventDefault(); S[key] = !S[key]; el.classList.toggle('on', S[key]); });
-      tog($('bRun'), 'run'); tog($('bCr'), 'cr');
-      const fire = $('bFire'); fire.addEventListener('pointerdown', (e) => { e.preventDefault(); S.sh = true; fire.classList.add('on'); if (navigator.vibrate) navigator.vibrate(18); }); const stopFire = () => { S.sh = false; fire.classList.remove('on'); }; fire.addEventListener('pointerup', stopFire); fire.addEventListener('pointercancel', stopFire); fire.addEventListener('pointerleave', stopFire);
-      setInterval(() => { if (ready) conn.send({ t: 's', mx: +S.mx.toFixed(2), my: +S.my.toFixed(2), lx: +S.lx.toFixed(2), ly: +S.ly.toFixed(2), run: S.run || !!S.hold, cr: S.cr, sh: S.sh }); }, 33);
-      // correr automáticamente tras mantener el joystick hacia delante durante 3 s
-      let held = 0; setInterval(() => { if (S.my < -0.7 && Math.hypot(S.mx, S.my) > 0.9) held += 0.1; else held = 0; S.hold = held >= 3; }, 100);
-      try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => { }); } catch (e) { }
+      $('goBtn').addEventListener('click', () => { $('go').style.display = 'none'; try { const el = document.documentElement; (el.requestFullscreen || el.webkitRequestFullscreen || (() => Promise.reject())).call(el).then(() => { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(() => { }); }).catch(() => { }); } catch (e) { } try { if (navigator.wakeLock) navigator.wakeLock.request('screen').catch(() => { }); } catch (e) { } });
+
+      /* joysticks fijos con base y pomo: el pomo sigue al dedo y se ve cómo empujas; zona muerta pequeña y respuesta progresiva */
+      const stick = (base, cb) => { const kn = base.firstElementChild; let tid = null;
+        const upd = (e) => { const r = base.getBoundingClientRect(), R = r.width * 0.34, cx = r.left + r.width / 2, cy = r.top + r.height / 2; let dx = e.clientX - cx, dy = e.clientY - cy; const d = Math.hypot(dx, dy) || 1e-6;
+          const m = Math.min(1, d / R); dx = dx / d * m * R; dy = dy / d * m * R; kn.style.transform = 'translate(' + dx + 'px,' + dy + 'px)';
+          const dz = 0.12, k = m < dz ? 0 : (m - dz) / (1 - dz);                                     // zona muerta pequeña y respuesta progresiva: andar suave y correr a tope
+          cb((dx / (m * R || 1)) * k, (dy / (m * R || 1)) * k); };
+        base.addEventListener('pointerdown', (e) => { if (tid !== null) return; tid = e.pointerId; try { base.setPointerCapture(tid); } catch (er) { } upd(e); });
+        base.addEventListener('pointermove', (e) => { if (e.pointerId === tid) upd(e); });
+        const end = (e) => { if (e.pointerId !== tid) return; tid = null; kn.style.transform = ''; cb(0, 0); }; base.addEventListener('pointerup', end); base.addEventListener('pointercancel', end); };
+      stick($('sL'), (x, y) => { S.mx = x; S.my = y; });
+      stick($('sR'), (x, y) => { S.lx = x; S.ly = y; });
+      // botones de un toque, mantenidos y de alternar
+      document.querySelectorAll('[data-ev]').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); b.classList.add('on'); if (ready) conn.send({ t: 'e', k: b.dataset.ev }); if (navigator.vibrate) navigator.vibrate(12); }));
+      document.querySelectorAll('[data-ev]').forEach((b) => { const off = () => b.classList.remove('on'); b.addEventListener('pointerup', off); b.addEventListener('pointercancel', off); b.addEventListener('pointerleave', off); });
+      document.querySelectorAll('[data-hold]').forEach((b) => { const k = b.dataset.hold, set = (v) => { if (k === 'cr') S.cr = v; else if (k === 'sh') S.sh = v; else if (k === 'ln-') S.ln = v ? -1 : (S.ln === -1 ? 0 : S.ln); else if (k === 'ln+') S.ln = v ? 1 : (S.ln === 1 ? 0 : S.ln); b.classList.toggle('on', v); if (v && navigator.vibrate) navigator.vibrate(14); };
+        b.addEventListener('pointerdown', (e) => { e.preventDefault(); set(true); }); ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => b.addEventListener(ev, () => set(false))); });
+      document.querySelectorAll('[data-tog]').forEach((b) => b.addEventListener('pointerdown', (e) => { e.preventDefault(); S.run = !S.run; b.classList.toggle('on', S.run); }));
+      setInterval(() => { if (ready) conn.send({ t: 's', mx: +S.mx.toFixed(2), my: +S.my.toFixed(2), lx: +S.lx.toFixed(2), ly: +S.ly.toFixed(2), run: S.run || S.hold, cr: S.cr, sh: S.sh, ln: S.ln }); }, 33);
+      // correr automáticamente al mantener el joystick izquierdo hacia delante 3 s
+      let held = 0; setInterval(() => { if (S.my < -0.7 && Math.hypot(S.mx, S.my) > 0.9) held += 0.1; else held = 0; S.hold = held >= 3; $('sL').classList.toggle('run', S.hold || S.run); }, 100);
     })();
   </script>
 </body>

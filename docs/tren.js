@@ -198,7 +198,9 @@
     W.acts.vecino = { label: 'Notar a tu vecino', stand: [-0.95, 0.35], look: [-0.45, 1.45, 0.0], enabled: () => true, run: async (api) => {
       W.pistas++; await api.say(['El pelo de tu vecino está a dos centímetros de tu cara. No sabes su nombre, pero conoces su champú. Ya hay más intimidad en este vagón que en tu último comité.', { text: 'Está pálido, suda y respira raro. Será el madrugón. Seguro que es el madrugón.', think: true }]); } };
     W.acts.puertas = { label: 'Esperar a Nuevos Ministerios', stand: [-1.9, 0.35], look: [-4.0, 1.3, -1.34], enabled: () => true, run: async (api) => {
-      await api.say('Las puertas se abren entre dos estornudos. Nuevos Ministerios. Sales empujado por una marea que sabe adónde va.'); W.exit = true; } };
+      await api.say('Las puertas se abren entre dos estornudos. Nuevos Ministerios. Sales empujado por una marea que sabe adónde va.');
+      const P = api.P, x0 = P.x; await api.tween(900, (e) => { P.x = x0 - 0.5 * e; P.dy = -0.34 * Math.sin(e * Math.PI); P.pitch = -0.1 * Math.sin(e * Math.PI); P.walk = 1; }); P.dy = 0; P.walk = 0;       // baja del vagón: se agacha al pasar el escalón y se incorpora
+      W.exit = true; } };
 
     W.play = async (api) => {
       const { say, setTime, free } = api;

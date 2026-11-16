@@ -263,7 +263,7 @@
   function setTime(t) { S.time = t; clockEl.textContent = t; }
   function enterWorld(w, name) {
     if (A.group.parent) A.group.parent.remove(A.group);
-    scene = w.scene; scene.add(A.group); if (GOAL.parent) GOAL.parent.remove(GOAL); scene.add(GOAL); if (VIEW.parent) VIEW.parent.remove(VIEW); scene.add(VIEW); try { renderer.compile(scene, camera); } catch (e) { }                  // precompila los shaders del mundo para evitar el tirón al entrar
+    scene = w.scene; scene.add(A.group); if (GOAL.parent) GOAL.parent.remove(GOAL); scene.add(GOAL); if (HAND.parent) HAND.parent.remove(HAND); scene.add(HAND); if (VIEW.parent) VIEW.parent.remove(VIEW); scene.add(VIEW); try { renderer.compile(scene, camera); } catch (e) { }                  // precompila los shaders del mundo para evitar el tirón al entrar
     if (fx.on && fx.composer.passes[0]) fx.composer.passes[0].scene = scene;
     ROOM = w.bounds; OBST = w.obst; TICK = w.tick; ACTS = w.acts; ACT_ROOTS = w.actRoots; WORLD = name;
     P.x = w.spawn[0]; P.z = w.spawn[1]; P.vx = P.vz = 0; P.walk = 0;
@@ -283,16 +283,16 @@
     });
   }
   async function free(ms, hint, until) {                    // ventana en la que puedes pasear y mirar antes de que siga el guion; devuelve true si se ha saltado
-    inFree = true; S.busy = false; freeHintEl.hidden = !hint;
+    inFree = true; S.busy = false; HINTTXT = hint || '';
     const t0 = performance.now(); let skipped = false; const sb = $('#saltar');
     sb.onclick = () => { skipped = true; }; const onN = (e) => { if ((e.key === 'n' || e.key === 'N') && !sb.hidden && !e.repeat) skipped = true; }; window.addEventListener('keydown', onN);
     while ((performance.now() - t0 < ms && !(until && until()) && !skipped) || S.busy) {
-      if (hint) { const wait = performance.now() - t0, o = wait > 6000 && until ? objetivo().t : ''; freeHintEl.textContent = hint.replace('{s}', Math.max(0, Math.ceil((ms - wait) / 1000))) + (o ? '  ·  Pista: ' + o : ''); }
+      if (hint) { const wait = performance.now() - t0, o = wait > 6000 && until ? objetivo().t : ''; HINTTXT = hint.replace('{s}', Math.max(0, Math.ceil((ms - wait) / 1000))) + (o ? '  ·  Pista: ' + o : ''); }
       sb.hidden = !(until && ms > 60000 && performance.now() - t0 > 12000 && !S.busy);          // a los 12 s aparece «Avanzar» para no quedarte atascado
       await sleep(150);
     }
     window.removeEventListener('keydown', onN); sb.hidden = true; sb.onclick = null;
-    freeHintEl.hidden = true; inFree = false; S.busy = true; return skipped;
+    HINTTXT = ''; inFree = false; S.busy = true; return skipped;
   }
 
   /* Objetivo del momento y dónde está, por mapa. La flecha 3D baja y sube sin parar sobre el sitio; el texto fijo repite qué hacer. */
@@ -327,9 +327,26 @@
       const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: Q.toTex(c), transparent: true, blending: THREE.AdditiveBlending, depthTest: false, depthWrite: false })); sp.position.set(0, 0.02, z); sp.renderOrder = 1001; sp.visible = false; return sp; };
     pis.userData.flash = fl(-0.28); esc.userData.flash = fl(-0.6); pis.add(pis.userData.flash); esc.add(esc.userData.flash);
     VIEW.userData = { pis, esc }; VIEW.add(pis, esc); scene.add(VIEW); }
-  const objEl = document.createElement('div'); objEl.id = 'objetivo'; objEl.hidden = true; document.body.appendChild(objEl); let objT = 0;
+  /* Un único cuadro arriba a la izquierda: lista de misiones, objetivo del momento y pista. Abajo solo queda el diálogo de la historia. */
+  /* Mano en primera persona: alcanza el objeto, lo agarra y (con la caña) lo lleva a la boca y lo suelta */
+  const HAND = new THREE.Group(); HAND.visible = false; scene.add(HAND); let handAnim = null;
+  { const skin = new THREE.MeshStandardMaterial({ color: 0xdcd8d0, roughness: 0.85, depthTest: false }), sleeve = new THREE.MeshStandardMaterial({ color: 0x3a3f4a, roughness: 0.9, depthTest: false });
+    const mk = (geo, mat, x, y, z) => { const o = new THREE.Mesh(geo, mat); o.position.set(x, y, z); o.renderOrder = 1002; return o; };
+    const arm = new THREE.Group(); arm.add(mk(new THREE.BoxGeometry(0.085, 0.085, 0.36), skin, 0, 0, 0.12), mk(new THREE.BoxGeometry(0.11, 0.1, 0.12), skin, 0, 0, -0.1), mk(new THREE.BoxGeometry(0.035, 0.05, 0.08), skin, -0.068, 0.02, -0.09), mk(new THREE.BoxGeometry(0.105, 0.105, 0.22), sleeve, 0, 0, 0.32));
+    const mkObj = (geo, col, op) => { const o = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: col, roughness: 0.25, transparent: op < 1, opacity: op, depthTest: false })); o.renderOrder = 1003; return o; };
+    const mug = new THREE.Group(); mug.add(mkObj(new THREE.CylinderGeometry(0.05, 0.045, 0.15, 14), 0xd8a640, 0.92), (() => { const f = mkObj(new THREE.CylinderGeometry(0.052, 0.052, 0.035, 14), 0xf4f0e0, 1); f.position.y = 0.09; return f; })());
+    const cup = new THREE.Group(); cup.add(mkObj(new THREE.CylinderGeometry(0.05, 0.036, 0.09, 14), 0xf4f0e0, 1), (() => { const f = mkObj(new THREE.CylinderGeometry(0.046, 0.046, 0.01, 14), 0x3a2418, 1); f.position.y = 0.05; return f; })());
+    const gun = new THREE.Group(); gun.add(mk(new THREE.BoxGeometry(0.055, 0.07, 0.26), new THREE.MeshStandardMaterial({ color: 0x4a4e56, roughness: 0.25, metalness: 0.9, depthTest: false }), 0, 0.05, -0.12), mk(new THREE.BoxGeometry(0.045, 0.12, 0.07), new THREE.MeshStandardMaterial({ color: 0x15171b, roughness: 0.4, depthTest: false }), 0, -0.04, -0.02));
+    [mug, cup, gun].forEach((o) => { o.position.set(0, 0.07, -0.13); o.visible = false; }); HAND.add(arm, mug, cup, gun); HAND.userData = { mug, cup, gun }; }
+  const playHand = (kind, ms) => new Promise((res) => { handAnim = { kind, t: 0, dur: ms / 1000, res }; });
+  const objLi = document.createElement('li'); objLi.className = 'obj'; const hintLi = document.createElement('li'); hintLi.className = 'hintline'; let objT = 0, HINTTXT = '';
+  function renderObj(text, hint) {
+    if (objLi.parentNode !== tasksEl) tasksEl.appendChild(objLi); if (hintLi.parentNode !== tasksEl) tasksEl.appendChild(hintLi);
+    const o = text ? 'Objetivo · ' + text : ''; if (objLi.textContent !== o) objLi.textContent = o; if (hintLi.textContent !== (hint || '')) hintLi.textContent = hint || '';
+    objLi.hidden = !o; hintLi.hidden = !hint;
+  }
   let CINE = null;
-  const API = { cine: (cfg) => { CINE = cfg; A.group.visible = !cfg; }, chart: async () => { if (document.pointerLockElement) document.exitPointerLock(); await Q.showMortality(); lockPointer(); }, say: async (l) => { await say(l); if (inScript && !inFree) S.busy = true; }, choose, tween, wait: sleep, setTime, free, P, S };
+  const API = { hand: playHand, cine: (cfg) => { CINE = cfg; A.group.visible = !cfg; }, chart: async () => { if (document.pointerLockElement) document.exitPointerLock(); await Q.showMortality(); lockPointer(); }, say: async (l) => { await say(l); if (inScript && !inFree) S.busy = true; }, choose, tween, wait: sleep, setTime, free, P, S };
   function endScreen(title, text) {
     $('#hud').hidden = true; if (document.pointerLockElement) document.exitPointerLock();
     const end = document.createElement('div'); end.id = 'end';
@@ -652,27 +669,38 @@
     requestAnimationFrame(frame);
     const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
     let gp = null; try { gp = (navigator.getGamepads && navigator.getGamepads()[0]) || null; } catch (e) { }
+    if (gp && (gp.mapping !== 'standard' || !gp.axes || gp.axes.length < 4)) gp = null;               // solo mandos estándar: otros dispositivos (ratones, teclados) no deben mover al personaje
+    if (gp && !gpHeld.seen) { if (gp.buttons.some((b) => b && b.pressed)) gpHeld.seen = true; else gp = null; }   // hasta que no pulses un botón del mando, no cuenta
     if (gp) { const dz = (v) => (Math.abs(v) < 0.18 ? 0 : v); const rx = dz(gp.axes[2] || 0), ry = dz(gp.axes[3] || 0); if (S.started && !S.busy) { P.yaw -= rx * 2.4 * dt * CFG.sens; P.pitch = clamp(P.pitch - (CFG.invY ? -ry : ry) * 1.9 * dt * CFG.sens, -1.35, 1.35); }
       const bt = (i) => !!(gp.buttons[i] && gp.buttons[i].pressed); gpHeld.crouch = bt(1);
       const edge = (i, f) => { const k = 'g' + i; if (bt(i) && !gpHeld[k]) f(); gpHeld[k] = bt(i); };
       edge(0, () => { if (current) interact(current); }); edge(2, () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }))); edge(7, () => window.dispatchEvent(new MouseEvent('mousedown', { button: 0 }))); edge(3, () => toggleCam()); }
     const RM = Q.remote && Q.remote.on ? Q.remote : null;
-    if (RM) { if (S.started && !S.busy) { P.yaw -= RM.lx * 2.6 * dt * CFG.sens; P.pitch = clamp(P.pitch - (CFG.invY ? -RM.ly : RM.ly) * 1.9 * dt * CFG.sens, -1.35, 1.35); }
-      while (RM.ev.length) { const k = RM.ev.shift(); if (k === 'interact' && current && !S.busy) interact(current); else if (k === 'push') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' })); else if (k === 'skip') { const sb = $('#saltar'); if (sb && !sb.hidden) sb.click(); else window.dispatchEvent(new KeyboardEvent('keydown', { key: 'n' })); window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space' })); } else if (k === 'cam') toggleCam(); } }
+    if (RM) { const curva = (v) => Math.sign(v) * Math.pow(Math.abs(v), 1.7);                      // girar con el stick: respuesta progresiva y mucho más lenta que antes
+      if (S.started && !S.busy) { P.yaw -= curva(RM.lx) * 1.35 * dt * CFG.sens; P.pitch = clamp(P.pitch - (CFG.invY ? -curva(RM.ly) : curva(RM.ly)) * 0.9 * dt * CFG.sens, -1.35, 1.35); }
+      while (RM.ev.length) { const k = RM.ev.shift(), key = (kk, code) => window.dispatchEvent(new KeyboardEvent('keydown', { key: kk, code: code || '' }));
+        if (!S.started) { if (k === 'interact' || k === 'adv') $('#go').click(); continue; }
+        if (k === 'interact' && current && !S.busy) interact(current);
+        else if (k === 'interact' || k === 'adv') { key(' ', 'Space'); }                           // avanza el texto, cierra paneles y pasa las pantallas de carga
+        else if (k === 'push') key('f');
+        else if (k === 'skip') { const sb = $('#saltar'); if (sb && !sb.hidden) sb.click(); else key('n'); }
+        else if (k === 'c1' || k === 'c2' || k === 'c3') key(k.slice(1));
+        else if (k === 'cam') toggleCam(); } }
     if (S.started && !S.busy && cfgEl.hidden) {
       let fx0 = 0, fz = 0;
       if (RM) { fx0 += RM.mx; fz -= RM.my; }
-      if (gp) { const ax = (Math.abs(gp.axes[0]) < 0.18 ? 0 : gp.axes[0]), ay = (Math.abs(gp.axes[1]) < 0.18 ? 0 : gp.axes[1]); fx0 += ax; fz -= ay; gpHeld.run = !!(gp.buttons[10] && gp.buttons[10].pressed); } else { gpHeld.run = false; gpHeld.crouch = false; }
+      if (gp) { const ax = (Math.abs(gp.axes[0] || 0) < 0.18 ? 0 : (gp.axes[0] || 0)), ay = (Math.abs(gp.axes[1] || 0) < 0.18 ? 0 : (gp.axes[1] || 0)); fx0 += ax; fz -= ay; gpHeld.run = !!(gp.buttons[10] && gp.buttons[10].pressed); } else { gpHeld.run = false; gpHeld.crouch = false; }
       if (keys['w'] || keys['arrowup']) fz += 1; if (keys['s'] || keys['arrowdown']) fz -= 1; if (keys['a']) fx0 -= 1; if (keys['d']) fx0 += 1;
       if (keys['arrowleft']) P.yaw += 1.8 * dt; if (keys['arrowright']) P.yaw -= 1.8 * dt;
       fx0 += moveVec.x; fz -= moveVec.y;
+      if (!Number.isFinite(fx0)) fx0 = 0; if (!Number.isFinite(fz)) fz = 0;                       // ninguna entrada rara puede bloquear el movimiento
       const len = Math.hypot(fx0, fz); if (len > 1) { fx0 /= len; fz /= len; }
       holdW = fz > 0 ? Math.min(4, holdW + dt) : Math.max(0, holdW - dt * 3);                    // 4 s hacia delante: hasta +30 % de velocidad
       const joyFwd = moveVec.y < -0.6 && Math.hypot(moveVec.x, moveVec.y) > 0.8; joyT = joyFwd ? joyT + dt : 0;                // joystick sostenido hacia delante ~1 s = correr
       const sp = (keys['shift'] || gpHeld.run || (Q.remote && Q.remote.on && Q.remote.run) || joyT > 3.0 ? 3.0 : 1.7) * (1 + 0.3 * (holdW / 4)) * (1 - 0.42 * crouchK), sy = Math.sin(P.yaw), cy = Math.cos(P.yaw);
       const tvx = (-sy * fz + cy * fx0) * sp, tvz = (-cy * fz - sy * fx0) * sp;
       { const want = tvx * tvx + tvz * tvz, have = P.vx * P.vx + P.vz * P.vz, k = 1 - Math.exp(-dt * (want > have ? 6.5 : 4.2)); P.vx = lerp(P.vx, tvx, k); P.vz = lerp(P.vz, tvz, k); }   // arranque y frenada con inercia, sin brusquedad
-      const [nx, nz] = collide(P.x + P.vx * dt, P.z + P.vz * dt); P.x = nx; P.z = nz; P.walk = Math.min(1, Math.hypot(P.vx, P.vz) / 1.5);
+      if (!Number.isFinite(P.vx)) P.vx = 0; if (!Number.isFinite(P.vz)) P.vz = 0; const [nx, nz] = collide(P.x + P.vx * dt, P.z + P.vz * dt); if (Number.isFinite(nx) && Number.isFinite(nz)) { P.x = nx; P.z = nz; } P.walk = Math.min(1, Math.hypot(P.vx, P.vz) / 1.5);
     } else if (!S.busy) { P.vx = P.vz = 0; }
 
     const diff = angDiff(P.yaw, P.bodyYaw);
@@ -695,12 +723,12 @@
       for (let i = 0; i < 40; i++) { cx = ex - fx1 * d; cy = ey - fy1 * d + 0.7 * camK; cz = ez - fz1 * d; if (cx > ROOM.minX + 0.2 && cx < ROOM.maxX - 0.2 && cz > zMin && cz < ROOM.maxZ - 0.2 && cy > 0.25 && cy < top) break; d *= 0.9; }
       ex = cx; ey = cy; ez = cz;
     }
-    leanT = lerp(leanT, (keys['r'] ? 1 : 0) - (keys['q'] ? 1 : 0), Math.min(1, dt * 9)); crouchK = lerp(crouchK, (keys['c'] || gpHeld.crouch || (Q.remote && Q.remote.on && Q.remote.crouch)) ? 1 : 0, Math.min(1, dt * 8));
+    leanT = lerp(leanT, (keys['r'] ? 1 : 0) - (keys['q'] ? 1 : 0) + (Q.remote && Q.remote.on ? Q.remote.lean : 0), Math.min(1, dt * 9)); crouchK = lerp(crouchK, (keys['c'] || gpHeld.crouch || (Q.remote && Q.remote.on && Q.remote.crouch)) ? 1 : 0, Math.min(1, dt * 8));
     ex += Math.cos(P.yaw) * leanT * 0.32 * (1 - camK); ez -= Math.sin(P.yaw) * leanT * 0.32 * (1 - camK); ey -= 0.55 * crouchK * (1 - camK);
     camera.position.set(ex, ey, ez);
     camera.rotation.set(P.pitch - 0.14 * camK, P.yaw, Math.sin(P.bob) * (0.005 + 0.006 * spdK) * P.walk * calm * (1 - camK) - leanT * 0.13 * (1 - camK) + strafeK * 0.022 * calm * (1 - camK));
     if (WORLD === 'train' && TRN) { camera.position.y += TRN.sway.y; camera.rotation.z += TRN.sway.roll; }
-    { objT -= dt; if (objT <= 0) { objT = 0.3; const o = objetivo(); objEl.textContent = o.t ? 'Objetivo · ' + o.t : ''; objEl.hidden = !o.t || !S.started || !!CINE || !!document.getElementById('apocframe') && false; GOAL.userData.g = o.g; }
+    { objT -= dt; if (objT <= 0) { objT = 0.3; const o = objetivo(); renderObj(S.started && !CINE ? o.t : '', S.started && !CINE ? HINTTXT : ''); GOAL.userData.g = o.g; }
       const g = GOAL.userData.g; if (g && !CINE && S.started && !S.busy) { const d = Math.hypot(g[0] - P.x, g[2] - P.z); GOAL.visible = d > 1.6; const s = clamp(d * 0.075, 0.45, 2.4); GOAL.scale.setScalar(s); GOAL.position.set(g[0], g[1] + (0.3 + 0.28 * Math.sin(t * 4.4)) * s, g[2]); GOAL.rotation.y = t * 1.2; } else GOAL.visible = false; }
     { const av = Q.apoc && Q.apoc.view ? Q.apoc.view() : null, show = !!(av && av.on && av.gun && camK < 0.1 && !CINE && !S.busy && S.started);
       VIEW.visible = show;
@@ -709,6 +737,11 @@
         const off = new THREE.Vector3(0.2 + sway, -0.2 + bob - k * 0.015 - crouchK * 0.03, -0.45 + k * (esc ? 0.14 : 0.08)); camera.updateMatrixWorld(); camera.localToWorld(off); VIEW.position.copy(off);
         VIEW.quaternion.copy(camera.quaternion); VIEW.rotateX(k * (esc ? 0.4 : 0.3)); VIEW.rotateY(-0.05);
         const f = g.userData.flash; f.visible = av.flash > 0; if (f.visible) { f.scale.setScalar((esc ? 0.55 : 0.34) * (0.8 + Math.random() * 0.5)); f.material.rotation = Math.random() * 6.28; } } }
+    if (handAnim) { const a = handAnim; a.t += dt; const k = Math.min(1, a.t / a.dur), sm = (x) => x * x * (3 - 2 * x), reach = sm(clamp(k / 0.3, 0, 1)), back = sm(clamp((k - 0.82) / 0.18, 0, 1)), sip = a.kind === 'beer' ? sm(clamp((k - 0.42) / 0.16, 0, 1)) - sm(clamp((k - 0.72) / 0.12, 0, 1)) : 0, p = reach * (1 - back);
+      HAND.visible = true; const U = HAND.userData; U.mug.visible = a.kind === 'beer'; U.cup.visible = a.kind === 'cup'; U.gun.visible = a.kind === 'gun';
+      const off = new THREE.Vector3(lerp(0.4, 0.15, p) - 0.14 * sip, lerp(-0.55, -0.17, p) + 0.16 * sip, lerp(-0.2, -0.43, p) + 0.1 * sip); camera.updateMatrixWorld(); camera.localToWorld(off); HAND.position.copy(off);
+      HAND.quaternion.copy(camera.quaternion); HAND.rotateX(0.25 + sip * 1.0); HAND.rotateY(-0.18); if (sip > 0.1 && Math.random() < 0.15 && window.Sound && Sound.on) Sound.step(0.6);
+      if (k >= 1) { HAND.visible = false; handAnim = null; a.res(); } }
     if (CINE) { const l = CINE.look(); camera.position.set(CINE.pos[0], CINE.pos[1], CINE.pos[2]); camera.lookAt(l[0], l[1], l[2]); }                // plano fijo de cine
     if (camK > 0.05) camera.layers.enable(1); else camera.layers.disable(1);     // la cabeza (capa 1) solo se ve en el espejo y en tercera persona
 

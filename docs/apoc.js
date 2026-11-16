@@ -30,7 +30,7 @@
     spawn(w) {
       const n = Math.min(SIZES[w - 1], S.en.length);
       S.en.forEach((e, i) => {
-        if (i < n) { e.dead = false; e.dying = 0; e.stun = 0; e.free = 1.5; e.v = e.v0 * (1 + 0.32 * (w - 1)); e.g.visible = true; e.g.rotation.set(0, 0, 0); const gp = S.gates ? S.gates[i % S.gates.length] : e.p0; e.g.position.set(gp[0] + ((i * 0.77) % 2.4) - 1.2, 0, gp[1] + ((i * 1.31) % 2.4) - 1.2); }
+        if (i < n) { e.dead = false; e.dying = 0; e.stun = 0; e.free = 2.4; e.g.scale.setScalar(1); e.g.rotation.order = 'YXZ'; e.g.rotation.x = -1.3; e.v = e.v0 * (1 + 0.32 * (w - 1)); e.g.visible = true; e.g.rotation.set(0, 0, 0); const gp = S.gates ? S.gates[i % S.gates.length] : e.p0; e.g.position.set(gp[0] + ((i * 0.77) % 2.4) - 1.2, 0, gp[1] + ((i * 1.31) % 2.4) - 1.2); }
         else { e.dead = true; e.dying = 0; e.g.visible = false; }
       });
       if (S.gun) S.ammo = AMMO[S.gun][w - 1];
@@ -85,8 +85,9 @@
         if (S.grace > 0) { e.g.rotation.y = Math.atan2(P.x - e.g.position.x, P.z - e.g.position.z) + Math.PI; return; }
         if (e.stun > 0) { e.stun -= dt; e.g.rotation.z = 0.5; return; } e.g.rotation.z = Math.sin(S.t * 3 + (e.ph || 0)) * 0.1; e.g.rotation.x = 0;
         const dx = P.x - e.g.position.x, dz = P.z - e.g.position.z, d = Math.hypot(dx, dz) || 1;
-        if (e.free > 0) { e.free -= dt; e.g.scale.setScalar(0.35 + 0.65 * (1 - e.free / 1.5)); if (d > 0.8) { const v = (e.v || 1.8) * 0.8; e.g.position.x += dx / d * v * dt; e.g.position.z += dz / d * v * dt; } }                      // salen de la tienda de campaña, ya sin chocar con ella
-        else if (d > 0.8) { e.g.scale.setScalar(1); const v = e.v || 1.8; Q.npcStep(e.g.position, dx / d * v * dt, dz / d * v * dt, 0.34, S.W.obst, S.en.filter((q) => !q.dead && q.g.visible).map((q) => q.g.position)); } e.g.rotation.y = Math.atan2(dx, dz) + Math.PI;
+        if (e.free > 0) { e.free -= dt; const t = 1 - e.free / 2.4, up = Math.max(0, Math.min(1, (t - 0.55) / 0.45)), sm = up * up * (3 - 2 * up); e.g.rotation.x = -1.3 * (1 - sm);       // salen de la tienda de campaña arrastrándose (a ras de suelo) y se ponen de pie antes de perseguirte
+          if (d > 0.8) { const v = (e.v || 1.8) * (t < 0.55 ? 0.45 : 0.8); e.g.position.x += dx / d * v * dt; e.g.position.z += dz / d * v * dt; } }
+        else if (d > 0.8) { e.g.rotation.x = 0; const v = e.v || 1.8; Q.npcStep(e.g.position, dx / d * v * dt, dz / d * v * dt, 0.34, S.W.obst, S.en.filter((q) => !q.dead && q.g.visible).map((q) => q.g.position)); } e.g.rotation.y = Math.atan2(dx, dz) + Math.PI;
         if (d < 0.9 && S.inv <= 0) { S.lives--; S.inv = 1.8; this.hud(); P.x = Math.max(b.minX + 0.3, Math.min(b.maxX - 0.3, P.x - dx / d * 0.9)); P.z = Math.max(b.minZ + 0.3, Math.min(b.maxZ - 0.3, P.z - dz / d * 0.9)); if (window.Sound && Sound.on) { Sound.growl(0.9); Sound.bad(); } S.frame.classList.add('hurt'); setTimeout(() => S.frame && S.frame.classList.remove('hurt'), 300); }
       });
       // oleada abatida: el número romano titila y llega la siguiente (II con 10, III con 20); tras la III, sobrevives

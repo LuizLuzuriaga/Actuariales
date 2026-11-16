@@ -46,9 +46,10 @@
       <p class="blurb">Una mañana de trabajo en primera persona: te despiertas, coges el cercanías, llegas a la oficina y cuadras reservas mientras Madrid se va a pique. Hay curvas de mortalidad, una bacteria negra, zombis y ocho finales. Cada cosa que haces suma o resta descuido, y el descuido decide cómo acaba el día.</p>
       <button type="button" class="btn primary" id="go" disabled>Cargando…</button>
       <noscript><p class="fine">Hace falta JavaScript para ver el juego en 3D.</p></noscript>
-      <details id="qrbox" class="qrbox"><summary>Jugar con el móvil como mando</summary>
-        <div class="qrwrap"><div id="qrcode" aria-label="Código QR para conectar el móvil"></div><div><p class="qrtxt">Escanea el código con el móvil: se abre un mando con dos joysticks y botones, y tu móvil mueve al personaje de esta pantalla.</p><p class="qrstate qrfine">Se abre una sala temporal solo cuando despliegas este panel.</p></div></div>
-      </details>
+      <section id="qrmain" class="qrmain" hidden aria-label="Jugar con el móvil">
+        <div id="qrcode" aria-label="Código QR para conectar el móvil"></div>
+        <div class="qrside"><h2>Juega con el móvil</h2><p class="qrtxt">Escanea el código y tu móvil se convierte en el mando: joysticks, botones y cruceta. Si no lo escaneas, juegas con el teclado como siempre.</p><p class="qrstate qrfine">Preparando…</p></div>
+      </section>
       <dl class="ficha" aria-label="Ficha del juego"><div><dt>duración</dt><dd>~20 min</dd></div><div><dt>mapas</dt><dd>11</dd></div><div><dt>finales</dt><dd>8</dd></div><div><dt>descargas</dt><dd>0</dd></div></dl>
       <ul class="how">
         <li><b>Ordenador:</b> clic para capturar el ratón · <kbd>WASD</kbd> moverte · <kbd>Shift</kbd> correr · <kbd>E</kbd> interactuar · <kbd>Q</kbd>/<kbd>R</kbd> asomarte · <kbd>C</kbd> agacharte · <kbd>F</kbd> empujar · clic para disparar · <kbd>Esc</kbd> soltar</li>
